@@ -22,9 +22,9 @@ double target_altitude = 1.5;
 double ground_distance;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(50, 0, 0, -100, 100);
-PIDController* yPosCtrl = new PIDController(50, 0, 0, -100, 100);
-PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
+PIDController* xPosCtrl = new PIDController(1.5, 0, 0, -100, 100);
+PIDController* yPosCtrl = new PIDController(1.5, 0, 0, -100, 100);
+PIDController* altPosCtrl = new PIDController(700, 0, 0, -200, 500);
 
 enum State {
 	TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
@@ -51,7 +51,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	}
 	else if (currentState == InteractWithRobot){
 		roll = MID_PWM + xPosCtrl->calc(msg->pointX);
-		pitch = MID_PWM - xPosCtrl->calc(msg->pointX);
+		pitch = MID_PWM - xPosCtrl->calc(msg->pointY);
 		
 		
 		
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 			break;
 		case EnterArena:
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
-			pwmVector(30, 0, &roll, &pitch);
+			pwmVector(40, 0, &roll, &pitch);
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				enterArenaStartTime = ros::Time::now();
@@ -230,7 +230,7 @@ int main(int argc, char **argv)
 				randomTraversalTimeStarted = true;
 				if (!randomTraversalWait){
 					double angle = (rand() % 359) + 1;
-					pwmVector(30, angle, &roll, &pitch);
+					pwmVector(60, angle, &roll, &pitch);
 					cout << "Angle Pitch Roll " << angle << " " << pitch << " " << roll << endl;
 				}
 				else{
