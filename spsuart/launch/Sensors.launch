@@ -1,0 +1,4 @@
+<launch>
+	<node name="OpennICamera" pkg="rm_openni_camera" type="camera" />
+	<node name="OpticalFlow" pkg="px4flow" type="px4flow_node" />
+</launch>	

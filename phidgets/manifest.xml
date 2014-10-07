@@ -1,0 +1,24 @@
+<package>
+  <description brief="Drivers for Phidgets devices">
+	ROS drivers for Phidgets devices
+  </description>
+  <version>1.50</version>
+  <author>Bob Mottram/bob@sluggish.dyndns.org</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/phidgets</url>
+  <versioncontrol type="bzr" url="https://launchpad.net/phidgets-ros-pkg/trunk"/>
+  <depend package="roscpp"/>
+  <depend package="std_msgs"/>
+  <depend package="nav_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="tf"/>
+  <depend package="sensor_msgs"/>
+  <depend package="sound_play"/>
+  <depend package="opencv2" />
+  <depend package="move_base_msgs" />
+  <depend package="actionlib" />
+  <depend package="rviz" />
+</package>
+
+

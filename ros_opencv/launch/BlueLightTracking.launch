@@ -1,0 +1,4 @@
+<launch>
+	<node name="lightTalker" pkg="ros_opencv" type="lightTalker"/>
+	<node name="lightToHokuyo" pkg="ros_opencv" type="lightToHokuyo"/>
+</launch>

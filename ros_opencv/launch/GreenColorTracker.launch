@@ -1,0 +1,3 @@
+<launch>
+	<node name="GreenColorTracker" pkg="ros_opecnv" type="xtionTrackGreen" />
+</launch>	

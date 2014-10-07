@@ -1,0 +1,4 @@
+<launch>
+	<node name="AltHold" pkg="spsuart" type="alt_hold" />
+	<node name="PitchAndYawControl" pkg="rc_sender" type="image_listener" />
+</launch>	
