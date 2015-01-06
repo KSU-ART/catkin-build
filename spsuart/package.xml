@@ -50,6 +50,8 @@
   <build_depend>message_generation</build_depend>
   <build_depend>ros_opencv</build_depend>
   <build_depend>OpenCV</build_depend>
+  <build_depend>serial</build_depend>
+  <build_depend>mavros</build_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>message_runtime</run_depend>
@@ -59,6 +61,8 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>ros_opencv</run_depend>
+  <run_depend>serial</run_depend>
+  <run_depend>mavros</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

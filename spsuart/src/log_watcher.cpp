@@ -13,7 +13,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/image_encodings.h>
+#include <SerialStream.h>f
 
+using namespace LibSerial ;
 using namespace std;
 using namespace cv;
 
@@ -156,7 +158,6 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "log_watcher");
   
   ros::NodeHandle n;
- 
   //ros::Subscriber subflow = n.subscribe("/px4flow/opt_flow", 1, flowCallback);
   ros::Subscriber subx = n.subscribe("diff", 1, callbackX);
   ros::Subscriber suby = n.subscribe("diffy", 1, callbackY);

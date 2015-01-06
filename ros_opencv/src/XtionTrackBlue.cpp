@@ -124,10 +124,15 @@ depth_pub= nh_.advertise<ros_opencv::Depthmessage>("depthValFromMask" , 1);
 
 cv_bridge::CvImagePtr cv_ptr;
 cv_bridge::CvImagePtr cv_ptr_depth;
+Mat blur_img;
 try
 {
 cv_ptr = cv_bridge::toCvCopy(rgb_msg, enc::BGR8);
-cv_ptr_depth = cv_bridge::toCvCopy(depth_msg, enc::TYPE_16UC1);	  
+cv_ptr_depth = cv_bridge::toCvCopy(depth_msg, enc::TYPE_32FC1);	
+    double minVal, maxVal;
+    minMaxLoc(cv_ptr_depth->image, &minVal, &maxVal); //find minimum and maximum intensities
+    //Mat draw;
+    cv_ptr_depth->image.convertTo(blur_img, CV_8U, 255.0/(maxVal - minVal), -minVal * 255.0/(maxVal - minVal));  
 }
 catch (cv_bridge::Exception& e)
 {
@@ -139,7 +144,7 @@ Vec3f selectedColor;
 bool loadNewStock=false;
 
 Mat frame=cv_ptr->image;
-Mat depth=cv_ptr_depth->image;
+Mat depth=blur_img;
 Mat frameSmall;
 Mat threshSmall;
 Mat depthSmall;
@@ -147,7 +152,7 @@ Mat depthSmall;
 resize(frame,frameSmall,Size(640,480));
 
 
-Mat imgColorThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(0,50,50), (_InputArray)cvScalar(10,255,255));
+Mat imgColorThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(40,0,0), (_InputArray)cvScalar(58,255,255));
 
 resize(imgColorThresh,threshSmall,Size(640,480));
 resize(depth,depthSmall,Size(640,480));
@@ -176,10 +181,6 @@ posX=-1;
 posY=-1;
 }
 
-cout <<"Red object at X: "<<posX<<"Y: "<<posY<< endl;
-
-
-
 light.pointX=posX;
 light.pointY=posY;
 result_pub.publish(light);
@@ -187,7 +188,7 @@ result_pub.publish(light);
 circle( frameSmall, Point(posX, posY), 3, Scalar( 0, 0, 255), 2, 8);
 cv::imshow("rgb image", frameSmall);
 cv::imshow("threshed image", threshSmall);
-//cv::imshow("depth image", depthSmall);
+cv::imshow("depth image", depthSmall);
 cv::waitKey(3);
 //Release images from memory
 threshSmall.release();

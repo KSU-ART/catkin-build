@@ -37,7 +37,7 @@ else{
 
 if(x>325)
 {
-double diffValue=50.0*((x-320.0)/320.0);
+double diffValue=75.0*((x-320.0)/320.0);
 diffValue= round(diffValue);
 if((pan+diffValue)<=1650)
 	pan+=diffValue;
@@ -45,16 +45,13 @@ if((pan+diffValue)<=1650)
 }
 else if(x<315)
 {
-double diffValue=50.0*((320.0-x)/320.0);
+double diffValue=75.0*((320.0-x)/320.0);
 diffValue= round(diffValue);
-if((pan-diffValue)>=1350)
+if((pan-diffValue)>=1225)
 	pan-=diffValue;
 
 }
-
 }
-
-
 
 if(y<0){
 
@@ -62,14 +59,14 @@ if(y<0){
 else{
 
 if(y<230){
-double diffValue=50.0*((240.0-y)/240.0);
+double diffValue=75.0*((240.0-y)/240.0);
 diffValue= round(diffValue);
 if((tilt+diffValue)<=1850)
 	tilt+=diffValue;
 
 }
 else if(y>250){
-double diffValue=50.0*((y-240.0)/240.0);
+double diffValue=75.0*((y-240.0)/240.0);
 diffValue= round(diffValue);
 if((tilt-diffValue)>=1250)
 	tilt-=diffValue;
@@ -107,7 +104,7 @@ int main(int argc, char **argv)
   ros::Subscriber subbot = n.subscribe("tracking_point", 1, callback);
   rc_pub = n.advertise<roscopter::RC>("send_rc", 1);
 
-    ros::Rate r(45);
+    ros::Rate r(200);
 
     roscopter::RC msg; 
 	while(ros::ok()){
