@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/odroid/ros/catkin_ws/src/imu_tools/imu_filter_madgwick/build/devel/setup.sh
