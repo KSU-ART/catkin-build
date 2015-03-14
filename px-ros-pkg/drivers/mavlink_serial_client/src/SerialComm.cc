@@ -1,5 +1,5 @@
 #include <boost/bind.hpp>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 
 // ROS includes
 #include <px_comm/Mavlink.h>

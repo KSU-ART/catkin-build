@@ -8,22 +8,22 @@
 #include "opencv/cv.h"
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/features2d.hpp"
+//#include "opencv2/nonfree/features2d.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/image_encodings.h>
-#include <SerialStream.h>
+//#include <SerialStream.h>
 #include "PIDController.h"
 #include <sstream>
 
-using namespace LibSerial;
+//using namespace LibSerial;
 using namespace std;
 using namespace cv;
 using namespace ros;  
 
 namespace enc = sensor_msgs::image_encodings;	
-SerialStream serial;
+//SerialStream serial;
 PIDController* rateController = new PIDController();
 Publisher rc_pub;
 
@@ -69,7 +69,7 @@ void flowImageCallback(const sensor_msgs::ImageConstPtr& msg){
      Size size(300,300);
      Mat dest;
      resize(cv_ptr->image, dest, size);	  
-     cv::imshow("FlowImage", dest);
+     //cv::imshow("FlowImage", dest);
      cv::waitKey(3);
    }
    catch (cv_bridge::Exception& e) 

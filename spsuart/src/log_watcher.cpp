@@ -8,14 +8,14 @@
 #include "opencv/cv.h"
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/features2d.hpp"
+//#include "opencv2/nonfree/features2d.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/image_encodings.h>
-#include <SerialStream.h>f
+//#include <SerialStream.h>f
 
-using namespace LibSerial ;
+//using namespace LibSerial ;
 using namespace std;
 using namespace cv;
 
@@ -84,7 +84,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg){
    try
    {
      cv_ptr = cv_bridge::toCvCopy(msg, enc::BGR8);
-     cv::imshow("XtionRgbImage", cv_ptr->image);
+     imshow ("XtionRgbImage",cv_ptr->image);
      cv::waitKey(3);
    }
    catch (cv_bridge::Exception& e)
@@ -99,12 +99,12 @@ void imageCallbackDown(const sensor_msgs::ImageConstPtr& msg){
    try
    {
      cv_ptr = cv_bridge::toCvCopy(msg, enc::BGR8);
-     cv::imshow("Downward Facing Camera", cv_ptr->image);
+     //cv::imshow("Downward Facing Camera", cv_ptr->image);
      Mat frameSmall=cv_ptr->image;
 	 Mat hsv;
      cvtColor(frameSmall, hsv, CV_BGR2HSV);
      Mat finalImage = getBoundary(hsv);
-     cv::imshow("Downward Facing Camera Post Processed", finalImage);
+     //cv::imshow("Downward Facing Camera Post Processed", finalImage);
      cv::waitKey(3);
    }
    catch (cv_bridge::Exception& e)
@@ -119,7 +119,7 @@ void depthImageCallback(const sensor_msgs::ImageConstPtr& msg){
    try
    {
      cv_ptr = cv_bridge::toCvCopy(msg, enc::TYPE_16UC1);	  
-     cv::imshow("XtionDepthImage", cv_ptr->image);
+    //cv::imshow("XtionDepthImage", cv_ptr->image);
      cv::waitKey(3);
    }
    catch (cv_bridge::Exception& e)
@@ -137,7 +137,7 @@ void flowImageCallback(const sensor_msgs::ImageConstPtr& msg){
      Size size(300,300);
      Mat dest;
      resize(cv_ptr->image, dest, size);	  
-     cv::imshow("FlowImage", dest);
+     //cv::imshow("FlowImage", dest);
      cv::waitKey(3);
    }
    catch (cv_bridge::Exception& e)

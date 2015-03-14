@@ -8,7 +8,7 @@
 #include "opencv/cv.h"
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/features2d.hpp"
+//#include "opencv2/nonfree/features2d.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 	    msg.channels[0]=msg.CHAN_NOCHANGE;
 	    msg.channels[1]=msg.CHAN_NOCHANGE;
         msg.channels[2]=throttle;
-        msg.channels[3]=yaw;
+        msg.channels[3]=0;
     	msg.channels[4]=msg.CHAN_NOCHANGE;
     	msg.channels[5]=msg.CHAN_NOCHANGE;
 	    msg.channels[6]=msg.CHAN_NOCHANGE;
