@@ -6,6 +6,9 @@
  */
 
 #include "PIDController.h"
+#include <iostream>
+
+using namespace std;
 
 PIDController::PIDController(double kp, double ki, double kd) {
     this->setGains(kp, ki, kd);
@@ -76,10 +79,16 @@ void PIDController::init() {
 
 double PIDController::calc(double processVariable, double nowTime) {
     double error = setpoint - processVariable;
+    cout << "Error: " << error << endl;
+    cout << "nowTime: " << nowTime << endl;
+    cout << "lastTime: " << lastTime << endl;
     double samplingTime = nowTime - lastTime;
     double differentiator = (error - lastError)/samplingTime;
+    cout << "Diff: " << differentiator << endl;
     integrator += (error * samplingTime);
+    cout << "Int: " << integrator << endl;
     double controlVariable = kp * error + ki * integrator + kd * differentiator;
+    cout << "CV (before constraint): " << controlVariable << endl;
     if(controlVariable < lowerConstraint) {
         controlVariable = lowerConstraint;
     }

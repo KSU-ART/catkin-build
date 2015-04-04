@@ -71,7 +71,7 @@ void flowImageCallback(const sensor_msgs::ImageConstPtr& msg){
    }
 }
 
-callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
+void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
 double x=msgs->pointX;
 double y=msgs->pointY;
 
@@ -79,7 +79,7 @@ double y=msgs->pointY;
 	if(x<0 || y<0){
 		roll=1500;
 		pitch=1500;
-		return;
+		//return;
 	}
 
 	if(x>330){
@@ -98,11 +98,11 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "testmavros");
   
   ros::NodeHandle n;
-  ros::Subscriber subflow = n.subscribe("/px4flow/opt_flow", 1, flowCallback);
-  ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
-  image_transport::ImageTransport it_(n);
-  image_transport::Subscriber flow_image_sub_;
-  flow_image_sub_ = it_.subscribe("/px4flow/camera_image", 1, flowImageCallback);  
+  //ros::Subscriber subflow = n.subscribe("/px4flow/opt_flow", 1, flowCallback);
+  //ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
+  //image_transport::ImageTransport it_(n);
+  //image_transport::Subscriber flow_image_sub_;
+  //flow_image_sub_ = it_.subscribe("/px4flow/camera_image", 1, flowImageCallback);  
   rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);	
   mavros::OverrideRCIn msg;
   ros::Rate r(45); 
