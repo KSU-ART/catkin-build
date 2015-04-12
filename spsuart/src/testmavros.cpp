@@ -18,6 +18,8 @@
 #include "PIDController.h"
 #include <sstream>
 
+#include "mavlink/v1.0/ardupilotmega/mavlink.h"
+
 using namespace std;
 using namespace cv;
 using namespace ros;  
@@ -25,6 +27,8 @@ using namespace ros;
 namespace enc = sensor_msgs::image_encodings;	
 PIDController* rateController = new PIDController();
 Publisher rc_pub;
+mavlink_message_t* msgt = NULL;
+__mavlink_rangefinder_t* x = NULL;
 
 double yLinearVelocity = 0;
 int roll=1500;
@@ -46,12 +50,41 @@ void flowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
 	//178
 	if(msg->msgid==173){
-		cout<<(const uint16_t*)((char *)((msg)->payload64[0])) <<endl;
+
+		if(msgt == NULL)
+		{
+			msgt = new mavlink_message_t();
+		}
+
+		if(x == NULL)
+		{
+			x = new __mavlink_rangefinder_t();
+		}
+
+		msgt->seq = msg->seq;
+		msgt->len = msg->len;
+		msgt->sysid = msg->sysid;
+		msgt->compid = msg->compid;
+		msgt->msgid = msg->msgid;
+		msgt->payload64[0] = msg->payload64[0];
+
+		mavlink_msg_rangefinder_decode(msgt, x); 
+
+		cout << "distance: " << x->distance << endl;
+		cout << "Voltage: " << x->voltage << endl;
+
+		//cout<<(float)((char *)((msg)->payload64[0])) <<endl;
 		cout<<"Value 1: "<<msg->payload64[0]<<endl;
 		//cout<<"Value 2: "<<msg->payload64[1]<<endl;
 		//cout<<"Value 3: "<<msg->payload64[2]<<endl;
 		//cout<<"Value 4: "<<msg->payload64[3]<<endl;
-	cout<<"--------------------------------------------------------------------------"<<endl;
+		cout<<"--------------------------------------------------------------------------"<<endl;
+
+		delete msgt;
+		delete x;
+
+		msgt = NULL;
+		x = NULL;
 	}
 }
 
