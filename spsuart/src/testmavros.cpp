@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "px_comm/OpticalFlow.h"
 #include <mavros/OverrideRCIn.h>
+#include <mavros/Mavlink.h>
 #include <roscopter/VFR_HUD.h>
 #include <ros_opencv/Diffmessage.h>
 #include <ros_opencv/TrackingPoint.h>
@@ -40,6 +41,18 @@ void flowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
 	cout<<"Flow altitude: "<< distance<<endl;
 	//cout<<"Velocity x: "<<velx<<endl;
 	cout<<"Velocity y: "<<yLinearVelocity<<endl;
+}
+
+void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
+	//178
+	if(msg->msgid==173){
+		cout<<(const uint16_t*)((char *)((msg)->payload64[0])) <<endl;
+		cout<<"Value 1: "<<msg->payload64[0]<<endl;
+		//cout<<"Value 2: "<<msg->payload64[1]<<endl;
+		//cout<<"Value 3: "<<msg->payload64[2]<<endl;
+		//cout<<"Value 4: "<<msg->payload64[3]<<endl;
+	cout<<"--------------------------------------------------------------------------"<<endl;
+	}
 }
 
 void updatePID(){
@@ -86,6 +99,7 @@ double y=msgs->pointY;
 		roll=1500 + 75*((x-320)/320);
 	}
 	
+	
 	if(x<310){
 		roll=1500 + 75*((320-x)/320);
 	}
@@ -99,7 +113,7 @@ int main(int argc, char **argv)
   
   ros::NodeHandle n;
   //ros::Subscriber subflow = n.subscribe("/px4flow/opt_flow", 1, flowCallback);
-  //ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
+  ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
   //image_transport::ImageTransport it_(n);
   //image_transport::Subscriber flow_image_sub_;
   //flow_image_sub_ = it_.subscribe("/px4flow/camera_image", 1, flowImageCallback);  
@@ -111,13 +125,13 @@ int main(int argc, char **argv)
   while(ros::ok()){
 	msg.channels[0]=msg.CHAN_RELEASE;
 	msg.channels[1]=msg.CHAN_RELEASE;
-        msg.channels[2]=1200;
-        msg.channels[3]=msg.CHAN_RELEASE;
-    	msg.channels[4]=msg.CHAN_RELEASE;
-    	msg.channels[5]=msg.CHAN_RELEASE;
+    msg.channels[2]=msg.CHAN_RELEASE;
+    msg.channels[3]=msg.CHAN_RELEASE;
+    msg.channels[4]=msg.CHAN_RELEASE;
+    msg.channels[5]=msg.CHAN_RELEASE;
 	msg.channels[6]=msg.CHAN_RELEASE;
-    	msg.channels[7]=msg.CHAN_RELEASE;
-        rc_pub.publish(msg);  
+    msg.channels[7]=msg.CHAN_RELEASE;
+    rc_pub.publish(msg);  
 	updatePID();  
  	ros::spinOnce();
  	r.sleep();	
