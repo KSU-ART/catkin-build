@@ -2,6 +2,7 @@
 #include "px_comm/OpticalFlow.h"
 #include <mavros/OverrideRCIn.h>
 #include <mavros/VFR_HUD.h>
+#include <mavros/Mavlink.h>
 #include <ros_opencv/TrackingPoint.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -15,6 +16,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include "PIDController.h"
 #include <sstream>
+#include "mavlink/v1.0/ardupilotmega/mavlink.h"
 
 using namespace std;
 using namespace cv;
@@ -25,13 +27,65 @@ Publisher rc_pub;
 int throttle=1000;
 int roll=1500;
 int pitch=1500;
+double alt = 5;
 //PIDController* xPosCtrl = PIDController();
 //PIDController* yPosCtrl = PIDController();
 PIDController* altPosCtrl = new PIDController();
+mavlink_message_t* msgt = NULL;
+__mavlink_rangefinder_t* x = NULL;
 
-double nowTimeVFRHUD = 0;
+//double nowTimeVFRHUD = 0;
+double nowTimeALT = 0;
 double nowTimeImagePoint = 0;
 
+
+void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
+	if(msg->msgid==173){
+
+		if(msgt == NULL)
+		{
+			msgt = new mavlink_message_t();
+		}
+
+		if(x == NULL)
+		{
+			x = new __mavlink_rangefinder_t();
+		}
+
+		msgt->seq = msg->seq;
+		msgt->len = msg->len;
+		msgt->sysid = msg->sysid;
+		msgt->compid = msg->compid;
+		msgt->msgid = msg->msgid;
+		msgt->payload64[0] = msg->payload64[0];
+
+		mavlink_msg_rangefinder_decode(msgt, x); 
+		alt = x->distance;
+		cout << "distance: " << x->distance << endl;
+		cout << "Voltage: " << x->voltage << endl;
+
+		cout<<"--------------------------------------------------------------------------"<<endl;
+		
+		nowTimeALT = ros::Time::now().toSec();
+		double calc = altPosCtrl->calc(alt, nowTimeALT);
+		throttle = 1500 + calc;
+		cout<<"Setpoint: "<<altPosCtrl->getSetpoint()<<", Altitude: "<<alt<<", PID Calc: " <<calc<<endl;
+		
+		
+
+		delete msgt;
+		delete x;
+
+		msgt = NULL;
+		x = NULL;
+	}
+}
+
+
+
+//VFR_Hud based alt hold commmented out
+
+/*
 void callbackVFRHUD(const mavros::VFR_HUD::ConstPtr& msgs){
 	double alt =msgs->altitude;
 	nowTimeVFRHUD = ros::Time::now().toSec();
@@ -39,7 +93,7 @@ void callbackVFRHUD(const mavros::VFR_HUD::ConstPtr& msgs){
 	throttle = 1500 + calc;
 	cout<<"Setpoint: "<<altPosCtrl->getSetpoint()<<", Altitude: "<<alt<<", PID Calc: " <<calc<<endl;
 }
-
+*/
 
 void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
 /*
@@ -71,7 +125,8 @@ int main(int argc, char **argv)
   
   ros::NodeHandle n;
   ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
-  ros::Subscriber subVfr = n.subscribe("mavros/vfr_hud", 1, callbackVFRHUD);
+  ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
+  //ros::Subscriber subVfr = n.subscribe("mavros/vfr_hud", 1, callbackVFRHUD);
   image_transport::ImageTransport it_(n);
   image_transport::Subscriber flow_image_sub_;
   rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);	

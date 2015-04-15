@@ -31,6 +31,7 @@ mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
 
 double yLinearVelocity = 0;
+double alt = 5;
 int roll=1500;
 int pitch=1500;
 
@@ -48,7 +49,6 @@ void flowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
 }
 
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
-	//178
 	if(msg->msgid==173){
 
 		if(msgt == NULL)
@@ -69,15 +69,10 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
 		msgt->payload64[0] = msg->payload64[0];
 
 		mavlink_msg_rangefinder_decode(msgt, x); 
-
+		alt = x->distance;
 		cout << "distance: " << x->distance << endl;
 		cout << "Voltage: " << x->voltage << endl;
 
-		//cout<<(float)((char *)((msg)->payload64[0])) <<endl;
-		cout<<"Value 1: "<<msg->payload64[0]<<endl;
-		//cout<<"Value 2: "<<msg->payload64[1]<<endl;
-		//cout<<"Value 3: "<<msg->payload64[2]<<endl;
-		//cout<<"Value 4: "<<msg->payload64[3]<<endl;
 		cout<<"--------------------------------------------------------------------------"<<endl;
 
 		delete msgt;
