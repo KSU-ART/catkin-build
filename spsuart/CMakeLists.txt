@@ -14,7 +14,6 @@ find_package(catkin
   ros_opencv
   cv_bridge
   image_transport
-  serial
   mavros
 )
 
@@ -89,7 +88,7 @@ find_package(catkin
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES spsuart
-  CATKIN_DEPENDS cv_bridge image_transport roscopter roscpp rospy std_msgs message_runtime ros_opencv serial mavros
+  CATKIN_DEPENDS cv_bridge image_transport roscopter roscpp rospy std_msgs message_runtime ros_opencv mavros
 #  DEPENDS system_lib
 )
 
@@ -110,15 +109,10 @@ find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 ## Declare a cpp executable
 add_executable(mavros_flight_test src/mavros_flight_test.cpp include/PIDController.cpp)
-add_executable(alt_hold src/alt_hold.cpp)
 add_executable(log_watcher src/log_watcher.cpp)
 #add_executable(follow_lines src/follow_line.cpp)
 add_executable(follow_irobot src/follow_irobot.cpp)
 add_executable(mission7 src/mission7.cpp)
-add_executable(sensor_fusion src/sensor_fusion.cpp)
-add_executable(phidget_based_flight src/phidget_based_flight.cpp include/PIDController.cpp)
-add_executable(velocity_test src/velocity_test include/PIDController.cpp)
-add_executable(auto_pan_tilt src/auto_pan_tilt.cpp)
 #add_executable(sensor_test src/sensor_test include/PIDController.cpp)
 add_executable(testmavros src/testmavros.cpp include/PIDController.cpp)
 ## Add cmake target dependencies of the executable/library
@@ -128,16 +122,10 @@ add_dependencies(log_watcher spsuart_generate_messages_cpp)
 #add_dependencies(follow_lines spsuart_generate_messages_cpp)
 add_dependencies(follow_irobot spsuart_generate_messages_cpp)
 add_dependencies(mission7 spsuart_generate_messages_cpp)
-add_dependencies(sensor_fusion spsuart_generate_messages_cpp)
-add_dependencies(auto_pan_tilt spsuart_generate_messages_cpp)
-add_dependencies(phidget_based_flight spsuart_generate_messages_cpp)
-add_dependencies(velocity_test spsuart_generate_messages_cpp)
 #add_dependencies(sensor_test spsuart_generate_messages_cpp)
 add_dependencies(testmavros spsuart_generate_messages_cpp)
 ## Specify libraries to link a library or executable target against
- target_link_libraries(alt_hold
-   ${catkin_LIBRARIES}
- )
+
  target_link_libraries(log_watcher
    ${catkin_LIBRARIES}
  )
@@ -148,18 +136,6 @@ add_dependencies(testmavros spsuart_generate_messages_cpp)
    ${catkin_LIBRARIES}
  )
   target_link_libraries(mission7
-   ${catkin_LIBRARIES}
- )
-  target_link_libraries(sensor_fusion
-   ${catkin_LIBRARIES}
- )
-  target_link_libraries(auto_pan_tilt
-   ${catkin_LIBRARIES}
- )
-   target_link_libraries(phidget_based_flight
-   ${catkin_LIBRARIES}
- )
- target_link_libraries(velocity_test
    ${catkin_LIBRARIES}
  )
 # target_link_libraries(sensor_test

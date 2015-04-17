@@ -1,168 +1,137 @@
-#include "ros/ros.h"
-#include "px_comm/OpticalFlow.h"
-#include <mavros/OverrideRCIn.h>
-#include <mavros/VFR_HUD.h>
-#include <mavros/Mavlink.h>
-#include <ros_opencv/TrackingPoint.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
-#include "opencv/cv.h"
-#include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/features2d.hpp"
-#include "opencv2/calib3d/calib3d.hpp"
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <sensor_msgs/image_encodings.h>
-#include "PIDController.h"
-#include <sstream>
-#include "mavlink/v1.0/ardupilotmega/mavlink.h"
+#include "spsuart/Autonomous.h"
 
 using namespace std;
 using namespace cv;
-using namespace ros;  
+  
+namespace enc = sensor_msgs::image_encodings;        
 
-namespace enc = sensor_msgs::image_encodings;	
-Publisher rc_pub;
-int throttle=1000;
-int roll=1500;
-int pitch=1500;
-double alt = 5;
+int throttle = LOW_PWM;
+int roll = MID_PWM;
+int pitch = MID_PWM;
+
+double alt = 5.0; // current altitude in meters
+
+// Instantiate PID controllers
 //PIDController* xPosCtrl = PIDController();
 //PIDController* yPosCtrl = PIDController();
 PIDController* altPosCtrl = new PIDController();
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
 
-//double nowTimeVFRHUD = 0;
+// Time reference for PID controllers
 double nowTimeALT = 0;
 double nowTimeImagePoint = 0;
 
 
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
-	if(msg->msgid==173){
+        if(msg->msgid==173){
 
-		if(msgt == NULL)
-		{
-			msgt = new mavlink_message_t();
-		}
+                if(msgt == NULL)
+                        msgt = new mavlink_message_t();
 
-		if(x == NULL)
-		{
-			x = new __mavlink_rangefinder_t();
-		}
+                if(x == NULL)
+                        x = new __mavlink_rangefinder_t();
 
-		msgt->seq = msg->seq;
-		msgt->len = msg->len;
-		msgt->sysid = msg->sysid;
-		msgt->compid = msg->compid;
-		msgt->msgid = msg->msgid;
-		msgt->payload64[0] = msg->payload64[0];
+                msgt->seq = msg->seq;
+                msgt->len = msg->len;
+                msgt->sysid = msg->sysid;
+                msgt->compid = msg->compid;
+                msgt->msgid = msg->msgid;
+                msgt->payload64[0] = msg->payload64[0];
 
-		mavlink_msg_rangefinder_decode(msgt, x); 
-		alt = x->distance;
-		cout << "distance: " << x->distance << endl;
-		cout << "Voltage: " << x->voltage << endl;
+                mavlink_msg_rangefinder_decode(msgt, x); 
+                alt = x->distance;
+                
+                nowTimeALT = ros::Time::now().toSec();
+                
+                // increase (or decrease?) altitude based on value from pid
+                throttle = MID_PWM + altPosCtrl->calc(alt, nowTimeALT);
 
-		cout<<"--------------------------------------------------------------------------"<<endl;
-		
-		nowTimeALT = ros::Time::now().toSec();
-		double calc = altPosCtrl->calc(alt, nowTimeALT);
-		throttle = 1500 + calc;
-		cout<<"Setpoint: "<<altPosCtrl->getSetpoint()<<", Altitude: "<<alt<<", PID Calc: " <<calc<<endl;
-		
-		
+                delete msgt;
+                delete x;
 
-		delete msgt;
-		delete x;
-
-		msgt = NULL;
-		x = NULL;
-	}
+                msgt = NULL;
+                x = NULL;
+        }
 }
-
-
-
-//VFR_Hud based alt hold commmented out
-
-/*
-void callbackVFRHUD(const mavros::VFR_HUD::ConstPtr& msgs){
-	double alt =msgs->altitude;
-	nowTimeVFRHUD = ros::Time::now().toSec();
-	double calc = altPosCtrl->calc(alt, nowTimeVFRHUD);
-	throttle = 1500 + calc;
-	cout<<"Setpoint: "<<altPosCtrl->getSetpoint()<<", Altitude: "<<alt<<", PID Calc: " <<calc<<endl;
-}
-*/
 
 void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
 /*
+// Get X and Y coordinates of color center in image
 double x=msgs->pointX;
 double y=msgs->pointY;
 
+// Get the current time for the PID controllers
 nowTimeImagePoint = = ros::Time::now().toSec();
 
-if(x<0 || y<0){
-		roll=1500;
-		pitch=1500;
-		xPosCtrl->calc(xPosCtrl->getSetpoint(), nowTimeImagePoint);
-		yPosCtrl->calc(yPosCtrl->getSetpoint(), nowTimeImagePoint);
-		return;
-	}
-
-	else {
-		roll = 1500 - xPosCtrl->calc(x, nowTimeImagePoint);
-		pitch = 1500 - xPosCtrl->calc(y, nowTimeImagePoint);
-	}
-*/	
+// If color not detected in image, hold position and keep the current time up-to-date in the PID controllers
+if(x<0 || y<0) {
+                roll=MID_PWM;
+                pitch=MID_PWM;
+                xPosCtrl->calc(xPosCtrl->getSetpoint(), nowTimeImagePoint);
+                yPosCtrl->calc(yPosCtrl->getSetpoint(), nowTimeImagePoint);
+        }
+        // Color center detected in image, calculate roll and pitch corrections to move the hexacopter over the object.
+        else {
+                roll = MID_PWM - xPosCtrl->calc(x, nowTimeImagePoint);
+                pitch = MID_PWM - yPosCtrl->calc(y, nowTimeImagePoint);
+        }
+*/        
 }
-
 
 int main(int argc, char **argv)
 {
- 
+  //ROS node init and NodeHandle init
   ros::init(argc, argv, "mavros_flight_test");
-  
   ros::NodeHandle n;
+  
+  //Image and mavlink message subscriber
   ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
   ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
-  //ros::Subscriber subVfr = n.subscribe("mavros/vfr_hud", 1, callbackVFRHUD);
-  image_transport::ImageTransport it_(n);
-  image_transport::Subscriber flow_image_sub_;
-  rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);	
+  
+  //Mavros rc override publisher
+  ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+  
+  //RC msg container that will be sent to the FC @ fcuCommRate hz
   mavros::OverrideRCIn msg;
-  ros::Rate r(45);
-
+  ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
+  
+  // The amount of PID stuff here is ridiculous but my constructors in the PIDController class are broken so this is the workaround =(
+  // Initialize PID controller gains
   //xPosCtrl.setGains(1, 0, 0);
   //yPosCtrl.setGains(1, 0, 0);
   altPosCtrl->setGains(500, 0.0, 0);
-
+  
+  // Initialize PID controller constraints
   //xPosCtrl.setConstraints(-100, 100);
   //yPosCtrl.setConstraints(-100, 100);
   altPosCtrl->setConstraints(-300, 300);
   
+  // Zero out differentiator, integrator, and time variables in the PID controllers
   //xPosCtrl.init();
   //yPosCtrl.init();
   altPosCtrl->init();
   
-  //xPosCtrl.targetSetpoint(320);
-  //yPosCtrl.targetSetpoint(240);
-  altPosCtrl->targetSetpoint(2.0);
+  // Set PID controller targets  
+  //xPosCtrl.targetSetpoint(320); // target X coordinate in pixels
+  //yPosCtrl.targetSetpoint(240); // target Y coordinate in pixels
+  altPosCtrl->targetSetpoint(2.0); // target altitude in meters
 
- while(ros::ok()){
-		msg.channels[0]=msg.CHAN_NOCHANGE;//roll;
-		msg.channels[1]=msg.CHAN_NOCHANGE;//pitch;
-       	msg.channels[2]=throttle;
-        msg.channels[3]=msg.CHAN_NOCHANGE;
-        msg.channels[4]=2000;
-        msg.channels[5]=msg.CHAN_NOCHANGE;
-	    msg.channels[6]=msg.CHAN_NOCHANGE;
-    	msg.channels[7]=msg.CHAN_NOCHANGE;
+    //While node is alive send RC values to the FC @ fcuCommRate hz
+    while(ros::ok()){
+        msg.channels[ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
+        msg.channels[PITCH_CHANNEL]=msg.CHAN_NOCHANGE;
+        msg.channels[THROTTLE_CHANNEL]=throttle;
+        msg.channels[YAW_CHANNEL]=msg.CHAN_NOCHANGE;
+        msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
+        msg.channels[NOT_USED_CHANNEL]=msg.CHAN_NOCHANGE;
+        msg.channels[GIMBAL_ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
+        msg.channels[GIMBAL_YAW_CHANNEL]=msg.CHAN_NOCHANGE;
+        
         rc_pub.publish(msg);  
- 	    ros::spinOnce();
- 	    r.sleep();	
-	}
+        ros::spinOnce();
+        fcuCommRate.sleep();        
+    }
 
-  return 0;
+    return 0;
 }
-
