@@ -75,12 +75,13 @@ void PIDController::init() {
     setpoint = 0;
     integrator = 0;
     lastError = 0;
+	lastProcessVariable = 123456;
     lastTime = 0;    
 }
 
 bool PIDController::isSettled() {
 
-	double percent = 1-((setpoint + lastError)/setpoint);
+	double percent = 1-(lastProcessVariable/setpoint);
 
 	cout<<"Percent: "<<percent<<endl;	
 
@@ -107,6 +108,7 @@ double PIDController::calc(double processVariable, double nowTime) {
         controlVariable = upperConstraint;
     }
     lastError = error;
+	lastProcessVariable = processVariable;
     lastTime = nowTime;
     
     return controlVariable;

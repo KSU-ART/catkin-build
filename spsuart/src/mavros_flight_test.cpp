@@ -1,4 +1,5 @@
 #include "spsuart/autonomous.h"
+#include <termios.h>
 
 #define LANDING_ALTITUDE 0.5
 
@@ -97,6 +98,37 @@ int constrain(int value, int min, int max)
 	}
 }
 
+int getchNonBlocking()
+{
+  struct termios initial_settings,
+               new_settings;
+  int n;
+ 
+  unsigned char key;
+ 
+ 
+ 
+  tcgetattr(0,&initial_settings);
+ 
+  new_settings = initial_settings;
+  new_settings.c_lflag &= ~ICANON;
+  new_settings.c_lflag &= ~ECHO;
+  new_settings.c_lflag &= ~ISIG;
+  new_settings.c_cc[VMIN] = 0;
+  new_settings.c_cc[VTIME] = 0;
+ 
+  tcsetattr(0, TCSANOW, &new_settings);
+
+    n = getchar();
+
+    key = n;
+
+ 
+    tcsetattr(0, TCSANOW, &initial_settings);
+    
+    return key;
+}
+
 int main(int argc, char **argv)
 {
   //ROS node init and NodeHandle init
@@ -134,30 +166,46 @@ int main(int argc, char **argv)
   //xPosCtrl.targetSetpoint(320); // target X coordinate in pixels
   //yPosCtrl.targetSetpoint(240); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
-
+  int inputChar = 'a';
+  
+  bool land = false;
+  
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
 
 		
-		if(altPosCtrl->isSettled() && target_altitude == LANDING_ALTITUDE)
+		if(altPosCtrl->isSettled() && target_altitude == 2.0)
 		{
 			target_altitude = LANDING_ALTITUDE;
   			altPosCtrl->targetSetpoint(target_altitude); 
 		}
+		
+			msg.channels[ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
+			msg.channels[PITCH_CHANNEL]=msg.CHAN_NOCHANGE;
+			msg.channels[THROTTLE_CHANNEL]=throttle;
+			msg.channels[YAW_CHANNEL]=msg.CHAN_NOCHANGE;
+			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
+			msg.channels[NOT_USED_CHANNEL]=msg.CHAN_NOCHANGE;
+			msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
+			msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
+		
+		inputChar = getchNonBlocking();   // call non-blocking input function
+		
+		if(inputChar == ' ' || land){
+			if(!land){
+				land= true;
+				cout<<"EMERGENCY LAND ENGAGED"<<endl;
+		    }
 
-        msg.channels[ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[PITCH_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[THROTTLE_CHANNEL]=throttle;
-        msg.channels[YAW_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
-        msg.channels[NOT_USED_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
-        msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
-        
-        rc_pub.publish(msg);  
+			msg.channels[THROTTLE_CHANNEL]=msg.CHAN_NOCHANGE;
+			msg.channels[MODE_CHANNEL]=LAND_MODE;
+
+		}
+		
+		rc_pub.publish(msg);  
         ros::spinOnce();
-        fcuCommRate.sleep();        
-    }
-
+        fcuCommRate.sleep();
+		
+	}
     return 0;
 }

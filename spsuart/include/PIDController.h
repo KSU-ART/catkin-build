@@ -24,7 +24,7 @@ class PIDController {
         double getKp();
         double getKi();
         double getKd();
-        
+
         void init();
         bool isSettled();
         double calc(double feedback, double nowTime);
@@ -35,6 +35,7 @@ class PIDController {
         double kp, ki, kd;
         double lowerConstraint, upperConstraint;
         double lastError;
+		double lastProcessVariable;
         double lastTime;
         double integrator;
         
