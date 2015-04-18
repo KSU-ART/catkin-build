@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "px_comm/OpticalFlow.h"
 #include <mavros/OverrideRCIn.h>
+#include <mavros/Mavlink.h>
 #include <roscopter/VFR_HUD.h>
 #include <ros_opencv/Diffmessage.h>
 #include <ros_opencv/TrackingPoint.h>
@@ -17,6 +18,8 @@
 #include "PIDController.h"
 #include <sstream>
 
+#include "mavlink/v1.0/ardupilotmega/mavlink.h"
+
 using namespace std;
 using namespace cv;
 using namespace ros;  
@@ -24,8 +27,11 @@ using namespace ros;
 namespace enc = sensor_msgs::image_encodings;	
 PIDController* rateController = new PIDController();
 Publisher rc_pub;
+mavlink_message_t* msgt = NULL;
+__mavlink_rangefinder_t* x = NULL;
 
 double yLinearVelocity = 0;
+double alt = 5;
 int roll=1500;
 int pitch=1500;
 
@@ -40,6 +46,41 @@ void flowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
 	cout<<"Flow altitude: "<< distance<<endl;
 	//cout<<"Velocity x: "<<velx<<endl;
 	cout<<"Velocity y: "<<yLinearVelocity<<endl;
+}
+
+void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
+	if(msg->msgid==173){
+
+		if(msgt == NULL)
+		{
+			msgt = new mavlink_message_t();
+		}
+
+		if(x == NULL)
+		{
+			x = new __mavlink_rangefinder_t();
+		}
+
+		msgt->seq = msg->seq;
+		msgt->len = msg->len;
+		msgt->sysid = msg->sysid;
+		msgt->compid = msg->compid;
+		msgt->msgid = msg->msgid;
+		msgt->payload64[0] = msg->payload64[0];
+
+		mavlink_msg_rangefinder_decode(msgt, x); 
+		alt = x->distance;
+		cout << "distance: " << x->distance << endl;
+		cout << "Voltage: " << x->voltage << endl;
+
+		cout<<"--------------------------------------------------------------------------"<<endl;
+
+		delete msgt;
+		delete x;
+
+		msgt = NULL;
+		x = NULL;
+	}
 }
 
 void updatePID(){
@@ -71,7 +112,7 @@ void flowImageCallback(const sensor_msgs::ImageConstPtr& msg){
    }
 }
 
-callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
+void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
 double x=msgs->pointX;
 double y=msgs->pointY;
 
@@ -79,12 +120,13 @@ double y=msgs->pointY;
 	if(x<0 || y<0){
 		roll=1500;
 		pitch=1500;
-		return;
+		//return;
 	}
 
 	if(x>330){
 		roll=1500 + 75*((x-320)/320);
 	}
+	
 	
 	if(x<310){
 		roll=1500 + 75*((320-x)/320);
@@ -98,11 +140,11 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "testmavros");
   
   ros::NodeHandle n;
-  ros::Subscriber subflow = n.subscribe("/px4flow/opt_flow", 1, flowCallback);
-  ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
-  image_transport::ImageTransport it_(n);
-  image_transport::Subscriber flow_image_sub_;
-  flow_image_sub_ = it_.subscribe("/px4flow/camera_image", 1, flowImageCallback);  
+  //ros::Subscriber subflow = n.subscribe("/px4flow/opt_flow", 1, flowCallback);
+  ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
+  //image_transport::ImageTransport it_(n);
+  //image_transport::Subscriber flow_image_sub_;
+  //flow_image_sub_ = it_.subscribe("/px4flow/camera_image", 1, flowImageCallback);  
   rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);	
   mavros::OverrideRCIn msg;
   ros::Rate r(45); 
@@ -111,13 +153,13 @@ int main(int argc, char **argv)
   while(ros::ok()){
 	msg.channels[0]=msg.CHAN_RELEASE;
 	msg.channels[1]=msg.CHAN_RELEASE;
-        msg.channels[2]=1200;
-        msg.channels[3]=msg.CHAN_RELEASE;
-    	msg.channels[4]=msg.CHAN_RELEASE;
-    	msg.channels[5]=msg.CHAN_RELEASE;
+    msg.channels[2]=msg.CHAN_RELEASE;
+    msg.channels[3]=msg.CHAN_RELEASE;
+    msg.channels[4]=msg.CHAN_RELEASE;
+    msg.channels[5]=msg.CHAN_RELEASE;
 	msg.channels[6]=msg.CHAN_RELEASE;
-    	msg.channels[7]=msg.CHAN_RELEASE;
-        rc_pub.publish(msg);  
+    msg.channels[7]=msg.CHAN_RELEASE;
+    rc_pub.publish(msg);  
 	updatePID();  
  	ros::spinOnce();
  	r.sleep();	
