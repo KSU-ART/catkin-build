@@ -34,7 +34,7 @@ class ColorDetector
             : it_(nh_)
         {
             result_pub= nh_.advertise<ros_opencv::TrackingPoint>("test/image_point" , 1);
-            image_sub_ = it_.subscribe("/image_raw", 1, &ColorDetector::imageCb, this);
+            image_sub_ = it_.subscribe("/camera/rgb/image_raw", 1, &ColorDetector::imageCb, this);
         }
 
         ~ColorDetector()

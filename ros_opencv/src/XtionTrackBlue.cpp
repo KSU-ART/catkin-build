@@ -51,11 +51,11 @@ public:
 MyClass() :
 it_(nh_),
 #if USE_IMAGE_TRANSPORT_SUBSCRIBER_FILTER
-rgb_image_sub_( it_, "/rgb/image_raw", 1 ),
-depth_image_sub_( it_, "/depth/image_raw", 1 ),
+rgb_image_sub_( it_, "camera/rgb/image_raw", 1 ),
+depth_image_sub_( it_, "camera/depth/image_raw", 1 ),
 #else
-orig_image_sub_( nh_, "rgb/image_raw", 1 ),
-warp_image_sub_( nh_, "depth/image_raw", 1 ),
+orig_image_sub_( nh_, "camera/rgb/image_raw", 1 ),
+warp_image_sub_( nh_, "camera/depth/image_raw", 1 ),
 #endif
 sync( MySyncPolicy(2), rgb_image_sub_, depth_image_sub_ )
 {

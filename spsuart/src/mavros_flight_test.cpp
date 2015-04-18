@@ -1,4 +1,6 @@
-#include "spsuart/Autonomous.h"
+#include "spsuart/autonomous.h"
+
+#define LANDING_ALTITUDE 0.5
 
 using namespace std;
 using namespace cv;
@@ -9,7 +11,7 @@ int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
 
-double alt = 5.0; // current altitude in meters
+double target_altitude = 2.0;
 
 // Instantiate PID controllers
 //PIDController* xPosCtrl = PIDController();
@@ -40,14 +42,14 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
                 msgt->payload64[0] = msg->payload64[0];
 
                 mavlink_msg_rangefinder_decode(msgt, x); 
-                alt = x->distance;
-                
+                                
                 nowTimeALT = ros::Time::now().toSec();
                 
                 // increase (or decrease?) altitude based on value from pid
-                throttle = MID_PWM + altPosCtrl->calc(alt, nowTimeALT);
-
-                delete msgt;
+				cout<<"Altitude :"<<x->distance<<endl;                
+		double out = altPosCtrl->calc(double(x->distance), nowTimeALT);
+                throttle = MID_PWM + out;
+		delete msgt;
                 delete x;
 
                 msgt = NULL;
@@ -77,6 +79,22 @@ if(x<0 || y<0) {
                 pitch = MID_PWM - yPosCtrl->calc(y, nowTimeImagePoint);
         }
 */        
+}
+
+int constrain(int value, int min, int max)
+{
+	if(value > max)
+	{
+		return max;
+	}
+	else if(value < min)
+	{
+		return min;
+	}
+	else
+	{
+		return value;
+	}
 }
 
 int main(int argc, char **argv)
@@ -115,18 +133,26 @@ int main(int argc, char **argv)
   // Set PID controller targets  
   //xPosCtrl.targetSetpoint(320); // target X coordinate in pixels
   //yPosCtrl.targetSetpoint(240); // target Y coordinate in pixels
-  altPosCtrl->targetSetpoint(2.0); // target altitude in meters
+  altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
 
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
+
+		
+		if(altPosCtrl->isSettled() && target_altitude == LANDING_ALTITUDE)
+		{
+			target_altitude = LANDING_ALTITUDE;
+  			altPosCtrl->targetSetpoint(target_altitude); 
+		}
+
         msg.channels[ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
         msg.channels[PITCH_CHANNEL]=msg.CHAN_NOCHANGE;
         msg.channels[THROTTLE_CHANNEL]=throttle;
         msg.channels[YAW_CHANNEL]=msg.CHAN_NOCHANGE;
         msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
         msg.channels[NOT_USED_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[GIMBAL_ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[GIMBAL_YAW_CHANNEL]=msg.CHAN_NOCHANGE;
+        msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
+        msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
         
         rc_pub.publish(msg);  
         ros::spinOnce();

@@ -7,6 +7,7 @@
 
 #include "PIDController.h"
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -75,6 +76,25 @@ void PIDController::init() {
     integrator = 0;
     lastError = 0;
     lastTime = 0;    
+}
+
+bool PIDController::isSettled() {
+
+	cout << "Setpoint: " << setpoint << endl;
+	cout << "Lasterror: " << lastError << endl;
+
+	double percent = (1-(setpoint + lastError))/setpoint;
+
+	cout<<"Percent: "<<percent<<endl;	
+
+	if(abs(percent) < 0.02)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 double PIDController::calc(double processVariable, double nowTime) {

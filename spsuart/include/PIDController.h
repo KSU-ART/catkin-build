@@ -26,6 +26,7 @@ class PIDController {
         double getKd();
         
         void init();
+        bool isSettled();
         double calc(double feedback, double nowTime);
 
         
