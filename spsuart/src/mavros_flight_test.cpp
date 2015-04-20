@@ -1,4 +1,5 @@
 #include "spsuart/autonomous.h"
+#include <termios.h>
 
 #define LANDING_ALTITUDE 0.5
 
@@ -11,11 +12,13 @@ int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
 
-double target_altitude = 2.0;
+bool xy_idle = false;
+
+double target_altitude = 2.5;
 
 // Instantiate PID controllers
-//PIDController* xPosCtrl = PIDController();
-//PIDController* yPosCtrl = PIDController();
+PIDController* xPosCtrl = new PIDController();
+PIDController* yPosCtrl = new PIDController();
 PIDController* altPosCtrl = new PIDController();
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
@@ -58,27 +61,27 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
 }
 
 void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
-/*
+
 // Get X and Y coordinates of color center in image
 double x=msgs->pointX;
 double y=msgs->pointY;
 
 // Get the current time for the PID controllers
-nowTimeImagePoint = = ros::Time::now().toSec();
+nowTimeImagePoint = ros::Time::now().toSec();
 
 // If color not detected in image, hold position and keep the current time up-to-date in the PID controllers
 if(x<0 || y<0) {
-                roll=MID_PWM;
-                pitch=MID_PWM;
+                xy_idle = true;
                 xPosCtrl->calc(xPosCtrl->getSetpoint(), nowTimeImagePoint);
                 yPosCtrl->calc(yPosCtrl->getSetpoint(), nowTimeImagePoint);
         }
         // Color center detected in image, calculate roll and pitch corrections to move the hexacopter over the object.
         else {
-                roll = MID_PWM - xPosCtrl->calc(x, nowTimeImagePoint);
+                xy_idle = false;
+                roll = MID_PWM + xPosCtrl->calc(x, nowTimeImagePoint);
                 pitch = MID_PWM - yPosCtrl->calc(y, nowTimeImagePoint);
         }
-*/        
+       
 }
 
 int constrain(int value, int min, int max)
@@ -97,6 +100,37 @@ int constrain(int value, int min, int max)
 	}
 }
 
+int getchNonBlocking()
+{
+  struct termios initial_settings,
+               new_settings;
+  int n;
+ 
+  unsigned char key;
+ 
+ 
+ 
+  tcgetattr(0,&initial_settings);
+ 
+  new_settings = initial_settings;
+  new_settings.c_lflag &= ~ICANON;
+  new_settings.c_lflag &= ~ECHO;
+  new_settings.c_lflag &= ~ISIG;
+  new_settings.c_cc[VMIN] = 0;
+  new_settings.c_cc[VTIME] = 0;
+ 
+  tcsetattr(0, TCSANOW, &new_settings);
+
+    n = getchar();
+
+    key = n;
+
+ 
+    tcsetattr(0, TCSANOW, &initial_settings);
+    
+    return key;
+}
+
 int main(int argc, char **argv)
 {
   //ROS node init and NodeHandle init
@@ -104,7 +138,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   
   //Image and mavlink message subscriber
-  ros::Subscriber subpoint = n.subscribe("test/image_point", 1, callbackImagePoint);
+  ros::Subscriber subpoint = n.subscribe("image_point", 1, callbackImagePoint);
   ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
   
   //Mavros rc override publisher
@@ -116,48 +150,73 @@ int main(int argc, char **argv)
   
   // The amount of PID stuff here is ridiculous but my constructors in the PIDController class are broken so this is the workaround =(
   // Initialize PID controller gains
-  //xPosCtrl.setGains(1, 0, 0);
-  //yPosCtrl.setGains(1, 0, 0);
+  xPosCtrl->setGains(.25, 0, 0);
+  yPosCtrl->setGains(.32, 0, 0);
   altPosCtrl->setGains(500, 0.0, 0);
   
   // Initialize PID controller constraints
-  //xPosCtrl.setConstraints(-100, 100);
-  //yPosCtrl.setConstraints(-100, 100);
+  xPosCtrl->setConstraints(-60, 60);
+  yPosCtrl->setConstraints(-60, 60);
   altPosCtrl->setConstraints(-300, 300);
   
   // Zero out differentiator, integrator, and time variables in the PID controllers
-  //xPosCtrl.init();
-  //yPosCtrl.init();
+  xPosCtrl->init();
+  yPosCtrl->init();
   altPosCtrl->init();
   
   // Set PID controller targets  
-  //xPosCtrl.targetSetpoint(320); // target X coordinate in pixels
-  //yPosCtrl.targetSetpoint(240); // target Y coordinate in pixels
+  xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
+  yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
-
+  int inputChar = 'a';
+  
+  bool land = false;
+  
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
 
 		
-		if(altPosCtrl->isSettled() && target_altitude == LANDING_ALTITUDE)
-		{
-			target_altitude = LANDING_ALTITUDE;
-  			altPosCtrl->targetSetpoint(target_altitude); 
+		//if(altPosCtrl->isSettled() && target_altitude == 2.0)
+		//{
+		//	target_altitude = LANDING_ALTITUDE;
+  		//	altPosCtrl->targetSetpoint(target_altitude); 
+		//}
+		
+			if(xy_idle)
+			{
+				msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
+				msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
+		    }	
+		    else{
+				msg.channels[ROLL_CHANNEL]=roll;
+				msg.channels[PITCH_CHANNEL]=pitch;
+			}
+			msg.channels[THROTTLE_CHANNEL]=throttle;
+			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
+			msg.channels[NOT_USED_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
+			msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
+		
+		inputChar = getchNonBlocking();   // call non-blocking input function
+		
+		if(inputChar == ' ' || land){
+			if(!land){
+				land= true;
+				cout<<"EMERGENCY LAND ENGAGED"<<endl;
+		    }
+			
+			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[MODE_CHANNEL]=LAND_MODE;
+
 		}
-
-        msg.channels[ROLL_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[PITCH_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[THROTTLE_CHANNEL]=throttle;
-        msg.channels[YAW_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
-        msg.channels[NOT_USED_CHANNEL]=msg.CHAN_NOCHANGE;
-        msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
-        msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
-        
-        rc_pub.publish(msg);  
+		
+		rc_pub.publish(msg);  
         ros::spinOnce();
-        fcuCommRate.sleep();        
-    }
-
+        fcuCommRate.sleep();
+		
+	}
     return 0;
 }

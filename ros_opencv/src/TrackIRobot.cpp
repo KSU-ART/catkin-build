@@ -33,7 +33,7 @@ class ColorDetector
         ColorDetector()
             : it_(nh_)
         {
-            result_pub= nh_.advertise<ros_opencv::TrackingPoint>("test/image_point" , 1);
+            result_pub= nh_.advertise<ros_opencv::TrackingPoint>("image_point" , 1);
             image_sub_ = it_.subscribe("/camera/rgb/image_raw", 1, &ColorDetector::imageCb, this);
         }
 
@@ -82,8 +82,9 @@ class ColorDetector
 
             resize(frame,frameSmall,Size(640,480));
 
-            Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(0,100,50), (_InputArray)cvScalar(5,255,150));
-            Mat imgRedThresh2 = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(175,100,100), (_InputArray)cvScalar(180,255,255));
+            Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(0,254,254), (_InputArray)cvScalar(6,255,255));
+            Mat imgRedThresh2 = GetThresholdedImage(frameSmall,
+(_InputArray)cvScalar(170,150,60), (_InputArray)cvScalar(180,255,255));
 
             resize(imgRedThresh,threshSmallRed,Size(640,480));
             resize(imgRedThresh2,threshSmallRed2,Size(640,480));
@@ -112,7 +113,7 @@ class ColorDetector
             int posX;
             int posY;
 
-            if(threshVector.size()>150) {
+            if(threshVector.size()>300) {
                 posX = moment10/area;
                 posY = moment01/area;
             }
@@ -128,8 +129,8 @@ class ColorDetector
 
             circle(frameSmall, Point(posX,posY), 30, cvScalar(255,0,0), 5, 8, 0);
 
-            imshow("ColorTrackerRGB", frameSmall);
-            imshow("ColorTrackerThresh", finalImage);
+            //imshow("ColorTrackerRGB", frameSmall);
+            //imshow("ColorTrackerThresh", finalImage);
             cv::waitKey(3);
 
             threshSmallRed.release();
