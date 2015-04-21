@@ -14,7 +14,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/image_encodings.h>
 //#include <SerialStream.h>
-#include "PIDController.h"
+#include "spsuart/pid-controller/PIDController.h"
 #include <sstream>
 
 //using namespace LibSerial;

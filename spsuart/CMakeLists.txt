@@ -108,14 +108,14 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 ## Declare a cpp executable
-add_executable(mavros_flight_test src/mavros_flight_test.cpp include/PIDController.cpp)
-add_executable(servo_test src/servo_test.cpp include/PIDController.cpp)
+add_executable(mavros_flight_test src/mavros_flight_test.cpp)
+add_executable(servo_test src/servo_test.cpp) 
 add_executable(log_watcher src/log_watcher.cpp)
 #add_executable(follow_lines src/follow_line.cpp)
 add_executable(follow_irobot src/follow_irobot.cpp)
 add_executable(mission7 src/mission7.cpp)
-#add_executable(sensor_test src/sensor_test include/PIDController.cpp)
-add_executable(testmavros src/testmavros.cpp include/PIDController.cpp)
+#add_executable(sensor_test src/sensor_test)
+add_executable(testmavros src/testmavros.cpp)
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 #add_dependencies(alt_hold spsuart_generate_messages_cpp)

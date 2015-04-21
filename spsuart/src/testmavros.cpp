@@ -15,7 +15,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <sensor_msgs/image_encodings.h>
-#include "PIDController.h"
+#include "spsuart/pid-controller/PIDController.h"
 #include <sstream>
 
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
