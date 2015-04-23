@@ -103,12 +103,18 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(spsuart
-#   src/${PROJECT_NAME}/PIDloop.h
+#   src/${PROJECT_NAME}/PIDLoop.h
 # )
+
+add_library(pid-controller
+	include/spsuart/pid-controller/PIDController.cpp
+)
+
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 ## Declare a cpp executable
 add_executable(mavros_flight_test src/mavros_flight_test.cpp)
+# include/spsuart/pid-controller/PIDController.cpp)
 add_executable(servo_test src/servo_test.cpp) 
 add_executable(log_watcher src/log_watcher.cpp)
 #add_executable(follow_lines src/follow_line.cpp)
@@ -148,12 +154,15 @@ add_dependencies(testmavros spsuart_generate_messages_cpp)
  
   target_link_libraries(testmavros
    ${catkin_LIBRARIES}
+   pid-controller
  )
  target_link_libraries(mavros_flight_test
    ${catkin_LIBRARIES}
+   pid-controller
  )
  target_link_libraries(servo_test
    ${catkin_LIBRARIES}
+   pid-controller
  ) 
 #############
 ## Install ##
