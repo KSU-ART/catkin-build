@@ -18,7 +18,7 @@ find_package(catkin
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system chrono timer)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -89,7 +89,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES spsuart
   CATKIN_DEPENDS cv_bridge image_transport roscopter roscpp rospy std_msgs message_runtime ros_opencv mavros
-#  DEPENDS system_lib
+#  DEPENDS system_lib boost
 )
 
 ###########
@@ -99,7 +99,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(spsuart
@@ -154,16 +154,19 @@ add_dependencies(testmavros spsuart_generate_messages_cpp)
  
   target_link_libraries(testmavros
    ${catkin_LIBRARIES}
+   ${Boost_LIBRARIES}
    pid-controller
  )
  target_link_libraries(mavros_flight_test
    ${catkin_LIBRARIES}
+   ${Boost_LIBRARIES}
    pid-controller
- )
+)
  target_link_libraries(servo_test
    ${catkin_LIBRARIES}
+   ${Boost_LIBRARIES}
    pid-controller
- ) 
+) 
 #############
 ## Install ##
 #############

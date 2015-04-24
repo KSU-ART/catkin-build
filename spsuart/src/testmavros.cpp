@@ -41,8 +41,7 @@ void flowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
 	//float velx = msg->velocity_x;
 	//float vely = msg->velocity_y;
 	yLinearVelocity = -msg->velocity_y;
-	double nowTime = ros::Time::now().toSec();
-	//int dutyCycle = (rateController->calc(yLinearVelocity, nowTime) * 5) + 1500;
+	//int dutyCycle = (rateController->calc(yLinearVelocity) * 5) + 1500;
 	cout<<"Flow altitude: "<< distance<<endl;
 	//cout<<"Velocity x: "<<velx<<endl;
 	cout<<"Velocity y: "<<yLinearVelocity<<endl;

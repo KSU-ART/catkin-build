@@ -12,16 +12,11 @@ int pitch = MID_PWM;
 double alt = 5.0; // current altitude in meters
 
 // Instantiate PID controllers
-//PIDController* xPosCtrl = PIDController();
-//PIDController* yPosCtrl = PIDController();
-PIDController* altPosCtrl = new PIDController();
+//PIDController* xPosCtrl = PIDController(0.25,0,0,-60,60);
+//PIDController* yPosCtrl = PIDController(0,32,0,0,-60,60);
+PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
-
-// Time reference for PID controllers
-double nowTimeALT = 0;
-double nowTimeImagePoint = 0;
-
 
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
         if(msg->msgid==173){
@@ -41,11 +36,9 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
 
                 mavlink_msg_rangefinder_decode(msgt, x); 
                 alt = x->distance;
-                
-                nowTimeALT = ros::Time::now().toSec();
-                
+                               
                 // increase (or decrease?) altitude based on value from pid
-                throttle = MID_PWM + altPosCtrl->calc(alt, nowTimeALT);
+                throttle = MID_PWM + altPosCtrl->calc(alt);
 
                 delete msgt;
                 delete x;
@@ -61,20 +54,17 @@ void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
 double x=msgs->pointX;
 double y=msgs->pointY;
 
-// Get the current time for the PID controllers
-nowTimeImagePoint = = ros::Time::now().toSec();
-
 // If color not detected in image, hold position and keep the current time up-to-date in the PID controllers
 if(x<0 || y<0) {
                 roll=MID_PWM;
                 pitch=MID_PWM;
-                xPosCtrl->calc(xPosCtrl->getSetpoint(), nowTimeImagePoint);
-                yPosCtrl->calc(yPosCtrl->getSetpoint(), nowTimeImagePoint);
+                xPosCtrl->calc(xPosCtrl->getSetpoint());
+                yPosCtrl->calc(yPosCtrl->getSetpoint());
         }
         // Color center detected in image, calculate roll and pitch corrections to move the hexacopter over the object.
         else {
-                roll = MID_PWM - xPosCtrl->calc(x, nowTimeImagePoint);
-                pitch = MID_PWM - yPosCtrl->calc(y, nowTimeImagePoint);
+                roll = MID_PWM - xPosCtrl->calc(x);
+                pitch = MID_PWM - yPosCtrl->calc(y);
         }
 */        
 }
@@ -95,23 +85,7 @@ int main(int argc, char **argv)
   //RC msg container that will be sent to the FC @ fcuCommRate hz
   mavros::OverrideRCIn msg;
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
-  
-  // The amount of PID stuff here is ridiculous but my constructors in the PIDController class are broken so this is the workaround =(
-  // Initialize PID controller gains
-  //xPosCtrl.setGains(1, 0, 0);
-  //yPosCtrl.setGains(1, 0, 0);
-  altPosCtrl->setGains(500, 0.0, 0);
-  
-  // Initialize PID controller constraints
-  //xPosCtrl.setConstraints(-100, 100);
-  //yPosCtrl.setConstraints(-100, 100);
-  altPosCtrl->setConstraints(-300, 300);
-  
-  // Zero out differentiator, integrator, and time variables in the PID controllers
-  //xPosCtrl.init();
-  //yPosCtrl.init();
-  altPosCtrl->init();
-  
+   
   // Set PID controller targets  
   //xPosCtrl.targetSetpoint(320); // target X coordinate in pixels
   //yPosCtrl.targetSetpoint(240); // target Y coordinate in pixels
