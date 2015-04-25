@@ -6,7 +6,6 @@ project(spsuart)
 ## is used, also find other catkin packages
 find_package(catkin 
  COMPONENTS
-  roscopter
   roscpp
   rospy
   std_msgs
@@ -88,7 +87,7 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES spsuart
-  CATKIN_DEPENDS cv_bridge image_transport roscopter roscpp rospy std_msgs message_runtime ros_opencv mavros
+  CATKIN_DEPENDS cv_bridge image_transport roscpp rospy std_msgs message_runtime ros_opencv mavros
 #  DEPENDS system_lib boost
 )
 
@@ -112,61 +111,27 @@ add_library(pid-controller
 
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
+
 ## Declare a cpp executable
 add_executable(mavros_flight_test src/mavros_flight_test.cpp)
-# include/spsuart/pid-controller/PIDController.cpp)
-add_executable(servo_test src/servo_test.cpp) 
-add_executable(log_watcher src/log_watcher.cpp)
-#add_executable(follow_lines src/follow_line.cpp)
 add_executable(follow_irobot src/follow_irobot.cpp)
-add_executable(mission7 src/mission7.cpp)
-#add_executable(sensor_test src/sensor_test)
-add_executable(testmavros src/testmavros.cpp)
+
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-#add_dependencies(alt_hold spsuart_generate_messages_cpp)
 add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
-add_dependencies(servo_test spsuart_generate_messages_cpp)
-add_dependencies(log_watcher spsuart_generate_messages_cpp)
-#add_dependencies(follow_lines spsuart_generate_messages_cpp)
 add_dependencies(follow_irobot spsuart_generate_messages_cpp)
-add_dependencies(mission7 spsuart_generate_messages_cpp)
-#add_dependencies(sensor_test spsuart_generate_messages_cpp)
-add_dependencies(testmavros spsuart_generate_messages_cpp)
+
 ## Specify libraries to link a library or executable target against
 
- target_link_libraries(log_watcher
-   ${catkin_LIBRARIES}
- )
-# target_link_libraries(follow_lines
-#   ${catkin_LIBRARIES}
-# )
  target_link_libraries(follow_irobot
    ${catkin_LIBRARIES}
- )
-  target_link_libraries(mission7
-   ${catkin_LIBRARIES}
- )
-# target_link_libraries(sensor_test
-#   ${catkin_LIBRARIES}
-#   serial
-# )
- 
-  target_link_libraries(testmavros
-   ${catkin_LIBRARIES}
-   ${Boost_LIBRARIES}
-   pid-controller
  )
  target_link_libraries(mavros_flight_test
    ${catkin_LIBRARIES}
    ${Boost_LIBRARIES}
    pid-controller
 )
- target_link_libraries(servo_test
-   ${catkin_LIBRARIES}
-   ${Boost_LIBRARIES}
-   pid-controller
-) 
+ 
 #############
 ## Install ##
 #############
