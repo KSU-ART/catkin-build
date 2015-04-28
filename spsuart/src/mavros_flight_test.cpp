@@ -14,7 +14,7 @@ int pitch = MID_PWM;
 
 bool xy_idle = false;
 
-double target_altitude = 2.5;
+double target_altitude = 2.0;
 
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(0.25,0,0,-60,60);
@@ -44,7 +44,8 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
                 // increase (or decrease?) altitude based on value from pid
 				cout<<"Altitude :"<<x->distance<<endl;                
 		double out = altPosCtrl->calc(double(x->distance));
-                throttle = MID_PWM + out;
+                cout << "PID Out: " << out << endl;
+				throttle = MID_PWM + out;
 		delete msgt;
                 delete x;
 
@@ -141,8 +142,8 @@ int main(int argc, char **argv)
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
   // Set PID controller targets  
-  xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
-  yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
+  //xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
+  //yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
   int inputChar = 'a';
   
@@ -152,21 +153,21 @@ int main(int argc, char **argv)
     while(ros::ok()){
 
 		
-		//if(altPosCtrl->isSettled() && target_altitude == 2.0)
-		//{
-		//	target_altitude = LANDING_ALTITUDE;
-  		//	altPosCtrl->targetSetpoint(target_altitude); 
-		//}
+		if(altPosCtrl->hasSettled() && target_altitude == 2.0)
+		{
+			target_altitude = LANDING_ALTITUDE;
+  			altPosCtrl->targetSetpoint(target_altitude); 
+		}
 		
-			if(xy_idle)
-			{
+			//if(xy_idle)
+			//{
 				msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 				msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-		    }	
-		    else{
-				msg.channels[ROLL_CHANNEL]=roll;
-				msg.channels[PITCH_CHANNEL]=pitch;
-			}
+		    //}	
+		    // else{
+			//	msg.channels[ROLL_CHANNEL]=roll;
+			//	msg.channels[PITCH_CHANNEL]=pitch;
+			//}
 			msg.channels[THROTTLE_CHANNEL]=throttle;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
