@@ -14,19 +14,14 @@ int pitch = MID_PWM;
 
 bool xy_idle = false;
 
-double target_altitude = 2.5;
+double target_altitude = 2.0;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController();
-PIDController* yPosCtrl = new PIDController();
-PIDController* altPosCtrl = new PIDController();
+PIDController* xPosCtrl = new PIDController(0.25,0,0,-60,60);
+PIDController* yPosCtrl = new PIDController(0.32,0,0,-60,60);
+PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
-
-// Time reference for PID controllers
-double nowTimeALT = 0;
-double nowTimeImagePoint = 0;
-
 
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
         if(msg->msgid==173){
@@ -45,13 +40,12 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
                 msgt->payload64[0] = msg->payload64[0];
 
                 mavlink_msg_rangefinder_decode(msgt, x); 
-                                
-                nowTimeALT = ros::Time::now().toSec();
                 
                 // increase (or decrease?) altitude based on value from pid
 				cout<<"Altitude :"<<x->distance<<endl;                
-		double out = altPosCtrl->calc(double(x->distance), nowTimeALT);
-                throttle = MID_PWM + out;
+		double out = altPosCtrl->calc(double(x->distance));
+                cout << "PID Out: " << out << endl;
+				throttle = MID_PWM + out;
 		delete msgt;
                 delete x;
 
@@ -67,19 +61,18 @@ double x=msgs->pointX;
 double y=msgs->pointY;
 
 // Get the current time for the PID controllers
-nowTimeImagePoint = ros::Time::now().toSec();
 
 // If color not detected in image, hold position and keep the current time up-to-date in the PID controllers
 if(x<0 || y<0) {
                 xy_idle = true;
-                xPosCtrl->calc(xPosCtrl->getSetpoint(), nowTimeImagePoint);
-                yPosCtrl->calc(yPosCtrl->getSetpoint(), nowTimeImagePoint);
+                xPosCtrl->calc(xPosCtrl->getSetpoint());
+                yPosCtrl->calc(yPosCtrl->getSetpoint());
         }
         // Color center detected in image, calculate roll and pitch corrections to move the hexacopter over the object.
         else {
                 xy_idle = false;
-                roll = MID_PWM + xPosCtrl->calc(x, nowTimeImagePoint);
-                pitch = MID_PWM - yPosCtrl->calc(y, nowTimeImagePoint);
+                roll = MID_PWM + xPosCtrl->calc(x);
+                pitch = MID_PWM - yPosCtrl->calc(y);
         }
        
 }
@@ -148,25 +141,9 @@ int main(int argc, char **argv)
   mavros::OverrideRCIn msg;
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
-  // The amount of PID stuff here is ridiculous but my constructors in the PIDController class are broken so this is the workaround =(
-  // Initialize PID controller gains
-  xPosCtrl->setGains(.25, 0, 0);
-  yPosCtrl->setGains(.32, 0, 0);
-  altPosCtrl->setGains(500, 0.0, 0);
-  
-  // Initialize PID controller constraints
-  xPosCtrl->setConstraints(-60, 60);
-  yPosCtrl->setConstraints(-60, 60);
-  altPosCtrl->setConstraints(-300, 300);
-  
-  // Zero out differentiator, integrator, and time variables in the PID controllers
-  xPosCtrl->init();
-  yPosCtrl->init();
-  altPosCtrl->init();
-  
   // Set PID controller targets  
-  xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
-  yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
+  //xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
+  //yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
   int inputChar = 'a';
   
@@ -176,21 +153,21 @@ int main(int argc, char **argv)
     while(ros::ok()){
 
 		
-		//if(altPosCtrl->isSettled() && target_altitude == 2.0)
-		//{
-		//	target_altitude = LANDING_ALTITUDE;
-  		//	altPosCtrl->targetSetpoint(target_altitude); 
-		//}
+		if(altPosCtrl->hasSettled() && target_altitude == 2.0)
+		{
+			target_altitude = LANDING_ALTITUDE;
+  			altPosCtrl->targetSetpoint(target_altitude); 
+		}
 		
-			if(xy_idle)
-			{
+			//if(xy_idle)
+			//{
 				msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 				msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-		    }	
-		    else{
-				msg.channels[ROLL_CHANNEL]=roll;
-				msg.channels[PITCH_CHANNEL]=pitch;
-			}
+		    //}	
+		    // else{
+			//	msg.channels[ROLL_CHANNEL]=roll;
+			//	msg.channels[PITCH_CHANNEL]=pitch;
+			//}
 			msg.channels[THROTTLE_CHANNEL]=throttle;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;

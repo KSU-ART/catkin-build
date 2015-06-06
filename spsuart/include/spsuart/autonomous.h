@@ -22,7 +22,7 @@
 
 #include "px_comm/OpticalFlow.h"
 #include "ros_opencv/TrackingPoint.h"
-#include "PIDController.h"
+#include <spsuart/pid-controller/PIDController.h>
 
 #define ROLL_CHANNEL 0
 #define PITCH_CHANNEL 1
