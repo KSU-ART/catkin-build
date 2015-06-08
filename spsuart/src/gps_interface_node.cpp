@@ -82,11 +82,13 @@ int main(int argc, char **argv)
    
     //GPA msg container that will be sent to the FC
     sensor_msgs::NavSatFix gps;
-    ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
+    ros::Rate fcuCommRate(10); // emulating speed of dx9 controller
     
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok())
     {
+        cout<<"Pos X estimate: "<<pos_x<<endl;
+        cout<<"Pos Y estimate: "<<pos_y<<endl;
         ros::spinOnce();
         fcuCommRate.sleep();
     }
