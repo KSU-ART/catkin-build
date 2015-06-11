@@ -7,6 +7,7 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "iostream"
 #include "spsuart/pid-controller/PIDController.h"
+#include "spsuart/DspFilters/Dsp.h"
 
 using namespace std;
 

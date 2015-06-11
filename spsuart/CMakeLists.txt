@@ -109,6 +109,25 @@ add_library(pid-controller
 	include/spsuart/pid-controller/PIDController.cpp
 )
 
+add_library(DspFilters
+    include/spsuart/DspFilters/Bessel.cpp
+    include/spsuart/DspFilters/Butterworth.cpp
+    include/spsuart/DspFilters/Biquad.cpp
+    include/spsuart/DspFilters/Cascade.cpp
+    include/spsuart/DspFilters/ChebyshevI.cpp
+    include/spsuart/DspFilters/ChebyshevII.cpp
+    include/spsuart/DspFilters/Custom.cpp
+    include/spsuart/DspFilters/Design.cpp
+    include/spsuart/DspFilters/Elliptic.cpp
+    include/spsuart/DspFilters/Filter.cpp
+    include/spsuart/DspFilters/Legendre.cpp
+    include/spsuart/DspFilters/Param.cpp
+    include/spsuart/DspFilters/PoleFilter.cpp
+    include/spsuart/DspFilters/RBJ.cpp
+    include/spsuart/DspFilters/RootFinder.cpp
+    include/spsuart/DspFilters/State.cpp
+)
+
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -130,7 +149,13 @@ add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
    ${Boost_LIBRARIES}
    pid-controller
 )
- 
+
+ target_link_libraries(gps_interface_node
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+    pid-controller
+    DspFilters
+) 
 #############
 ## Install ##
 #############
