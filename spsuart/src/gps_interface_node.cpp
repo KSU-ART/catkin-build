@@ -7,8 +7,7 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "iostream"
 #include "spsuart/pid-controller/PIDController.h"
-#include "spsuart/DspFilters/Dsp.h"
-
+#include "spsuart/iir/Iir.h"
 using namespace std;
 
 PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);

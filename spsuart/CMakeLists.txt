@@ -19,7 +19,6 @@ find_package(catkin
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system chrono timer)
 
-
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -109,23 +108,20 @@ add_library(pid-controller
 	include/spsuart/pid-controller/PIDController.cpp
 )
 
-add_library(DspFilters
-    include/spsuart/DspFilters/Bessel.cpp
-    include/spsuart/DspFilters/Butterworth.cpp
-    include/spsuart/DspFilters/Biquad.cpp
-    include/spsuart/DspFilters/Cascade.cpp
-    include/spsuart/DspFilters/ChebyshevI.cpp
-    include/spsuart/DspFilters/ChebyshevII.cpp
-    include/spsuart/DspFilters/Custom.cpp
-    include/spsuart/DspFilters/Design.cpp
-    include/spsuart/DspFilters/Elliptic.cpp
-    include/spsuart/DspFilters/Filter.cpp
-    include/spsuart/DspFilters/Legendre.cpp
-    include/spsuart/DspFilters/Param.cpp
-    include/spsuart/DspFilters/PoleFilter.cpp
-    include/spsuart/DspFilters/RBJ.cpp
-    include/spsuart/DspFilters/RootFinder.cpp
-    include/spsuart/DspFilters/State.cpp
+add_library(iir
+    include/spsuart/iir/Bessel.cpp
+    include/spsuart/iir/Biquad.cpp
+    include/spsuart/iir/Butterworth.cpp
+    include/spsuart/iir/Cascade.cpp
+    include/spsuart/iir/ChebyshevI.cpp
+    include/spsuart/iir/ChebyshevII.cpp
+    include/spsuart/iir/Custom.cpp
+    include/spsuart/iir/Elliptic.cpp
+    include/spsuart/iir/Legendre.cpp
+    include/spsuart/iir/PoleFilter.cpp
+    include/spsuart/iir/RBJ.cpp
+    include/spsuart/iir/RootFinder.cpp
+    include/spsuart/iir/State.cpp
 )
 
 find_package(OpenCV)
@@ -154,7 +150,7 @@ add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
     pid-controller
-    DspFilters
+    iir
 ) 
 #############
 ## Install ##
