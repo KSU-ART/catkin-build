@@ -8,9 +8,14 @@
 #include "iostream"
 #include "spsuart/pid-controller/PIDController.h"
 #include "spsuart/iir/Iir.h"
+
 using namespace std;
 
 PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
+
+Iir::Butterworth::LowPass<3> posXFilt;
+Iir::Butterworth::LowPass<3> posYFilt;
+
 //Lidar hack references
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
@@ -54,8 +59,8 @@ void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
    double currentTimeNano = ros::Time::now().toNSec();
    double deltaTime = currentTimeNano - prevTime;
    
-   pos_x += msg->velocity_x * deltaTime;
-   pos_y += msg->velocity_y * deltaTime;
+   pos_x += posXFilt.filter(msg->velocity_x * deltaTime);
+   pos_y += posYFilt.filter(msg->velocity_y * deltaTime);
    
    prevTime = ros::Time::now().toNSec();
 }
@@ -72,7 +77,13 @@ int main(int argc, char **argv)
     //Init positions at (0,0)
     pos_x = 0;
     pos_y = 0;
+
+    posXFilt.setup(3, 300, 50);
+    posYFilt.setup(3, 300, 50);
     
+    posXFilt.reset();
+    posYFilt.reset();
+
     //Image and mavlink message subscriber
     ros::Subscriber subpoint = n.subscribe("image_point",1,imagePointCallback);
     ros::Subscriber subflow = n.subscribe("px4flow/OpticalFlow",1,optFlowCallback);
