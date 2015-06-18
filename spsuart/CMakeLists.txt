@@ -19,7 +19,6 @@ find_package(catkin
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system chrono timer)
 
-
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -109,16 +108,34 @@ add_library(pid-controller
 	include/spsuart/pid-controller/PIDController.cpp
 )
 
+add_library(iir
+    include/spsuart/iir/Bessel.cpp
+    include/spsuart/iir/Biquad.cpp
+    include/spsuart/iir/Butterworth.cpp
+    include/spsuart/iir/Cascade.cpp
+    include/spsuart/iir/ChebyshevI.cpp
+    include/spsuart/iir/ChebyshevII.cpp
+    include/spsuart/iir/Custom.cpp
+    include/spsuart/iir/Elliptic.cpp
+    include/spsuart/iir/Legendre.cpp
+    include/spsuart/iir/PoleFilter.cpp
+    include/spsuart/iir/RBJ.cpp
+    include/spsuart/iir/RootFinder.cpp
+    include/spsuart/iir/State.cpp
+)
+
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 ## Declare a cpp executable
 add_executable(mavros_flight_test src/mavros_flight_test.cpp)
+add_executable(gps_interface_node src/gps_interface_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
 #add_dependencies(follow_irobot spsuart_generate_messages_cpp)
+add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 
@@ -128,7 +145,13 @@ add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
    ${Boost_LIBRARIES}
    pid-controller
 )
- 
+
+ target_link_libraries(gps_interface_node
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+    pid-controller
+    iir
+) 
 #############
 ## Install ##
 #############
