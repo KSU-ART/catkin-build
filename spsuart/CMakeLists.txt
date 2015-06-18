@@ -49,17 +49,17 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+ add_message_files(
+   FILES
+   PosEst.msg
+ #  Message2.msg
+ )
 
 ## Generate services in the 'srv' folder
- add_service_files(
-   FILES
-   ChangeAlt.srv
- )
+# add_service_files(
+#   FILES
+#   ChangeAlt.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -69,10 +69,10 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 ###################################
 ## catkin specific configuration ##
