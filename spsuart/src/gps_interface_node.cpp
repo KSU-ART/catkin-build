@@ -1,11 +1,13 @@
 #include "ros/ros.h"
 #include <mavros/OverrideRCIn.h>
 #include <mavros/Mavlink.h>
+#include <mavros/Waypoint.h>
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 #include "px_comm/OpticalFlow.h"
 #include "ros_opencv/TrackingPoint.h"
 #include "sensor_msgs/NavSatFix.h"
 #include "iostream"
+#include <spsuart/PosEst.h>
 #include "spsuart/pid-controller/PIDController.h"
 #include "spsuart/iir/Iir.h"
 
@@ -64,6 +66,25 @@ void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
    
    prevTime = ros::Time::now().toNSec();
 }
+  
+  
+  void translatePosToGPS(spsuart::PosEst &pos, sensor_msgs::NavSatFix &gps){
+	double latitude = 0.00000904366736689;
+	double longitude = 0.00000898451471479;
+	
+	gps.latitude = pos.x * latitude;
+	gps.longitude = pos.y * longitude;
+	
+  } 
+  
+    void generateWaypoint(spsuart::PosEst &destPos, mavros::Waypoint &wp){
+	double latitude = 0.00000904366736689;
+	double longitude = 0.00000898451471479;
+	
+	wp.x_lat= destPos.x * latitude;
+	wp.y_long = destPos.y * longitude;
+	
+  }
 
 int main(int argc, char **argv)
 {
@@ -88,20 +109,47 @@ int main(int argc, char **argv)
     ros::Subscriber subpoint = n.subscribe("image_point",1,imagePointCallback);
     ros::Subscriber subflow = n.subscribe("px4flow/OpticalFlow",1,optFlowCallback);
     
-    //GPS publisher
-    ros::Publisher gps_pub = n.advertise<sensor_msgs::NavSatFix>("/gps/fix", 1);
-   
-    //GPA msg container that will be sent to the FC
-    sensor_msgs::NavSatFix gps;
-    ros::Rate fcuCommRate(10); // emulating speed of dx9 controller
+      //GPS publisher
+      ros::Publisher gps_pub = n.advertise<sensor_msgs::NavSatFix>("/gps/fix", 1);
+      ros::Publisher pos_est = n.advertise<spsuart::PosEst>("pos_estimate", 1);
+      ros::Publisher target_wp = n.advertise<mavros::Waypoint>("go_to", 1);
+  
+      //GPA msg container that will be sent to the FC
+      //This represents our fake gps point at any point in time
+      spsuart::PosEst prevPos;
+      spsuart::PosEst currPos;
+      spsuart::PosEst nextPos;
+      //Default the goal pos to be 5,5
+      nextPos.x = 5;
+      nextPos.y = 5;
+      sensor_msgs::NavSatFix prevGps;
+      sensor_msgs::NavSatFix currGps;
+      mavros::Waypoint nextWp;
+      
+      
+      ros::Rate fcuCommRate(300); 
     
     //While node is alive send RC values to the FC @ fcuCommRate hz
-    while(ros::ok())
-    {
-        cout<<"Pos X estimate: "<<pos_x<<endl;
-        cout<<"Pos Y estimate: "<<pos_y<<endl;
-        ros::spinOnce();
-        fcuCommRate.sleep();
-    }
+      while(ros::ok())
+      {
+		  prevPos = currPos;
+		  currPos.x=pos_x;
+	      currPos.y=pos_y;
+	      //publish position estimate in meters
+	      pos_est.publish(currPos);
+	      
+	      //translate position estimate to gps point
+	      translatePosToGPS(currPos, currGps);
+	      //publish gps to Flight computer
+	      gps_pub.publish(currGps);
+	      
+	      generateWaypoint(nextPos, nextWp);
+	      //publish wp
+	      target_wp.publish(nextWp);
+	      
+	      
+          ros::spinOnce();
+          fcuCommRate.sleep();
+      }
     return 0;
 }
