@@ -24,6 +24,8 @@ __mavlink_rangefinder_t* x = NULL;
 double pos_x;
 double pos_y;
 double prevTime;
+const double Meter_To_Latitude = 0.00000904366736689;
+const double Meter_To_Longitude = 0.00000898451471479;
 
 //Lidar hack : The product of pair programming
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
@@ -69,20 +71,14 @@ void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
   
   
   void translatePosToGPS(spsuart::PosEst &pos, sensor_msgs::NavSatFix &gps){
-	double latitude = 0.00000904366736689;
-	double longitude = 0.00000898451471479;
-	
-	gps.latitude = pos.x * latitude;
-	gps.longitude = pos.y * longitude;
+	gps.latitude = pos.x * Meter_To_Latitude;
+	gps.longitude = pos.y * Meter_To_Longitude;
 	
   } 
   
-    void generateWaypoint(spsuart::PosEst &destPos, mavros::Waypoint &wp){
-	double latitude = 0.00000904366736689;
-	double longitude = 0.00000898451471479;
-	
-	wp.x_lat= destPos.x * latitude;
-	wp.y_long = destPos.y * longitude;
+  void generateWaypoint(spsuart::PosEst &destPos, mavros::Waypoint &wp){
+	wp.x_lat = destPos.x * Meter_To_Latitude;
+	wp.y_long = destPos.y * Meter_To_Longitude;
 	
   }
 
