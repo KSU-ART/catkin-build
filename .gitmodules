@@ -21,3 +21,11 @@ url = https://github.com/ethz-asl/glog_catkin
 [submodule "ethzasl_msf"]
 path = ethzasl_msf
 url = https://github.com/ethz-asl/ethzasl_msf
+
+[submodule "rpg_svo"]
+path = rpg_svo
+url = https://github.com/uzh-rpg/rpg_svo.git
+
+[submodule "rpg_vikit"]
+path = rpg_vikit
+url = https://github.com/uzh-rpg/rpg_vikit.git
