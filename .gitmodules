@@ -1,3 +1,23 @@
 [submodule "pid-controller"]
 path = spsuart/include/spsuart/pid-controller
 url = https://github.com/silentreverb/pid-controller.git
+
+[submodule "asctec_mav_framework"]
+path = asctec_mav_framework
+url = https://github.com/ethz-asl/asctec_mav_framework
+
+[submodule "catkin_simple"]
+path = catkin_simple
+url = https://github.com/ethz-asl/catkin_simple
+
+[submodule "gflags_catkin"]
+path = gflags_catkin
+url = https://github.com/ethz-asl/gflags_catkin.git
+
+[submodule "glog_catkin"]
+path = glog_catkin
+url = https://github.com/ethz-asl/glog_catkin
+
+[submodule "ethzasl_msf"]
+path = ethzasl_msf
+url = https://github.com/ethz-asl/ethzasl_msf
