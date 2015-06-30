@@ -14,6 +14,7 @@ find_package(catkin
   cv_bridge
   image_transport
   mavros
+  mavros_extras
 )
 
 ## System dependencies are found with CMake's conventions
@@ -86,7 +87,7 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES spsuart
-  CATKIN_DEPENDS cv_bridge image_transport roscpp rospy std_msgs message_runtime ros_opencv mavros
+  CATKIN_DEPENDS cv_bridge image_transport roscpp rospy std_msgs message_runtime ros_opencv mavros mavros_extras
 #  DEPENDS system_lib boost
 )
 

@@ -51,6 +51,7 @@
   <build_depend>ros_opencv</build_depend>
   <build_depend>OpenCV</build_depend>
   <build_depend>mavros</build_depend>
+  <build_depend>mavros_extras</build_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>message_runtime</run_depend>
@@ -61,7 +62,7 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>ros_opencv</run_depend>
   <run_depend>mavros</run_depend>
-
+  <run_depend>mavros_extras</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
