@@ -29,11 +29,3 @@ url = https://github.com/uzh-rpg/rpg_svo.git
 [submodule "rpg_vikit"]
 path = rpg_vikit
 url = https://github.com/uzh-rpg/rpg_vikit.git
-
-[submodule "imu_tools"]
-path = imu_tools
-url = https://github.com/ccny-ros-pkg/imu_tools.git
-
-[submodule "px-ros-pkg"]
-path = px-ros-pkg
-url = https://github.com/cvg/px-ros-pkg.git
