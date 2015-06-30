@@ -23,6 +23,9 @@
  */
 
 #include "imu_filter_madgwick/imu_filter.h"
+#include "geometry_msgs/TransformStamped.h"
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 ImuFilter::ImuFilter(ros::NodeHandle nh, ros::NodeHandle nh_private):
   nh_(nh), 
@@ -34,18 +37,26 @@ ImuFilter::ImuFilter(ros::NodeHandle nh, ros::NodeHandle nh_private):
 
   // **** get paramters
 
-  if (!nh_private_.getParam ("gain", gain_))
-   gain_ = 0.1;
-  if (!nh_private_.getParam ("zeta", zeta_))
-   zeta_ = 0;
   if (!nh_private_.getParam ("use_mag", use_mag_))
    use_mag_ = true;
   if (!nh_private_.getParam ("publish_tf", publish_tf_))
    publish_tf_ = true;
+  if (!nh_private_.getParam ("reverse_tf", reverse_tf_))
+   reverse_tf_ = false;
   if (!nh_private_.getParam ("fixed_frame", fixed_frame_))
    fixed_frame_ = "odom";
   if (!nh_private_.getParam ("constant_dt", constant_dt_))
     constant_dt_ = 0.0;
+  if (!nh_private_.getParam ("publish_debug_topics", publish_debug_topics_))
+    publish_debug_topics_= false;
+
+  // For ROS Jade, make this default to true.
+  if (!nh_private_.getParam ("use_magnetic_field_msg", use_magnetic_field_msg_))
+  {
+      ROS_WARN("Deprecation Warning: The parameter use_magnetic_field_msg was not set, default is 'false'.");
+      ROS_WARN("Starting with ROS Jade, use_magnetic_field_msg will default to 'true'!");
+      use_magnetic_field_msg_ = false;
+  }
 
   // check for illegal constant_dt values
   if (constant_dt_ < 0.0)
@@ -62,27 +73,50 @@ ImuFilter::ImuFilter(ros::NodeHandle nh, ros::NodeHandle nh_private):
     ROS_INFO("Using constant dt of %f sec", constant_dt_);
 
   // **** register dynamic reconfigure
-  
+  config_server_.reset(new FilterConfigServer(nh_private_));
   FilterConfigServer::CallbackType f = boost::bind(&ImuFilter::reconfigCallback, this, _1, _2);
-  config_server_.setCallback(f);
+  config_server_->setCallback(f);
   
   // **** register publishers
-
   imu_publisher_ = nh_.advertise<sensor_msgs::Imu>(
-    "imu/data", 5);
+    ros::names::resolve("imu") + "/data", 5);
+
+  if (publish_debug_topics_)
+  {
+    rpy_filtered_debug_publisher_ = nh_.advertise<geometry_msgs::Vector3Stamped>(
+      ros::names::resolve("imu") + "/rpy/filtered", 5);
+
+    rpy_raw_debug_publisher_ = nh_.advertise<geometry_msgs::Vector3Stamped>(
+      ros::names::resolve("imu") + "/rpy/raw", 5);
+  }
 
   // **** register subscribers
-
   // Synchronize inputs. Topic subscriptions happen on demand in the connection callback.
   int queue_size = 5;
 
   imu_subscriber_.reset(new ImuSubscriber(
-    nh_, "imu/data_raw", queue_size));
+    nh_, ros::names::resolve("imu") + "/data_raw", queue_size));
 
   if (use_mag_)
   {
-    mag_subscriber_.reset(new MagSubscriber(
-      nh_, "imu/mag", queue_size));
+    if (use_magnetic_field_msg_)
+    {
+      mag_subscriber_.reset(new MagSubscriber(
+        nh_, ros::names::resolve("imu") + "/mag", queue_size));
+    }
+    else
+    {
+      mag_subscriber_.reset(new MagSubscriber(
+        nh_, ros::names::resolve("imu") + "/magnetic_field", queue_size));
+
+      // Initialize the shim to support republishing Vector3Stamped messages from /mag as MagneticField
+      // messages on the /magnetic_field topic.
+      mag_republisher_ = nh_.advertise<MagMsg>(
+        ros::names::resolve("imu") + "/magnetic_field", 5);
+      vector_mag_subscriber_.reset(new MagVectorSubscriber(
+        nh_, ros::names::resolve("imu") + "/mag", queue_size));
+      vector_mag_subscriber_->registerCallback(&ImuFilter::imuMagVectorCallback, this);
+    }
 
     sync_.reset(new Synchronizer(
       SyncPolicy(queue_size), *imu_subscriber_, *mag_subscriber_));
@@ -117,7 +151,8 @@ void ImuFilter::imuCallback(const ImuMsg::ConstPtr& imu_msg_raw)
     double pitch = -atan2(lin_acc.x, sqrt(lin_acc.y*lin_acc.y + lin_acc.z*lin_acc.z));
     double yaw = 0.0;
                         
-    tf::Quaternion init_q = tf::createQuaternionFromRPY(roll, pitch, yaw);
+    tf2::Quaternion init_q;
+    init_q.setRPY(roll, pitch, yaw);
     
     q1 = init_q.getX();
     q2 = init_q.getY();
@@ -155,21 +190,36 @@ void ImuFilter::imuMagCallback(
   boost::mutex::scoped_lock(mutex_);
   
   const geometry_msgs::Vector3& ang_vel = imu_msg_raw->angular_velocity;
-  const geometry_msgs::Vector3& lin_acc = imu_msg_raw->linear_acceleration; 
-  const geometry_msgs::Vector3& mag_fld = mag_msg->vector;
-  
+  const geometry_msgs::Vector3& lin_acc = imu_msg_raw->linear_acceleration;
+  const geometry_msgs::Vector3& mag_fld = mag_msg->magnetic_field;
+
   ros::Time time = imu_msg_raw->header.stamp;
   imu_frame_ = imu_msg_raw->header.frame_id;
 
+  /*** Compensate for hard iron ***/
+  double mx = mag_fld.x - mag_bias_.x;
+  double my = mag_fld.y - mag_bias_.y;
+  double mz = mag_fld.z - mag_bias_.z;
+
+  float roll = 0.0;
+  float pitch = 0.0;
+  float yaw = 0.0;
+
   if (!initialized_)
   {
-    // initialize roll/pitch orientation from acc. vector    
-    double sign = copysignf(1.0, lin_acc.z);
-    double roll = atan2(lin_acc.y, sign * sqrt(lin_acc.x*lin_acc.x + lin_acc.z*lin_acc.z));
-    double pitch = -atan2(lin_acc.x, sqrt(lin_acc.y*lin_acc.y + lin_acc.z*lin_acc.z));
-    double yaw = 0.0; // TODO: initialize from magnetic raeding?
-                        
-    tf::Quaternion init_q = tf::createQuaternionFromRPY(roll, pitch, yaw);
+    // wait for mag message without NaN / inf
+    if(!std::isfinite(mag_fld.x) || !std::isfinite(mag_fld.y) || !std::isfinite(mag_fld.z))
+    {
+      return;
+    }
+
+    computeRPY(
+      lin_acc.x, lin_acc.y, lin_acc.z,
+      mx, my, mz,
+      roll, pitch, yaw);
+
+    tf2::Quaternion init_q;
+    init_q.setRPY(roll, pitch, yaw);
     
     q1 = init_q.getX();
     q2 = init_q.getY();
@@ -196,40 +246,114 @@ void ImuFilter::imuMagCallback(
   madgwickAHRSupdate(
     ang_vel.x, ang_vel.y, ang_vel.z,
     lin_acc.x, lin_acc.y, lin_acc.z,
-    mag_fld.x, mag_fld.y, mag_fld.z,
+    mx, my, mz,
     dt);
 
   publishFilteredMsg(imu_msg_raw);
   if (publish_tf_)
     publishTransform(imu_msg_raw);
+
+  if(publish_debug_topics_ && std::isfinite(mx) && std::isfinite(my) && std::isfinite(mz))
+  {
+    computeRPY(
+      lin_acc.x, lin_acc.y, lin_acc.z,
+      mx, my, mz,
+      roll, pitch, yaw);
+
+    publishRawMsg(time, roll, pitch, yaw);
+  }
 }
 
 void ImuFilter::publishTransform(const ImuMsg::ConstPtr& imu_msg_raw)
 {
-  tf::Quaternion q(q1, q2, q3, q0);
-  tf::Transform transform;
-  transform.setOrigin( tf::Vector3( 0.0, 0.0, 0.0 ) );
-  transform.setRotation( q );
-  tf_broadcaster_.sendTransform( tf::StampedTransform( transform,
-                   imu_msg_raw->header.stamp,
-                   fixed_frame_,
-                   imu_frame_ ) );
+  geometry_msgs::TransformStamped transform;
+  transform.header.stamp = imu_msg_raw->header.stamp;
+  if (reverse_tf_)
+  {
+    transform.header.frame_id = imu_frame_;
+    transform.child_frame_id = fixed_frame_;
+    transform.transform.rotation.w = q0;
+    transform.transform.rotation.x = -q1;
+    transform.transform.rotation.y = -q2;
+    transform.transform.rotation.z = -q3;
+  }
+  else {
+    transform.header.frame_id = fixed_frame_;
+    transform.child_frame_id = imu_frame_;
+    transform.transform.rotation.w = q0;
+    transform.transform.rotation.x = q1;
+    transform.transform.rotation.y = q2;
+    transform.transform.rotation.z = q3;
+  }
+  tf_broadcaster_.sendTransform(transform);
 
 }
 
 void ImuFilter::publishFilteredMsg(const ImuMsg::ConstPtr& imu_msg_raw)
 {
-  // create orientation quaternion
-  // q0 is the angle, q1, q2, q3 are the axes  
-  tf::Quaternion q(q1, q2, q3, q0);   
 
   // create and publish fitlered IMU message
   boost::shared_ptr<ImuMsg> imu_msg = 
     boost::make_shared<ImuMsg>(*imu_msg_raw);
 
-  imu_msg->header.frame_id = fixed_frame_;
-  tf::quaternionTFToMsg(q, imu_msg->orientation);  
+  imu_msg->orientation.w = q0;
+  imu_msg->orientation.x = q1;
+  imu_msg->orientation.y = q2;
+  imu_msg->orientation.z = q3;
+
+  imu_msg->orientation_covariance[0] = orientation_variance_;
+  imu_msg->orientation_covariance[1] = 0.0;
+  imu_msg->orientation_covariance[2] = 0.0;
+  imu_msg->orientation_covariance[3] = 0.0;
+  imu_msg->orientation_covariance[4] = orientation_variance_;
+  imu_msg->orientation_covariance[5] = 0.0;
+  imu_msg->orientation_covariance[6] = 0.0;
+  imu_msg->orientation_covariance[7] = 0.0;
+  imu_msg->orientation_covariance[8] = orientation_variance_;
+
   imu_publisher_.publish(imu_msg);
+
+  if(publish_debug_topics_)
+  {
+    geometry_msgs::Vector3Stamped rpy;
+    tf2::Matrix3x3(tf2::Quaternion(q1,q2,q3,q0)).getRPY(rpy.vector.x, rpy.vector.y, rpy.vector.z);
+
+    rpy.header = imu_msg_raw->header;
+    rpy_filtered_debug_publisher_.publish(rpy);
+  }
+}
+
+void ImuFilter::publishRawMsg(const ros::Time& t,
+  float roll, float pitch, float yaw)
+{
+  geometry_msgs::Vector3Stamped rpy;
+  rpy.vector.x = roll;
+  rpy.vector.y = pitch;
+  rpy.vector.z = yaw ;
+  rpy.header.stamp = t;
+  rpy.header.frame_id = imu_frame_;
+  rpy_raw_debug_publisher_.publish(rpy);
+}
+
+void ImuFilter::computeRPY(
+  float ax, float ay, float az, 
+  float mx, float my, float mz,
+  float& roll, float& pitch, float& yaw)
+{ 
+  // initialize roll/pitch orientation from acc. vector.
+  double sign = copysignf(1.0, az);
+  roll = atan2(ay, sign * sqrt(ax*ax + az*az));
+  pitch = -atan2(ax, sqrt(ay*ay + az*az));
+  double cos_roll = cos(roll);
+  double sin_roll = sin(roll);
+  double cos_pitch = cos(pitch);
+  double sin_pitch = sin(pitch);
+
+  // initialize yaw orientation from magnetometer data.
+  /***  From: http://cache.freescale.com/files/sensors/doc/app_note/AN4248.pdf (equation 22). ***/
+  double head_x = mx * cos_pitch + my * sin_pitch * sin_roll + mz * sin_pitch * cos_roll;
+  double head_y = my * cos_roll - mz * sin_roll;
+  yaw = atan2(-head_y, head_x);
 }
 
 void ImuFilter::madgwickAHRSupdate(
@@ -246,13 +370,12 @@ void ImuFilter::madgwickAHRSupdate(
 	float _w_err_x, _w_err_y, _w_err_z;
 
 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
-  if(std::isnan(mx) || std::isnan(my) || std::isnan(mz))
+  if(!std::isfinite(mx) || !std::isfinite(my) || !std::isfinite(mz))
   {
 		madgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az, dt);
 		return;
 	}
 
-	
 	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
 	if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) 
   {
@@ -355,7 +478,6 @@ void ImuFilter::madgwickAHRSupdate(
 	q3 *= recipNorm;
 }
 
-
 void ImuFilter::madgwickAHRSupdateIMU(
   float gx, float gy, float gz, 
   float ax, float ay, float az,
@@ -435,6 +557,18 @@ void ImuFilter::reconfigCallback(FilterConfig& config, uint32_t level)
   zeta_ = config.zeta;
   ROS_INFO("Imu filter gain set to %f", gain_);
   ROS_INFO("Gyro drift bias set to %f", zeta_);
+  mag_bias_.x = config.mag_bias_x;
+  mag_bias_.y = config.mag_bias_y;
+  mag_bias_.z = config.mag_bias_z;
+  orientation_variance_ = config.orientation_stddev * config.orientation_stddev;
+  ROS_INFO("Magnetometer bias values: %f %f %f", mag_bias_.x, mag_bias_.y, mag_bias_.z);
 }
 
-
+void ImuFilter::imuMagVectorCallback(const MagVectorMsg::ConstPtr& mag_vector_msg)
+{
+  MagMsg mag_msg;
+  mag_msg.header = mag_vector_msg->header;
+  mag_msg.magnetic_field = mag_vector_msg->vector;
+  // leaving mag_msg.magnetic_field_covariance set to all zeros (= "covariance unknown")
+  mag_republisher_.publish(mag_msg);
+}

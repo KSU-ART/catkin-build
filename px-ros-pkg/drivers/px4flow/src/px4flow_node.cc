@@ -36,22 +36,18 @@ main(int argc, char** argv)
     ros::NodeHandle pnh("~");
 
     std::string portStr;
-    pnh.param("serial_port", portStr, std::string("/dev/ttyACM0"));
+    pnh.param("serial_port", portStr, std::string("/dev/ttyUSB0"));
 
     int baudrate;
     pnh.param("baudrate", baudrate, 115200);
-    std::cout << "First one" << std::endl;
 
     std::string frameId;
     pnh.param("frame_id", frameId, std::string("/px4flow"));
-    std::cout << "Second one" << std::endl;
 
     px::SerialComm comm(frameId);
-    std::cout << "Third one" << std::endl;
-
     if (!comm.open(portStr, baudrate))
-    {        
-	return -1;
+    {
+        return -1;
     }
 
     printTopicInfo();

@@ -1,1 +1,0 @@
-/usr/bin/c++  -fPIC -O2 -g -DNDEBUG   -shared -Wl,-soname,libgtest.so -o /home/odroid/ros/catkin_ws/src/imu_tools/imu_filter_madgwick/lib/libgtest.so CMakeFiles/gtest.dir/src/gtest-all.cc.o  -L/home/odroid/ros/catkin_ws/src/imu_tools/imu_filter_madgwick/build/gtest/src -lpthread -Wl,-rpath,/home/odroid/ros/catkin_ws/src/imu_tools/imu_filter_madgwick/build/gtest/src 
