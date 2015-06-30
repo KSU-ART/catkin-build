@@ -20,7 +20,7 @@ url = https://github.com/ethz-asl/glog_catkin.git
 
 [submodule "ethzasl_msf"]
 path = ethzasl_msf
-url = https://github.com/ethz-asl/ethzasl_msf.git
+url = https://github.com/SPSU-ART/ethzasl_msf.git
 
 [submodule "rpg_svo"]
 path = rpg_svo
