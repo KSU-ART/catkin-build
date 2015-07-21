@@ -10,10 +10,11 @@
 #include <spsuart/PosEst.h>
 #include "spsuart/pid-controller/PIDController.h"
 #include "spsuart/iir/Iir.h"
+#include "geometry_msgs/PoseStamped.h"
 
 using namespace std;
 
-PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
+//PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
 
 Iir::Butterworth::LowPass<3> posXFilt;
 Iir::Butterworth::LowPass<3> posYFilt;
@@ -22,10 +23,16 @@ Iir::Butterworth::LowPass<3> posYFilt;
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
 double pos_x;
+double prev_vel_x = 0;
 double pos_y;
+double prev_vel_y = 0;
+double pos_z;
 double prevTime;
+bool firstCallback = true;
 const double Meter_To_Latitude = 0.00000904366736689;
 const double Meter_To_Longitude = 0.00000898451471479;
+geometry_msgs::PoseStamped currPos;
+geometry_msgs::PoseStamped posDest;
 
 //Lidar hack : The product of pair programming
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
@@ -43,8 +50,9 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
                 mavlink_msg_rangefinder_decode(msgt, x); 
                 
                 // increase (or decrease?) altitude based on value from pid
-                cout<<"Altitude :"<<x->distance<<endl;                
-        double out = altPosCtrl->calc(double(x->distance));
+                cout<<"Altitude :"<<x->distance<<endl;
+                currPos.pose.position.z=pos_y;                
+        //double out = altPosCtrl->calc(double(x->distance));
 
         delete msgt;
                 delete x;
@@ -62,10 +70,21 @@ void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg)
 {
    double currentTimeNano = ros::Time::now().toNSec();
    double deltaTime = currentTimeNano - prevTime;
-   
-   pos_x += posXFilt.filter(msg->velocity_x * deltaTime);
-   pos_y += posYFilt.filter(msg->velocity_y * deltaTime);
-   
+   pos_z = msg->ground_distance;
+    
+   //pos_x += posXFilt.filter(msg->velocity_x * deltaTime);
+   //pos_y += posYFilt.filter(msg->velocity_y * deltaTime);
+   if(firstCallback) {
+      pos_x = msg->velocity_x * (deltaTime / 1000000000.0);
+      pos_y = msg->velocity_y * (deltaTime / 1000000000.0);
+      firstCallback = false;
+   }
+  
+   pos_x += (prev_vel_x + msg->velocity_x) / 2 * (deltaTime / 1000000000.0);
+   pos_y += (prev_vel_y + msg->velocity_y) / 2 * (deltaTime / 1000000000.0);
+  
+   prev_vel_x = msg->velocity_x;
+   prev_vel_y = msg->velocity_y;
    prevTime = ros::Time::now().toNSec();
 }
   
@@ -95,55 +114,40 @@ int main(int argc, char **argv)
     pos_x = 0;
     pos_y = 0;
 
-    posXFilt.setup(3, 300, 50);
-    posYFilt.setup(3, 300, 50);
+    //posXFilt.setup(3, 300, 50);
+    //posYFilt.setup(3, 300, 50);
     
-    posXFilt.reset();
-    posYFilt.reset();
+    //posXFilt.reset();
+    //posYFilt.reset();
 
     //Image and mavlink message subscriber
     ros::Subscriber subpoint = n.subscribe("image_point",1,imagePointCallback);
-    ros::Subscriber subflow = n.subscribe("px4flow/OpticalFlow",1,optFlowCallback);
+    ros::Subscriber subflow = n.subscribe("px4flow/opt_flow",1,optFlowCallback);
     
-      //GPS publisher
-      ros::Publisher gps_pub = n.advertise<sensor_msgs::NavSatFix>("/gps/fix", 1);
-      ros::Publisher pos_est = n.advertise<spsuart::PosEst>("pos_estimate", 1);
-      ros::Publisher target_wp = n.advertise<mavros::Waypoint>("go_to", 1);
+      //ros::Publisher pos_est = n.advertise<spsuart::PosEst>("pos_estimate", 1);
+      ros::Publisher pos_est = n.advertise<geometry_msgs::PoseStamped>("mavros/vision_pose/pose", 1);
+	  ros::Publisher set_point = n.advertise<geometry_msgs::PoseStamped>("/mavros/setpoint_position/local", 1);
   
       //GPA msg container that will be sent to the FC
       //This represents our fake gps point at any point in time
-      spsuart::PosEst prevPos;
-      spsuart::PosEst currPos;
-      spsuart::PosEst nextPos;
-      //Default the goal pos to be 5,5
-      nextPos.x = 5;
-      nextPos.y = 5;
-      sensor_msgs::NavSatFix prevGps;
-      sensor_msgs::NavSatFix currGps;
-      mavros::Waypoint nextWp;
       
       
-      ros::Rate fcuCommRate(300); 
+      ros::Rate fcuCommRate(100); 
     
     //While node is alive send RC values to the FC @ fcuCommRate hz
       while(ros::ok())
       {
-		  prevPos = currPos;
-		  currPos.x=pos_x;
-	      currPos.y=pos_y;
+		  currPos.pose.position.x=2;
+	      currPos.pose.position.y=2;
+	      currPos.pose.position.z=pos_z;
 	      //publish position estimate in meters
 	      pos_est.publish(currPos);
-	      
-	      //translate position estimate to gps point
-	      translatePosToGPS(currPos, currGps);
-	      //publish gps to Flight computer
-	      gps_pub.publish(currGps);
-	      
-	      generateWaypoint(nextPos, nextWp);
-	      //publish wp
-	      target_wp.publish(nextWp);
-	      
-	      
+		  
+		  posDest.pose.position.x=2;
+	      posDest.pose.position.y=2;
+	      posDest.pose.position.z=1;
+		  set_point.publish(posDest);
+		  
           ros::spinOnce();
           fcuCommRate.sleep();
       }
