@@ -36,8 +36,8 @@ url = https://github.com/ccny-ros-pkg/imu_tools.git
 
 [submodule "px-ros-pkg"]
 path = px-ros-pkg
-url = https://github.com/cvg/px-ros-pkg.git
+url = https://github.com/SPSU-ART/px-ros-pkg.git
 
 [submodule "mavros"]
 path = mavros
-url = https://github.com/mavlink/mavros
+url = https://github.com/SPSU-ART/mavros.git
