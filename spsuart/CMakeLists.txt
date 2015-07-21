@@ -9,6 +9,7 @@ find_package(catkin
   roscpp
   rospy
   std_msgs
+  geometry_msgs
   message_generation
   ros_opencv
   cv_bridge
@@ -129,30 +130,37 @@ find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 ## Declare a cpp executable
-add_executable(mavros_flight_test src/mavros_flight_test.cpp)
+#add_executable(mavros_flight_test src/mavros_flight_test.cpp)
 add_executable(gps_interface_node src/gps_interface_node.cpp)
+add_executable(offboard_mode src/offboard_mode.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
+#add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
 #add_dependencies(follow_irobot spsuart_generate_messages_cpp)
 add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
+add_dependencies(offboard_mode spsuart_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 
 
- target_link_libraries(mavros_flight_test
-   ${catkin_LIBRARIES}
-   ${Boost_LIBRARIES}
-   pid-controller
-)
+ #target_link_libraries(mavros_flight_test
+ #  ${catkin_LIBRARIES}
+ #  ${Boost_LIBRARIES}
+ #  pid-controller
+#)
 
  target_link_libraries(gps_interface_node
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
     pid-controller
     iir
-) 
+)
+
+target_link_libraries(offboard_mode
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+)  
 #############
 ## Install ##
 #############
