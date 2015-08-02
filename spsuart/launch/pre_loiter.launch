@@ -1,0 +1,15 @@
+<launch>
+	<node name="px4flow_node" pkg="px4flow" type="px4flow_node" />
+	
+	<include file="$(find hokuyo_node)/hokuyo_test.launch" />
+	
+	<node name="laser_scan_splitter_node" pkg="laser_scan_splitter" type="laser_scan_splitter_node">
+		<param name="sizes" value="128 128 128 128" />
+		<param name="topics" value="scan1 scan2 scan3 scan4" />
+		<param name="frames" value="laser laser laser laser" />
+	</node>
+	
+	<include file="$(find mavros)/launch/apm2.launch" />
+	
+	<node name="settings.sh" pkg="spsuart" type="settings.sh" />
+</launch>

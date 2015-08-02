@@ -67,10 +67,11 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		}
 	}
 	ground_distance = avg;	
-	cout<<"Altitude :"<<avg<<endl;                
+	ROS_DEBUG("Altitude: %d", avg);
 	double out = altPosCtrl->calc(ground_distance);
-    cout << "PID Out: " << out << endl;
+	ROS_DEBUG("PID Out: %d", out);
 	throttle = MID_PWM + out;
+	
 }
 
 void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg) 
