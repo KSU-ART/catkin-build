@@ -1,7 +1,15 @@
 <launch>
-	<node name="px4flow_node" pkg="px4flow" type="px4flow_node" />
+	<node name="px4flow_node" pkg="px4flow" type="px4flow_node">
+		<param name="serial_port" value="/dev/ttyACM0"/>
+	</node>
 	
-	<include file="$(find hokuyo_node)/hokuyo_test.launch" />
+	<node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
+		<!-- Starts up faster, but timestamps will be inaccurate. --> 
+		<param name="calibrate_time" type="bool" value="false"/> 
+		<!-- Set the port to connect to here -->
+		<param name="port" type="string" value="/dev/ttyACM1"/> 
+		<param name="intensity" type="bool" value="false"/>
+	</node>
 	
 	<node name="laser_scan_splitter_node" pkg="laser_scan_splitter" type="laser_scan_splitter_node">
 		<param name="sizes" value="128 128 128 128" />
@@ -9,7 +17,9 @@
 		<param name="frames" value="laser laser laser laser" />
 	</node>
 	
-	<include file="$(find mavros)/launch/apm2.launch" />
+	<include file="$(find mavros)/launch/apm2.launch">
+		<arg name="fcu_url" default="/dev/ttyACM2:115200" />
+	</include>
 	
 	<node name="settings.sh" pkg="spsuart" type="settings.sh" />
 </launch>
