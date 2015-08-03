@@ -17,9 +17,9 @@ double target_altitude = 1.5;
 double ground_distance;
 
 // Instantiate PID controllers
-PIDController* xVelCtrl = new PIDController(1,0,0,-100,100);
-PIDController* yVelCtrl = new PIDController(1,0,0,-100,100);
-PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
+PIDController* xVelCtrl = new PIDController(75,0,0,-100,100);
+PIDController* yVelCtrl = new PIDController(75,0,0,-100,100);
+PIDController* altPosCtrl = new PIDController(500,0,0,-200,300);
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
 
@@ -76,15 +76,15 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg) 
 { 
-   //double vel_x = msg->velocity_x;
-   // double vel_y = msg->velocity_y;
+   double vel_x = msg->velocity_x;
+   double vel_y = msg->velocity_y;
    // pos_z = msg->ground_distance; 
    
-   // double x_out = xVelCtrl->calc(vel_x);
-   // double y_out = yVelCtrl->calc(vel_y);
+   double x_out = xVelCtrl->calc(vel_x);
+   double y_out = yVelCtrl->calc(vel_y);
 
-   //roll = MID_PWM + x_out;
-   //pitch = MID_PWM + y_out; 
+   roll = MID_PWM + x_out;
+   pitch = MID_PWM - y_out; 
 }
 
 
@@ -173,7 +173,10 @@ int main(int argc, char **argv)
 			msg.channels[NOT_USED_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
 			msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
-		
+		ROS_DEBUG("ROLL : %d PITCH: %d THROTTLE: %d YAW: %d MODE: %d",
+msg.channels[ROLL_CHANNEL], msg.channels[PITCH_CHANNEL],
+msg.channels[THROTTLE_CHANNEL], msg.channels[YAW_CHANNEL],
+msg.channels[MODE_CHANNEL]);	
 		inputChar = getchNonBlocking();   // call non-blocking input function
 		
 		if(inputChar == ' ' || land){
@@ -184,7 +187,7 @@ int main(int argc, char **argv)
 			
 			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[THROTTLE_CHANNEL]=MID_PWM;
 			msg.channels[MODE_CHANNEL]=LAND_MODE;
 
 		}

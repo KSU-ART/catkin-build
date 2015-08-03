@@ -37,8 +37,8 @@
 #define MID_PWM 1500
 #define HIGH_PWM 2000
 
-#define STABILIZE_MODE 1000
-#define LAND_MODE 1500
+#define LAND_MODE 1000
+#define STABILIZE_MODE 1500
 #define ALT_HOLD_MODE 2000
 
 #define ROLL_TRIM 1513
