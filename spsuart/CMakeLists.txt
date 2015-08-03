@@ -145,6 +145,9 @@ add_dependencies(offboard_mode spsuart_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 
+ target_link_libraries(pid-controller
+    ${Boost_LIBRARIES}
+)
 
  #target_link_libraries(mavros_flight_test
  #  ${catkin_LIBRARIES}
