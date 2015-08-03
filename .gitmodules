@@ -2,34 +2,6 @@
 path = spsuart/include/spsuart/pid-controller
 url = https://github.com/silentreverb/pid-controller.git
 
-[submodule "asctec_mav_framework"]
-path = asctec_mav_framework
-url = https://github.com/ethz-asl/asctec_mav_framework.git
-
-[submodule "catkin_simple"]
-path = catkin_simple
-url = https://github.com/ethz-asl/catkin_simple.git
-
-[submodule "gflags_catkin"]
-path = gflags_catkin
-url = https://github.com/ethz-asl/gflags_catkin.git
-
-[submodule "glog_catkin"]
-path = glog_catkin
-url = https://github.com/ethz-asl/glog_catkin.git
-
-[submodule "ethzasl_msf"]
-path = ethzasl_msf
-url = https://github.com/SPSU-ART/ethzasl_msf.git
-
-[submodule "rpg_svo"]
-path = rpg_svo
-url = https://github.com/SPSU-ART/rpg_svo.git
-
-[submodule "rpg_vikit"]
-path = rpg_vikit
-url = https://github.com/uzh-rpg/rpg_vikit.git
-
 [submodule "imu_tools"]
 path = imu_tools
 url = https://github.com/ccny-ros-pkg/imu_tools.git
@@ -38,3 +10,10 @@ url = https://github.com/ccny-ros-pkg/imu_tools.git
 path = px-ros-pkg
 url = https://github.com/SPSU-ART/px-ros-pkg.git
 
+[submodule "scan_tools"]
+path = scan_tools
+url = https://github.com/ccny-ros-pkg/scan_tools.git
+
+[submodule "mavros"]
+path = mavros
+url = https://github.com/SPSU-ART/mavros.git
