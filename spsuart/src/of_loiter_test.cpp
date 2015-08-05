@@ -17,8 +17,8 @@ double target_altitude = 1.5;
 double ground_distance;
 
 // Instantiate PID controllers
-PIDController* xVelCtrl = new PIDController(75,0,0,-100,100);
-PIDController* yVelCtrl = new PIDController(75,0,0,-100,100);
+PIDController* xVelCtrl = new PIDController(50,0,0,-100,100);
+PIDController* yVelCtrl = new PIDController(50,0,0,-100,100);
 PIDController* altPosCtrl = new PIDController(500,0,0,-200,300);
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
@@ -77,12 +77,13 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg) 
 { 
    double vel_x = msg->velocity_x;
+   cout << ros::WallTime::now() << ",";
+   cout << vel_x << endl;
    double vel_y = msg->velocity_y;
    // pos_z = msg->ground_distance; 
    
    double x_out = xVelCtrl->calc(vel_x);
    double y_out = yVelCtrl->calc(vel_y);
-
    roll = MID_PWM + x_out;
    pitch = MID_PWM - y_out; 
 }
@@ -153,8 +154,8 @@ int main(int argc, char **argv)
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
   // Set PID controller targets  
-  // xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
-  // yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
+  xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
+  yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
   int inputChar = 'a';
   
@@ -162,12 +163,15 @@ int main(int argc, char **argv)
   
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
-
-            //msg.channels[ROLL_CHANNEL]=roll;
-			//msg.channels[PITCH_CHANNEL]=pitch;
-            msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
+			if(ground_distance > 0.5) {
+            msg.channels[ROLL_CHANNEL]=roll;
+			msg.channels[PITCH_CHANNEL]=pitch;
+			}
+			else {
+			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL]=throttle;
+			}
+           	msg.channels[THROTTLE_CHANNEL]=throttle;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
 			msg.channels[NOT_USED_CHANNEL]=msg.CHAN_RELEASE;
