@@ -1,8 +1,6 @@
 #include "spsuart/autonomous.h"
 #include <termios.h>
 
-#define LANDING_ALTITUDE 0.5
-
 using namespace std;
 using namespace cv;
   
@@ -142,8 +140,8 @@ int main(int argc, char **argv)
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
   // Set PID controller targets  
-  //xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
-  //yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
+  xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
+  yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
   int inputChar = 'a';
   
@@ -151,23 +149,16 @@ int main(int argc, char **argv)
   
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
-
 		
-		if(altPosCtrl->hasSettled() && target_altitude == 2.0)
-		{
-			target_altitude = LANDING_ALTITUDE;
-  			altPosCtrl->targetSetpoint(target_altitude); 
-		}
-		
-			//if(xy_idle)
-			//{
+			if(xy_idle)
+			{
 				msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 				msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-		    //}	
-		    // else{
-			//	msg.channels[ROLL_CHANNEL]=roll;
-			//	msg.channels[PITCH_CHANNEL]=pitch;
-			//}
+		    }	
+		     else{
+				msg.channels[ROLL_CHANNEL]=roll;
+				msg.channels[PITCH_CHANNEL]=pitch;
+			}
 			msg.channels[THROTTLE_CHANNEL]=throttle;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
