@@ -40,12 +40,12 @@ image_transport::ImageTransport it_;
 ros::Publisher result_pub;
 ros::Publisher result_pub_y;
 ros::Publisher depth_pub;
-ros_opencv::TrackingPoint light;
+ros_opencv::TrackingPoint color;
 ros_opencv::Depthmessage depthPoint;
 cv::Point p;
 cv::Vec3f selectedColor;
 bool loadNewStock;
-vector<cv::Point> lightPoints;
+vector<cv::Point> colorPoints;
 
 public:
 MyClass() :
@@ -159,7 +159,7 @@ resize(depth,depthSmall,Size(640,480));
 
 IplImage iplimg =imgColorThresh;
 
-// Calculate the moments to estimate the position of the light
+// Calculate the moments to estimate the position of the color
 CvMoments *moments = (CvMoments*)malloc(sizeof(CvMoments));
 cvMoments(&iplimg, moments, 1);
 
@@ -181,9 +181,9 @@ posX=-1;
 posY=-1;
 }
 
-light.pointX=posX;
-light.pointY=posY;
-result_pub.publish(light);
+color.pointX=posX;
+color.pointY=posY;
+result_pub.publish(color);
 
 circle( frameSmall, Point(posX, posY), 3, Scalar( 0, 0, 255), 2, 8);
 cv::imshow("rgb image", frameSmall);
@@ -217,7 +217,7 @@ message_filters::Synchronizer< MySyncPolicy > sync;
 
 int main(int argc, char** argv) {
 
-ros::init( argc, argv, "XtionTrackBlue" );
+ros::init( argc, argv, "XtionTrackColor" );
 MyClass mc;
 
 while( ros::ok() ){
