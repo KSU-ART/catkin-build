@@ -32,13 +32,17 @@ enum State {
 
 State currentState = AvoidObstacle;
 
+ros::Time interactWithRobotStartTime = ros::Time::now();
+bool interactWithRobotTimeStarted = false;
+
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 
-	if (currentState == RandomTraversal && msg->pointX != -1 && || msg->pointY != -1){
+	if (currentState == RandomTraversal && msg->pointX != -1 && msg->pointY != -1){
 		currentState = InteractWithRobot;
+		interactWithRobotTimeStarted = false;
 	}
 	// If we lose sight of the ground robot go back to random traversal state
-	else if (currentState == InteractWithRobot && msg->pointX != -1 && || msg->pointY != -1){
+	else if (currentState == InteractWithRobot && msg->pointX != -1 && msg->pointY != -1){
 		currentState == RandomTraversal;
 	}
 	else if (currentState == InteractWithRobot){
@@ -48,9 +52,18 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 		if (msg->pointX > 210 && msg->pointX < 270 && msg->pointY > 290 && msg->pointY < 350){
 			//If the ground robot is centered try to hover over it
 			altPosCtrl->targetSetpoint(0.5);
+			if (!interactWithRobotTimeStarted){
+				interactWithRobotStartTime = ros::Time::now();
+				interactWithRobotTimeStarted = true;
+			}
+			//If we have interacted with the ground robot for more than 15 seconds go back to random traversal
+			else if (ros::Time::now() >= interactWithRobotStartTime + ros::Duration(15)){
+				currentState == RandomTraversal;
+			}
 		}
 		else{
 			altPosCtrl->targetSetpoint(1.5);
+			interactWithRobotTimeStarted = false;
 		}
 	}
 }
