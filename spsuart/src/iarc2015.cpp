@@ -185,12 +185,12 @@ int main(int argc, char **argv)
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				cout<< "Starting enter arena timer" <<endl;
-				enterArenaCounter = 0;
-				timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
+				enterArenaStartTime = ros::Time::now();
+				//timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
 				enterArenaTimerStarted = true;
 			}
-			else {
-				timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
+			else if (ros::Time::now() >= enterArenaStartTime + 5){
+				enterArenaTimerCallback();
 			}
 			break;
 		case RandomTraversal:
