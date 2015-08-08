@@ -71,8 +71,8 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 }
 
-/* */
-void enterArenaTimerCallback(int count){
+ 
+void enterArenaTimerCallback(){
 cout<< "!!!!!!!!!!!!!!!####################################" <<endl;
 	currentState = RandomTraversal;
 	enterArenaTimerStarted = false;
@@ -129,14 +129,14 @@ void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
 	*xVar = int(MID_PWM + mag * sin(theta));
 	*yVar = int(MID_PWM + mag * cos(theta));
 }
-
+/*
 void timeManager(int* count, int max, void(*f)(int)) {
 	count++;
 	if (count == max)
 		(*f)(count);
 	}
 }
-
+*/
 int main(int argc, char **argv)
 {
 	//ROS node init and NodeHandle init
@@ -165,6 +165,7 @@ int main(int argc, char **argv)
 	bool land = false;
 	
 	int enterArenaCounter;
+	ros::Time enterArenaStartTime = ros::Time::now(); 
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
@@ -185,11 +186,12 @@ int main(int argc, char **argv)
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				cout<< "Starting enter arena timer" <<endl;
-				enterArenaStartTime = ros::Time::now();
+				ros::Time enterArenaStartTime = ros::Time::now();
 				//timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
 				enterArenaTimerStarted = true;
 			}
-			else if (ros::Time::now() >= enterArenaStartTime + 5){
+			else if (ros::Time::now() >= enterArenaStartTime +
+ros::Duration(5.0)){
 				enterArenaTimerCallback();
 			}
 			break;
