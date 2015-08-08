@@ -4,6 +4,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "ros_opencv/TrackingPoint.h"
 #include "ros_opencv/ObstacleDetected.h"
+#include "math.h"
 
 using namespace std;
 using namespace cv;
@@ -13,6 +14,7 @@ namespace enc = sensor_msgs::image_encodings;
 int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
+int mode = ALT_HOLD_MODE;
 
 double target_altitude = 1.5;
 
@@ -23,17 +25,27 @@ PIDController* xVelCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* yVelCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
 
-enum State { TakeOff = 0, FlyFoward = 1, FindRobots = 2,
+enum State { TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
 InteractWithRobot = 3, AvoidObstacle = 4, Land = 5 };
 
 State currentState = TakeOff;
+bool enterArenaTimerStarted = false;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
+	/*Only use this callback if the vehicle is in the InteractWithRobot state*/
+	if (currentState == InteractWithRobot){
 
+	}
+	else
+		return;
 }
 
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 msg) {
+	/* If an obstacle is detected override the state to avoid*/
+	if (msg->obstacleDetected){
+		currentState = AvoidObstacle;
+	}
 } 
 
 /* Lidar based alt-hold callback */
@@ -52,7 +64,17 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	double out = altPosCtrl->calc(ground_distance);
 	ROS_DEBUG("PID Out: %d", out);
 	throttle = MID_PWM + out;
+	/* If the vehicle is in the takeoff state and has settled switch to enter arena */
+	if (currentState == Takeoff && altitude > 1.45 && altitude < 1.55){
+		currentState = EnterArena;
+	}
 
+}
+
+/* */
+void enterArenaTimerCallback(const ros::TimerEvent&){
+	currentState = RandomTraversal;
+	enterArenaTimerStarted = false;
 }
 
 int constrain(int value, int min, int max)
@@ -79,8 +101,6 @@ int getchNonBlocking()
 
 	unsigned char key;
 
-
-
 	tcgetattr(0, &initial_settings);
 
 	new_settings = initial_settings;
@@ -91,15 +111,22 @@ int getchNonBlocking()
 	new_settings.c_cc[VTIME] = 0;
 
 	tcsetattr(0, TCSANOW, &new_settings);
-
 	n = getchar();
-
 	key = n;
-
-
 	tcsetattr(0, TCSANOW, &initial_settings);
 
 	return key;
+}
+
+void pwmVector(int mag, double theta, int*  xVar, int*  &yVar) {
+	if (mag > 500) {
+		mag = 500;
+	}
+	else if (mag < -500) {
+		mag = -500;
+	}
+	*xVar = int(MID_PWM + mag * sin(theta));
+	*yVar = int(MID_PWM + mag * cos(theta));
 }
 
 int main(int argc, char **argv)
@@ -125,63 +152,69 @@ int main(int argc, char **argv)
 	// Set PID controller targets  
 	xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
 	yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
-	altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
 	int inputChar = 'a';
 
 	bool land = false;
+	
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
-
-		msg.channels[YAW_CHANNEL] = msg.CHAN_RELEASE;
-		msg.channels[NOT_USED_CHANNEL] = msg.CHAN_RELEASE;
-		msg.channels[GIMBAL_TILT_CHANNEL] = constrain(GIMBAL_TILT_MAX, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
-		msg.channels[GIMBAL_ROLL_CHANNEL] = constrain(GIMBAL_ROLL_TRIM, GIMBAL_ROLL_MIN, GIMBAL_ROLL_MAX);
 		
 		switch (currentState){
 		case TakeOff:
 			cout << "Current state: Take off" << endl;
-			msg.channels[ROLL_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[PITCH_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL] = throttle;
-			msg.channels[MODE_CHANNEL] = ALT_HOLD_MODE;
+			roll = msg.CHAN_RELEASE;
+			pitch = msg.CHAN_RELEASE;
+			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
+			mode = ALT_HOLD_MODE;
 			break;
-		case FlyFoward:
-			cout << "Current state: Fly forward" << endl;
-			msg.channels[ROLL_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[PITCH_CHANNEL] = pitch;
-			msg.channels[THROTTLE_CHANNEL] = throttle;
-			msg.channels[MODE_CHANNEL] = ALT_HOLD_MODE;
+		case EnterArena:
+			cout << "Current state: Enter arena" << endl;
+			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
+			pwmVector(30, 0, roll&, pitch&);
+			cout << "Pitch: " << pitch << endl;
+			mode = ALT_HOLD_MODE;
+			if (!enterArenaTimerStarted){
+				ros::Timer timer = nh.createTimer(ros::Duration(5), enterArenaTimerCallback, true);
+				enterArenaTimerStarted = true;
+			}
 			break;
-		case FindRobots:
-			cout << "Current state: Searching for ground robots" << endl;
-			msg.channels[ROLL_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[PITCH_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL] = throttle;
-			msg.channels[MODE_CHANNEL] = ALT_HOLD_MODE;
+		case RandomTraversal:
+			cout << "Current state: Random Traversal" << endl;
+			roll = msg.CHAN_RELEASE;
+			pitch = msg.CHAN_RELEASE;
+			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
+			mode = ALT_HOLD_MODE;
 			break;
 		case InteractWithRobot:
 			cout << "Current state: Engaging a ground robot" << endl;
-			msg.channels[ROLL_CHANNEL] = roll;
-			msg.channels[PITCH_CHANNEL] = pitch;
-			msg.channels[THROTTLE_CHANNEL] = throttle;
-			msg.channels[MODE_CHANNEL] = ALT_HOLD_MODE;
+			altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
+			mode = ALT_HOLD_MODE;
 			break;
 		case AvoidObstacle:
 			cout << "Current state: AVODING OBSTACLE!!" << endl;
-			msg.channels[ROLL_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[PITCH_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL] = throttle;
-			msg.channels[MODE_CHANNEL] = ALT_HOLD_MODE;
+			roll = msg.CHAN_RELEASE;
+			pitch = msg.CHAN_RELEASE;
+			altPosCtrl->targetSetpoint(2.5); // target altitude in meters
+			mode = ALT_HOLD_MODE;
 			break;
 		case Land:
 			cout << "Current state: Landing..." << endl;
-			msg.channels[ROLL_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[PITCH_CHANNEL] = msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL] = MID_PWM;
-			msg.channels[MODE_CHANNEL] = LAND_MODE;
+			roll = msg.CHAN_RELEASE;
+			pitch = msg.CHAN_RELEASE;
+			throttle = MID_PWM;
+			mode = LAND_MODE;
 			break;
 		}
+
+		msg.channels[ROLL_CHANNEL] = roll;
+		msg.channels[PITCH_CHANNEL] = pitch;
+		msg.channels[THROTTLE_CHANNEL] = throttle;
+		msg.channels[MODE_CHANNEL] = mode;
+		msg.channels[YAW_CHANNEL] = msg.CHAN_RELEASE;
+		msg.channels[NOT_USED_CHANNEL] = msg.CHAN_RELEASE;
+		msg.channels[GIMBAL_TILT_CHANNEL] = constrain(GIMBAL_TILT_MAX, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
+		msg.channels[GIMBAL_ROLL_CHANNEL] = constrain(GIMBAL_ROLL_TRIM, GIMBAL_ROLL_MIN, GIMBAL_ROLL_MAX);
 		
 		inputChar = getchNonBlocking();   // call non-blocking input function to get keyboard inputs
 
