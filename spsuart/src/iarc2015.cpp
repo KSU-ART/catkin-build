@@ -21,8 +21,8 @@ double target_altitude = 1.5;
 double ground_distance;
 
 // Instantiate PID controllers
-PIDController* xVelCtrl = new PIDController(50, 0, 0, -100, 100);
-PIDController* yVelCtrl = new PIDController(50, 0, 0, -100, 100);
+PIDController* xPosCtrl = new PIDController(50, 0, 0, -100, 100);
+PIDController* yPosCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
 
 enum State {
@@ -34,14 +34,25 @@ State currentState = AvoidObstacle;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 
-	if (currentState == RandomTraversal){
-
+	if (currentState == RandomTraversal && msg->pointX != -1 && || msg->pointY != -1){
+		currentState = InteractWithRobot;
 	}
-	else if (currentState = InteractWithRobot){
-
+	// If we lose sight of the ground robot go back to random traversal state
+	else if (currentState == InteractWithRobot && msg->pointX != -1 && || msg->pointY != -1){
+		currentState == RandomTraversal;
 	}
-	else
-		return;
+	else if (currentState == InteractWithRobot){
+		roll = MID_PWM + xPosCtrl->calc(msg->pointX);
+		pitch = MID_PWM - xPosCtrl->calc(msg->pointX);
+
+		if (msg->pointX > 210 && msg->pointX < 270 && msg->pointY > 290 && msg->pointY < 350){
+			//If the ground robot is centered try to hover over it
+			altPosCtrl->targetSetpoint(0.5);
+		}
+		else{
+			altPosCtrl->targetSetpoint(1.5);
+		}
+	}
 }
 
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
@@ -147,9 +158,6 @@ int main(int argc, char **argv)
 	mavros::OverrideRCIn msg;
 	ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
-	// Set PID controller targets  
-	xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
-	yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
 	int inputChar = 'a';
 
 	bool land = false;
@@ -214,7 +222,9 @@ int main(int argc, char **argv)
 			break;
 		case InteractWithRobot:
 			cout << "Current state: Engaging a ground robot" << endl;
-			altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
+			xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
+			yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
+			
 			mode = ALT_HOLD_MODE;
 			break;
 		case AvoidObstacle:
