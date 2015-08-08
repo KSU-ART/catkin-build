@@ -50,6 +50,10 @@
 #define GIMBAL_TILT_MIN 1464
 #define GIMBAL_TILT_MAX 1962
 #define GIMBAL_TILT_TRIM 1464
+/* Copying the values from roll since Hank 2.0 replaces roll with tilt, We probably should update these later */
+#define GIMBAL_PITCH_MIN 1117  
+#define GIMBAL_PITCH_MAX 1853
+#define GIMBAL_PITCH_TRIM 1521
 
 
 // in meters
