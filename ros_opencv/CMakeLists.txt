@@ -26,6 +26,7 @@ add_message_files(
    LightToLasermessage.msg
    Depthmessage.msg
    TrackingPoint.msg
+   ObstacleDetected.msg
 )
 
 ## Generate services in the 'srv' folder

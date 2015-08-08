@@ -1,5 +1,7 @@
 #include "spsuart/autonomous.h"
+#include "px_comm/OpticalFlow.h"
 #include <termios.h>
+#include "sensor_msgs/LaserScan.h"
 
 using namespace std;
 using namespace cv;
@@ -10,17 +12,18 @@ int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
 
-bool xy_idle = false;
+double target_altitude = 1.5;
 
-double target_altitude = 2.0;
+double ground_distance;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(0.25,0,0,-60,60);
-PIDController* yPosCtrl = new PIDController(0.32,0,0,-60,60);
-PIDController* altPosCtrl = new PIDController(500,0,0,-300,300);
+PIDController* xVelCtrl = new PIDController(50,0,0,-100,100);
+PIDController* yVelCtrl = new PIDController(50,0,0,-100,100);
+PIDController* altPosCtrl = new PIDController(500,0,0,-200,300);
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
 
+/*
 void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
         if(msg->msgid==173){
 
@@ -51,29 +54,40 @@ void apmMavlinkmsgCallback(const mavros::Mavlink::ConstPtr& msg){
                 x = NULL;
         }
 }
+*/
 
-void callbackImagePoint(const ros_opencv::TrackingPoint::ConstPtr& msgs){
-
-// Get X and Y coordinates of color center in image
-double x=msgs->pointX;
-double y=msgs->pointY;
-
-// Get the current time for the PID controllers
-
-// If color not detected in image, hold position and keep the current time up-to-date in the PID controllers
-if(x<0 || y<0) {
-                xy_idle = true;
-                xPosCtrl->calc(xPosCtrl->getSetpoint());
-                yPosCtrl->calc(yPosCtrl->getSetpoint());
-        }
-        // Color center detected in image, calculate roll and pitch corrections to move the hexacopter over the object.
-        else {
-                xy_idle = false;
-                roll = MID_PWM + xPosCtrl->calc(x);
-                pitch = MID_PWM - yPosCtrl->calc(y);
-        }
-       
+void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {	
+	double avg = 0;
+	for(int i = 0; i < sizeof(msg->ranges)/4; i++) {
+		if(msg->ranges[i] < 4){
+			avg += (double)(msg->ranges[i]/(sizeof(msg->ranges)/4));
+		}
+		else{	
+			avg += (double)(4/(sizeof(4)));
+		}
+	}
+	ground_distance = avg;	
+	ROS_DEBUG("Altitude: %d", avg);
+	double out = altPosCtrl->calc(ground_distance);
+	ROS_DEBUG("PID Out: %d", out);
+	throttle = MID_PWM + out;
+	
 }
+
+void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg) 
+{ 
+   double vel_x = msg->velocity_x;
+   cout << ros::WallTime::now() << ",";
+   cout << vel_x << endl;
+   double vel_y = msg->velocity_y;
+   // pos_z = msg->ground_distance; 
+   
+   double x_out = xVelCtrl->calc(vel_x);
+   double y_out = yVelCtrl->calc(vel_y);
+   roll = MID_PWM + x_out;
+   pitch = MID_PWM - y_out; 
+}
+
 
 int constrain(int value, int min, int max)
 {
@@ -129,9 +143,9 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   
   //Image and mavlink message subscriber
-  ros::Subscriber subpoint = n.subscribe("image_point", 1, callbackImagePoint);
-  ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
-  
+  ros::Subscriber subflow = n.subscribe("px4flow/opt_flow",1,optFlowCallback);
+  //ros::Subscriber submav = n.subscribe("mavlink/from", 1, apmMavlinkmsgCallback);
+  ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback); 
   //Mavros rc override publisher
   ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
   
@@ -140,8 +154,8 @@ int main(int argc, char **argv)
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
   // Set PID controller targets  
-  xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
-  yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
+  xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
+  yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
   altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
   int inputChar = 'a';
   
@@ -149,23 +163,24 @@ int main(int argc, char **argv)
   
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
-		
-			if(xy_idle)
-			{
-				msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
-				msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-		    }	
-		     else{
-				msg.channels[ROLL_CHANNEL]=roll;
-				msg.channels[PITCH_CHANNEL]=pitch;
+			if(ground_distance > 0.5) {
+            msg.channels[ROLL_CHANNEL]=roll;
+			msg.channels[PITCH_CHANNEL]=pitch;
 			}
-			msg.channels[THROTTLE_CHANNEL]=throttle;
+			else {
+			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
+			}
+           	msg.channels[THROTTLE_CHANNEL]=throttle;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
 			msg.channels[NOT_USED_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
 			msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
-		
+		ROS_DEBUG("ROLL : %d PITCH: %d THROTTLE: %d YAW: %d MODE: %d",
+msg.channels[ROLL_CHANNEL], msg.channels[PITCH_CHANNEL],
+msg.channels[THROTTLE_CHANNEL], msg.channels[YAW_CHANNEL],
+msg.channels[MODE_CHANNEL]);	
 		inputChar = getchNonBlocking();   // call non-blocking input function
 		
 		if(inputChar == ' ' || land){
@@ -176,7 +191,7 @@ int main(int argc, char **argv)
 			
 			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-			msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[THROTTLE_CHANNEL]=MID_PWM;
 			msg.channels[MODE_CHANNEL]=LAND_MODE;
 
 		}
