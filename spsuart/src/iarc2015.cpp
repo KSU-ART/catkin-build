@@ -30,10 +30,10 @@ enum State {
 	InteractWithRobot = 3, AvoidObstacle = 4, Land = 5
 };
 
-State currentState = RandomTraversal;
+State currentState = AvoidObstacle;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
-	
+
 	if (currentState == RandomTraversal){
 
 	}
@@ -156,10 +156,12 @@ int main(int argc, char **argv)
 
 	ros::Time enterArenaStartTime = ros::Time::now();
 	ros::Time randomTraversalTime = ros::Time::now();
+	ros::Time obstacleAvoidStartTime = ros::Time::now();
 
 	bool enterArenaTimerStarted = false;
 	bool randomTraversalTimeStarted = false;
 	bool randomTraversalWait = false;
+	bool obstacleTimerStarted = false;
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
@@ -197,11 +199,9 @@ int main(int argc, char **argv)
 				if (!randomTraversalWait){
 					double angle = (rand() % 359) + 1;
 					pwmVector(30, angle, &roll, &pitch);
-						cout << "Angle Pitch Roll" << angle << " " <<
-pitch << " " << roll << endl;
+					cout << "Angle Pitch Roll " << angle << " " << pitch << " " << roll << endl;
 				}
 				else{
-					cout<< "asdlohifasdl;fhi" <<endl;
 					roll = msg.CHAN_RELEASE;
 					pitch = msg.CHAN_RELEASE;
 				}
@@ -223,6 +223,16 @@ pitch << " " << roll << endl;
 			pitch = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(2.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
+			if (!obstacleTimerStarted){
+				obstacleAvoidStartTime = ros::Time::now();
+				obstacleTimerStarted = true;
+			}
+			else if (ros::Time::now() >= obstacleAvoidStartTime + ros::Duration(10)){
+				currentState = RandomTraversal;
+				obstacleTimerStarted = false;
+				/* After avoiding an obstacle go back to random traversal state*/
+				currentState = RandomTraversal;
+			}
 			break;
 		case Land:
 			cout << "Current state: Landing..." << endl;
