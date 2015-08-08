@@ -28,7 +28,7 @@ PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
 enum State { TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
 InteractWithRobot = 3, AvoidObstacle = 4, Land = 5 };
 
-State currentState = TakeOff;
+State currentState = EnterArena;
 bool enterArenaTimerStarted = false;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
@@ -65,7 +65,7 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	ROS_DEBUG("PID Out: %d", out);
 	throttle = MID_PWM + out;
 	/* If the vehicle is in the takeoff state and has settled switch to enter arena */
-	if (currentState == Takeoff && altitude > 1.45 && altitude < 1.55){
+	if (currentState == TakeOff && ground_distance > 1.45 && ground_distance < 1.55){
 		currentState = EnterArena;
 	}
 
@@ -73,6 +73,7 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 /* */
 void enterArenaTimerCallback(const ros::TimerEvent&){
+cout<< "!!!!!!!!!!!!!!!####################################" <<endl;
 	currentState = RandomTraversal;
 	enterArenaTimerStarted = false;
 }
@@ -118,7 +119,7 @@ int getchNonBlocking()
 	return key;
 }
 
-void pwmVector(int mag, double theta, int*  xVar, int*  &yVar) {
+void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
 	if (mag > 500) {
 		mag = 500;
 	}
@@ -171,11 +172,12 @@ int main(int argc, char **argv)
 		case EnterArena:
 			cout << "Current state: Enter arena" << endl;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
-			pwmVector(30, 0, roll&, pitch&);
+			pwmVector(30, 0, &roll, &pitch);
 			cout << "Pitch: " << pitch << endl;
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
-				ros::Timer timer = nh.createTimer(ros::Duration(5), enterArenaTimerCallback, true);
+				cout<< "Starting enter arena timer" <<endl;
+				ros::Timer timer = n.createTimer(ros::Duration(1.0), enterArenaTimerCallback);
 				enterArenaTimerStarted = true;
 			}
 			break;
