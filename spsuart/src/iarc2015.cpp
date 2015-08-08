@@ -25,15 +25,19 @@ PIDController* xVelCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* yVelCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
 
-enum State { TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
-InteractWithRobot = 3, AvoidObstacle = 4, Land = 5 };
+enum State {
+	TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
+	InteractWithRobot = 3, AvoidObstacle = 4, Land = 5
+};
 
-State currentState = EnterArena;
-bool enterArenaTimerStarted = false;
+State currentState = RandomTraversal;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
-	/*Only use this callback if the vehicle is in the InteractWithRobot state*/
-	if (currentState == InteractWithRobot){
+	
+	if (currentState == RandomTraversal){
+
+	}
+	else if (currentState = InteractWithRobot){
 
 	}
 	else
@@ -41,12 +45,12 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 }
 
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
-msg) {
+	msg) {
 	/* If an obstacle is detected override the state to avoid*/
 	if (msg->obstacleDetected){
 		currentState = AvoidObstacle;
 	}
-} 
+}
 
 /* Lidar based alt-hold callback */
 void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -68,14 +72,6 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	if (currentState == TakeOff && ground_distance > 1.45 && ground_distance < 1.55){
 		currentState = EnterArena;
 	}
-
-}
-
- 
-void enterArenaTimerCallback(){
-cout<< "!!!!!!!!!!!!!!!####################################" <<endl;
-	currentState = RandomTraversal;
-	enterArenaTimerStarted = false;
 }
 
 int constrain(int value, int min, int max)
@@ -126,17 +122,11 @@ void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
 	else if (mag < -500) {
 		mag = -500;
 	}
+	theta = theta * (Math.PI / 180);
 	*xVar = int(MID_PWM + mag * sin(theta));
 	*yVar = int(MID_PWM + mag * cos(theta));
 }
-/*
-void timeManager(int* count, int max, void(*f)(int)) {
-	count++;
-	if (count == max)
-		(*f)(count);
-	}
-}
-*/
+
 int main(int argc, char **argv)
 {
 	//ROS node init and NodeHandle init
@@ -145,7 +135,7 @@ int main(int argc, char **argv)
 
 	//Image point subscriber
 	ros::Subscriber subPoint = n.subscribe("opencv/image_point", 1, imagePointCallback);
-	
+
 	//Obstacle detection subscriber
 	ros::Subscriber subObstacle = n.subscribe("spsuart/obstacle_detected", 1, obstacleDetectedCallback);
 
@@ -163,13 +153,17 @@ int main(int argc, char **argv)
 	int inputChar = 'a';
 
 	bool land = false;
-	
-	int enterArenaCounter;
-	ros::Time enterArenaStartTime = ros::Time::now(); 
+
+	ros::Time enterArenaStartTime = ros::Time::now();
+	ros::Time randomTraversalTime = ros::Time::now();
+
+	bool enterArenaTimerStarted = false;
+	bool randomTraversalTimeStarted = false;
+	bool randomTraversalWait = false;
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
-		
+
 		switch (currentState){
 		case TakeOff:
 			cout << "Current state: Take off" << endl;
@@ -185,22 +179,36 @@ int main(int argc, char **argv)
 			cout << "Pitch: " << pitch << endl;
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
-				cout<< "Starting enter arena timer" <<endl;
-				ros::Time enterArenaStartTime = ros::Time::now();
-				//timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
+				enterArenaStartTime = ros::Time::now();
 				enterArenaTimerStarted = true;
 			}
-			else if (ros::Time::now() >= enterArenaStartTime +
-ros::Duration(5.0)){
-				enterArenaTimerCallback();
+			else if (ros::Time::now() >= enterArenaStartTime + ros::Duration(5.0)){
+				currentState = RandomTraversal;
+				enterArenaTimerStarted = false;
 			}
 			break;
 		case RandomTraversal:
 			cout << "Current state: Random Traversal" << endl;
-			roll = msg.CHAN_RELEASE;
-			pitch = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
+			if (!randomTraversalTimeStarted){
+				randomTraversalTime = ros::Time::now();
+				randomTraversalTimeStarted = true;
+				if (!randomTraversalWait){
+					double angle = (rand() % 359) + 1;
+					pwmVector(30, angle, &roll, &pitch);
+					cout << "Angle Pitch Roll" << angle << pitch << roll << endl;
+				}
+				else{
+					roll = msg.CHAN_RELEASE;
+					pitch = msg.CHAN_RELEASE;
+				}
+			}
+			else if (ros::Time::now() >= randomTraversalTime + ros::Duration(1.0)){
+				currentState = RandomTraversal;
+				randomTraversalTimeStarted = false;
+				randomTraversalWait = !randomTraversalWait;
+			}
 			break;
 		case InteractWithRobot:
 			cout << "Current state: Engaging a ground robot" << endl;
@@ -231,7 +239,7 @@ ros::Duration(5.0)){
 		msg.channels[NOT_USED_CHANNEL] = msg.CHAN_RELEASE;
 		msg.channels[GIMBAL_TILT_CHANNEL] = constrain(GIMBAL_TILT_MAX, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
 		msg.channels[GIMBAL_ROLL_CHANNEL] = constrain(GIMBAL_ROLL_TRIM, GIMBAL_ROLL_MIN, GIMBAL_ROLL_MAX);
-		
+
 		inputChar = getchNonBlocking();   // call non-blocking input function to get keyboard inputs
 
 		if (inputChar == ' ' || land){
