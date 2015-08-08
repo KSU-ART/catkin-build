@@ -122,9 +122,9 @@ void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
 	else if (mag < -500) {
 		mag = -500;
 	}
-	theta = theta * (Math.PI / 180);
-	*xVar = int(MID_PWM + mag * sin(theta));
-	*yVar = int(MID_PWM + mag * cos(theta));
+	theta = theta * (M_PI / 180);
+	*xVar = int(MID_PWM - mag * sin(theta));
+	*yVar = int(MID_PWM - mag * cos(theta));
 }
 
 int main(int argc, char **argv)
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 			}
 			break;
 		case RandomTraversal:
-			cout << "Current state: Random Traversal" << endl;
+			//cout << "Current state: Random Traversal" << endl;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			if (!randomTraversalTimeStarted){
@@ -197,9 +197,11 @@ int main(int argc, char **argv)
 				if (!randomTraversalWait){
 					double angle = (rand() % 359) + 1;
 					pwmVector(30, angle, &roll, &pitch);
-					cout << "Angle Pitch Roll" << angle << pitch << roll << endl;
+						cout << "Angle Pitch Roll" << angle << " " <<
+pitch << " " << roll << endl;
 				}
 				else{
+					cout<< "asdlohifasdl;fhi" <<endl;
 					roll = msg.CHAN_RELEASE;
 					pitch = msg.CHAN_RELEASE;
 				}
