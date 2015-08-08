@@ -72,7 +72,7 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 }
 
 /* */
-void enterArenaTimerCallback(const ros::TimerEvent&){
+void enterArenaTimerCallback(int count){
 cout<< "!!!!!!!!!!!!!!!####################################" <<endl;
 	currentState = RandomTraversal;
 	enterArenaTimerStarted = false;
@@ -130,6 +130,13 @@ void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
 	*yVar = int(MID_PWM + mag * cos(theta));
 }
 
+void timeManager(int* count, int max, void(*f)(int)) {
+	count++;
+	if (count == max)
+		(*f)(count);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	//ROS node init and NodeHandle init
@@ -157,6 +164,7 @@ int main(int argc, char **argv)
 
 	bool land = false;
 	
+	int enterArenaCounter;
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
@@ -177,8 +185,12 @@ int main(int argc, char **argv)
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				cout<< "Starting enter arena timer" <<endl;
-				ros::Timer timer = n.createTimer(ros::Duration(1.0), enterArenaTimerCallback);
+				enterArenaCounter = 0;
+				timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
 				enterArenaTimerStarted = true;
+			}
+			else {
+				timeManager(enterArenaCounter*, 225, enterArenaTimerCallback)
 			}
 			break;
 		case RandomTraversal:
