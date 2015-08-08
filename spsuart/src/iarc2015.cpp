@@ -2,6 +2,8 @@
 #include "px_comm/OpticalFlow.h"
 #include <termios.h>
 #include "sensor_msgs/LaserScan.h"
+#include "ros_opencv/TrackingPoint.h"
+#include "ros_opencv/ObstacleDetected.h"
 
 using namespace std;
 using namespace cv;
@@ -21,9 +23,18 @@ PIDController* xVelCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* yVelCtrl = new PIDController(50, 0, 0, -100, 100);
 PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
 
-enum class State { TakeOff, FlyFoward, FindRobots, InteractWithRobot, AvoidObstacle, Land };
+enum State { TakeOff = 0, FlyFoward = 1, FindRobots = 2,
+InteractWithRobot = 3, AvoidObstacle = 4, Land = 5 };
 
 State currentState = TakeOff;
+
+void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
+
+}
+
+void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
+msg) {
+} 
 
 /* Lidar based alt-hold callback */
 void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -125,7 +136,7 @@ int main(int argc, char **argv)
 		msg.channels[YAW_CHANNEL] = msg.CHAN_RELEASE;
 		msg.channels[NOT_USED_CHANNEL] = msg.CHAN_RELEASE;
 		msg.channels[GIMBAL_TILT_CHANNEL] = constrain(GIMBAL_TILT_MAX, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
-		msg.channels[GIMBAL_PITCH_CHANNEL] = constrain(GIMBAL_ROLL_TRIM, GIMBAL_ROLL_MIN, GIMBAL_ROLL_MAX);
+		msg.channels[GIMBAL_ROLL_CHANNEL] = constrain(GIMBAL_ROLL_TRIM, GIMBAL_ROLL_MIN, GIMBAL_ROLL_MAX);
 		
 		switch (currentState){
 		case TakeOff:
@@ -164,7 +175,7 @@ int main(int argc, char **argv)
 			msg.channels[MODE_CHANNEL] = ALT_HOLD_MODE;
 			break;
 		case Land:
-			case << "Current state: Landing..." << endl;
+			cout << "Current state: Landing..." << endl;
 			msg.channels[ROLL_CHANNEL] = msg.CHAN_RELEASE;
 			msg.channels[PITCH_CHANNEL] = msg.CHAN_RELEASE;
 			msg.channels[THROTTLE_CHANNEL] = MID_PWM;

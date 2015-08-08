@@ -177,7 +177,7 @@ target_link_libraries(offboard_mode
 
 target_link_libraries(iarc2015
     ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
+	pid-controller
 )  
 #############
 ## Install ##
