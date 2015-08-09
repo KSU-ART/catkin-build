@@ -18,10 +18,6 @@ using namespace  cv;
 
 class ObstacleDetector
 {
-	_InputArray lowerBound = (_InputArray)cvScalar(0,0,0);
-	_InputArray upperBound = (_InputArray)cvScalar(255,255,255);
-	
-	
 	ros::NodeHandle nh;
 	
     image_transport::ImageTransport it;
@@ -35,7 +31,7 @@ class ObstacleDetector
         ObstacleDetector()
             : it(nh)
         {
-            result_pub= nh.advertise<ros_opencv::TrackingPoint>("detect obstacle" , 1);
+            result_pub= nh.advertise<ros_opencv::ObstacleDetected>("detect obstacle" , 1);
             image_sub = it.subscribe("/camera/depth/image_raw", 1, &ObstacleDetector::find_obstacle, this);
         }
 
@@ -60,13 +56,16 @@ class ObstacleDetector
 		cv_bridge::CvImagePtr cv_ptr;
 		try
 		{
-			cv_ptr = cv_bridge::toCvCopy(msg, enc::BGR8);
+			cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
 		}
 		catch (cv_bridge::Exception& e)
 		{
 			ROS_ERROR("cv_bridge exception: %s", e.what());
 			return;
 		}
+		
+		_InputArray lowerBound = (_InputArray)cvScalar(0,0,0);
+		_InputArray upperBound = (_InputArray)cvScalar(255,255,255);
 		
 		Mat original_image = cv_ptr->image;
 		
@@ -75,18 +74,20 @@ class ObstacleDetector
 		
 		Mat processed_image = GetThresholdedImage(original_image,lowerBound,upperBound);
 		
-		HoughCisrcles(processed_image,objects,CV_HOUGH_GRADIENT,2,matProcessed.rows /4,100,50,20,400);
+		HoughCircles(processed_image,objects,CV_HOUGH_GRADIENT,2,processed_image.rows /4,100,50,20,400);
+		
 		
 		if (objects.size() > 0)
 		{
-			result_pub.publish(true);
+			obstaclemsg.obstacleDetected = true;
 		}else
 		{
-			result_pub.publish(false);
+			obstaclemsg.obstacleDetected = false;
 		}
+		result_pub.publish(obstaclemsg);
 	}
 	
-}
+};
 
 
 int main(int argc, char** argv)
