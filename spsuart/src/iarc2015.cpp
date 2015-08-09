@@ -30,7 +30,7 @@ enum State {
 	InteractWithRobot = 3, AvoidObstacle = 4, Land = 5
 };
 
-State currentState = AvoidObstacle;
+State currentState = TakeOff;
 
 ros::Time interactWithRobotStartTime = ros::Time::now();
 bool interactWithRobotTimeStarted = false;
@@ -40,10 +40,12 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	if (currentState == RandomTraversal && msg->pointX != -1 && msg->pointY != -1){
 		currentState = InteractWithRobot;
 		interactWithRobotTimeStarted = false;
+		cout << "Current state: Engaging a ground robot" << endl;
 	}
 	// If we lose sight of the ground robot go back to random traversal state
 	else if (currentState == InteractWithRobot && msg->pointX != -1 && msg->pointY != -1){
-		currentState == RandomTraversal;
+		currentState = RandomTraversal;
+		cout << "Current state: Random Traversal" << endl;
 	}
 	else if (currentState == InteractWithRobot){
 		roll = MID_PWM + xPosCtrl->calc(msg->pointX);
@@ -58,7 +60,8 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 			}
 			//If we have interacted with the ground robot for more than 15 seconds go back to random traversal
 			else if (ros::Time::now() >= interactWithRobotStartTime + ros::Duration(15)){
-				currentState == RandomTraversal;
+				currentState = RandomTraversal;
+				cout << "Current state: Random Traversal" << endl;
 			}
 		}
 		else{
@@ -73,6 +76,7 @@ void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 	/* If an obstacle is detected override the state to avoid*/
 	if (msg->obstacleDetected){
 		currentState = AvoidObstacle;
+		cout << "Current state: AVODING OBSTACLE!!" << endl;
 	}
 }
 
@@ -95,6 +99,7 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	/* If the vehicle is in the takeoff state and has settled switch to enter arena */
 	if (currentState == TakeOff && ground_distance > 1.45 && ground_distance < 1.55){
 		currentState = EnterArena;
+		cout << "Current state: Enter arena" << endl;
 	}
 }
 
@@ -184,22 +189,21 @@ int main(int argc, char **argv)
 	bool randomTraversalWait = false;
 	bool obstacleTimerStarted = false;
 
+	cout << "Current state: Take off" << endl;
+
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
 
 		switch (currentState){
 		case TakeOff:
-			cout << "Current state: Take off" << endl;
 			roll = msg.CHAN_RELEASE;
 			pitch = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			break;
 		case EnterArena:
-			cout << "Current state: Enter arena" << endl;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			pwmVector(30, 0, &roll, &pitch);
-			cout << "Pitch: " << pitch << endl;
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				enterArenaStartTime = ros::Time::now();
@@ -208,10 +212,10 @@ int main(int argc, char **argv)
 			else if (ros::Time::now() >= enterArenaStartTime + ros::Duration(5.0)){
 				currentState = RandomTraversal;
 				enterArenaTimerStarted = false;
+				cout << "Current state: Random Traversal" << endl;
 			}
 			break;
 		case RandomTraversal:
-			//cout << "Current state: Random Traversal" << endl;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			if (!randomTraversalTimeStarted){
@@ -229,19 +233,18 @@ int main(int argc, char **argv)
 			}
 			else if (ros::Time::now() >= randomTraversalTime + ros::Duration(1.0)){
 				currentState = RandomTraversal;
+				cout << "Current state: Random Traversal" << endl;
 				randomTraversalTimeStarted = false;
 				randomTraversalWait = !randomTraversalWait;
 			}
 			break;
 		case InteractWithRobot:
-			cout << "Current state: Engaging a ground robot" << endl;
 			xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
 			yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
 			
 			mode = ALT_HOLD_MODE;
 			break;
 		case AvoidObstacle:
-			cout << "Current state: AVODING OBSTACLE!!" << endl;
 			roll = msg.CHAN_RELEASE;
 			pitch = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(2.5); // target altitude in meters
@@ -251,14 +254,13 @@ int main(int argc, char **argv)
 				obstacleTimerStarted = true;
 			}
 			else if (ros::Time::now() >= obstacleAvoidStartTime + ros::Duration(10)){
-				currentState = RandomTraversal;
-				obstacleTimerStarted = false;
 				/* After avoiding an obstacle go back to random traversal state*/
 				currentState = RandomTraversal;
+				obstacleTimerStarted = false;
+				cout << "Current state: Random Traversal" << endl;
 			}
 			break;
 		case Land:
-			cout << "Current state: Landing..." << endl;
 			roll = msg.CHAN_RELEASE;
 			pitch = msg.CHAN_RELEASE;
 			throttle = MID_PWM;
@@ -282,6 +284,7 @@ int main(int argc, char **argv)
 				land = true;
 				cout << "EMERGENCY LAND ENGAGED" << endl;
 				currentState = Land;
+				cout << "Current state: Landing..." << endl;
 			}
 		}
 
