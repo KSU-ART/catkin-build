@@ -34,7 +34,7 @@ class ColorDetector
             : it_(nh_)
         {
             result_pub= nh_.advertise<ros_opencv::TrackingPoint>("image_point" , 1);
-            image_sub_ = it_.subscribe("/camera/rgb/image_raw", 1, &ColorDetector::imageCb, this);
+            image_sub_ = it_.subscribe("/image_raw", 1, &ColorDetector::imageCb, this);
         }
 
         ~ColorDetector()
@@ -81,19 +81,21 @@ class ColorDetector
             Mat threshSmallWhite;
 
             resize(frame,frameSmall,Size(640,480));
-
+			//Scalar(40,20,235), Scalar(80,125,255)
+			//Scalar(50,55,210), Scalar(85,110,255)
             Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(0,254,254), (_InputArray)cvScalar(6,255,255));
-            Mat imgRedThresh2 = GetThresholdedImage(frameSmall,
-(_InputArray)cvScalar(170,150,60), (_InputArray)cvScalar(180,255,255));
+            Mat imgRedThresh2 = GetThresholdedImage(frameSmall,(_InputArray)cvScalar(170,150,60), (_InputArray)cvScalar(180,255,255));
+            Mat imgGreenThresh = GetThresholdedImage(frameSmall,(_InputArray)cvScalar(50,55,210), (_InputArray)cvScalar(85,110,255));
 
             resize(imgRedThresh,threshSmallRed,Size(640,480));
             resize(imgRedThresh2,threshSmallRed2,Size(640,480));
+            resize(imgGreenThresh,threshSmallGreen,Size(640,480));
 
             vector<Point> threshVector;
             Mat finalImage = imgRedThresh;
             for(int j=0; j<threshSmallRed.rows; j++) {
                 for (int i=0; i<threshSmallRed.cols; i++) {
-                    if(threshSmallRed.at<uchar>(j,i)==255 || threshSmallRed2.at<uchar>(j,i)==255) {
+                    if(threshSmallRed.at<uchar>(j,i)==255 || threshSmallRed2.at<uchar>(j,i)==255 || threshSmallGreen.at<uchar>(j,i)==255) {
                         threshVector.push_back(Point(j,i));
                         finalImage.at<uchar>(j,i)=255;
                     }
@@ -122,16 +124,11 @@ class ColorDetector
                 posY=-1;
             }
 
-            //line(frameSmall, Point(325,0), Point(325,480), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(315,0), Point(315,480), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(0,250), Point(640,250), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(0,230), Point(640,230), cvScalar(0,255,0),2,0);
-
             circle(frameSmall, Point(posX,posY), 30, cvScalar(255,0,0), 5, 8, 0);
 
             //imshow("ColorTrackerRGB", frameSmall);
             //imshow("ColorTrackerThresh", finalImage);
-            cv::waitKey(3);
+            //cv::waitKey(3);
 
             threshSmallRed.release();
             threshSmallYellow.release();
