@@ -163,7 +163,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 
 	//Image point subscriber
-	ros::Subscriber subPoint = n.subscribe("opencv/image_point", 1, imagePointCallback);
+	ros::Subscriber subPoint = n.subscribe("image_point", 1, imagePointCallback);
 
 	//Obstacle detection subscriber
 	ros::Subscriber subObstacle = n.subscribe("spsuart/obstacle_detected", 1, obstacleDetectedCallback);
