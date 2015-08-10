@@ -26,15 +26,45 @@ class ColorDetector
         image_transport::ImageTransport it_;
         image_transport::Subscriber image_sub_;
         ros::Publisher result_pub;
-        ros_opencv::TrackingPoint boundmsg;
-
+        ros_opencv::TrackingPoint trackingPoint;
+        
+        int sliderHMin;
+        int sliderHMax;
+		int sliderSMin;
+        int sliderSMax;
+        int sliderVMin;
+        int sliderVMax;
+        
     public:
 
         ColorDetector()
             : it_(nh_)
         {
             result_pub= nh_.advertise<ros_opencv::TrackingPoint>("image_point" , 1);
-            image_sub_ = it_.subscribe("/camera/rgb/image_raw", 1, &ColorDetector::imageCb, this);
+            image_sub_ = it_.subscribe("/image_raw", 1, &ColorDetector::imageCb, this);
+			sliderHMin = 0;
+			sliderHMax = 180;
+			sliderSMin = 0;
+			sliderSMax = 255;
+			sliderVMin = 0;
+			sliderVMax = 255;
+			
+			 //// Create Trackbar window
+			 //namedWindow("Tracking tuning", 1);
+
+			 ////Create trackbar to change H
+
+			 //createTrackbar("Hue Min", "Tracking tuning", &sliderHMin, 180);
+			 //createTrackbar("Hue Max", "Tracking tuning", &sliderHMax, 180);
+
+			  ////Create trackbar to change S
+
+			 //createTrackbar("Saturation Min", "Tracking tuning", &sliderSMin, 255);
+			 //createTrackbar("Saturation Max", "Tracking tuning", &sliderSMax, 255);
+			 
+			 ////Create trackbar to change V
+			 //createTrackbar("Value Min", "Tracking tuning", &sliderVMin, 255);
+			 //createTrackbar("Value Max", "Tracking tuning", &sliderVMax, 255);
         }
 
         ~ColorDetector()
@@ -75,72 +105,88 @@ class ColorDetector
             Mat frame=cv_ptr->image;
             Mat frameSmall;
             Mat threshSmallRed;
-            Mat threshSmallRed2;
             Mat threshSmallGreen;
-            Mat threshSmallYellow;
-            Mat threshSmallWhite;
 
             resize(frame,frameSmall,Size(640,480));
+			
+			//Use trackbar
+			//Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(180,255,255), (_InputArray)cvScalar(180,255,255));
+			//Mat imgGreenThresh = GetThresholdedImage(frameSmall,(_InputArray)cvScalar(sliderHMin,sliderSMin,sliderVMin), (_InputArray)cvScalar(sliderHMax,sliderSMax,sliderVMax));
 
-            Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(0,254,254), (_InputArray)cvScalar(6,255,255));
-            Mat imgRedThresh2 = GetThresholdedImage(frameSmall,
-(_InputArray)cvScalar(170,150,60), (_InputArray)cvScalar(180,255,255));
+            Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(140,127,111), (_InputArray)cvScalar(180,255,255));
+            Mat imgGreenThresh = GetThresholdedImage(frameSmall,(_InputArray)cvScalar(40,42,100), (_InputArray)cvScalar(80,255,255));
 
             resize(imgRedThresh,threshSmallRed,Size(640,480));
-            resize(imgRedThresh2,threshSmallRed2,Size(640,480));
+            resize(imgGreenThresh,threshSmallGreen,Size(640,480));
 
             vector<Point> threshVector;
             Mat finalImage = imgRedThresh;
             for(int j=0; j<threshSmallRed.rows; j++) {
                 for (int i=0; i<threshSmallRed.cols; i++) {
-                    if(threshSmallRed.at<uchar>(j,i)==255 || threshSmallRed2.at<uchar>(j,i)==255) {
+                    if(threshSmallRed.at<uchar>(j,i)==255 || threshSmallGreen.at<uchar>(j,i)==255) {
                         threshVector.push_back(Point(j,i));
                         finalImage.at<uchar>(j,i)=255;
                     }
                 }
             }
+            
+            //Blur, erode, and dilate to filter the binary image
+            GaussianBlur(finalImage.clone(), finalImage, cv::Size(5, 5), 2, 2);
+            erode( finalImage.clone(), finalImage, Mat(), Point(-1, -1), 2, 1, 1);
+            dilate( finalImage.clone(), finalImage, Mat(), Point(-1, -1), 2, 1, 1);
 
-            IplImage iplimage =finalImage;
-
-            CvMoments *moments = (CvMoments*)malloc(sizeof(CvMoments));
-            cvMoments(&iplimage, moments, 1);
-
-            // The actual moment values
-            double moment10 = cvGetSpatialMoment(moments, 1, 0);
-            double moment01 = cvGetSpatialMoment(moments, 0, 1);
-            double area = cvGetCentralMoment(moments, 0, 0);
-
-            int posX;
-            int posY;
-
-            if(threshVector.size()>300) {
-                posX = moment10/area;
-                posY = moment01/area;
-            }
-            else {
-                posX=-1;
-                posY=-1;
-            }
-
-            //line(frameSmall, Point(325,0), Point(325,480), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(315,0), Point(315,480), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(0,250), Point(640,250), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(0,230), Point(640,230), cvScalar(0,255,0),2,0);
-
-            circle(frameSmall, Point(posX,posY), 30, cvScalar(255,0,0), 5, 8, 0);
-
+			vector<vector<Point> > contours;
+			vector<Vec4i> hierarchy;
+			Mat thresh = finalImage.clone();
+			findContours(finalImage, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+				
+			vector<vector<Point> > filteredContours;
+				for (int i = 0; i< contours.size(); i++)
+				{
+					if(contourArea(contours[i]) > 3000){
+					filteredContours.push_back(contours[i]);
+					}
+				}
+				
+			/// Draw contours
+			//Mat drawing = Mat::zeros(finalImage.size(), CV_8UC3);
+			//for (int i = 0; i< filteredContours.size(); i++)
+			//{
+				//Scalar color = Scalar(0, 255, 0);
+				//drawContours(drawing, filteredContours, i, color, 2, 8, hierarchy, 0, Point());
+			//}
+			
+			int posX = -1;
+			int posY = -1;
+			
+			int cx = -1;
+			int cy = -1;
+			
+			for (int i = 0; i< filteredContours.size(); i++){
+				Moments m = moments(filteredContours[i]);
+				cx = m.m10/m.m00;
+				cy = m.m01/m.m00;
+				circle(frameSmall, Point(cx,cy), 30, cvScalar(255,0,0), 5, 8, 0);
+				if((posX == -1 && posY == -1) || (abs(cx - 320) + abs(cy - 240)) <  (abs(posX - 320) + abs(posY - 240))){
+					posX = cx;
+					posY = cy;
+				}
+			}
+			
+			//cout<<"Pos: "<<posX<<","<<posY<<endl;
+			
             //imshow("ColorTrackerRGB", frameSmall);
-            //imshow("ColorTrackerThresh", finalImage);
+            //imshow("ColorTrackerThresh", thresh);
+			//imshow("Contours", drawing);
             cv::waitKey(3);
 
             threshSmallRed.release();
-            threshSmallYellow.release();
             threshSmallGreen.release();
             frameSmall.release();
 
-            boundmsg.pointX=posX;
-            boundmsg.pointY=posY;
-            result_pub.publish(boundmsg);
+            trackingPoint.pointX=posX;
+            trackingPoint.pointY=posY;
+            result_pub.publish(trackingPoint);
         }
 };
 
@@ -148,6 +194,10 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "track_irobot");
     ColorDetector ld;
+    
+
+     
+
     ros::spin();
     return 0;
 }
