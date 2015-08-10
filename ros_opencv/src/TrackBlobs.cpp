@@ -83,8 +83,7 @@ class ColorDetector
             resize(frame,frameSmall,Size(640,480));
 
             Mat imgRedThresh = GetThresholdedImage(frameSmall, (_InputArray)cvScalar(0,254,254), (_InputArray)cvScalar(6,255,255));
-            Mat imgRedThresh2 = GetThresholdedImage(frameSmall,
-(_InputArray)cvScalar(170,150,60), (_InputArray)cvScalar(180,255,255));
+            Mat imgRedThresh2 = GetThresholdedImage(frameSmall,(_InputArray)cvScalar(170,150,60), (_InputArray)cvScalar(180,255,255));
 
             resize(imgRedThresh,threshSmallRed,Size(640,480));
             resize(imgRedThresh2,threshSmallRed2,Size(640,480));
@@ -100,34 +99,20 @@ class ColorDetector
                 }
             }
 
-            IplImage iplimage =finalImage;
+			vector<vector<Point> > contours;
+			vector<Vec4i> hierarchy;
 
-            CvMoments *moments = (CvMoments*)malloc(sizeof(CvMoments));
-            cvMoments(&iplimage, moments, 1);
+			findContours(finalImage, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
-            // The actual moment values
-            double moment10 = cvGetSpatialMoment(moments, 1, 0);
-            double moment01 = cvGetSpatialMoment(moments, 0, 1);
-            double area = cvGetCentralMoment(moments, 0, 0);
+			/// Draw contours
+			Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
+			for (int i = 0; i< contours.size(); i++)
+			{
+				Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+				drawContours(drawing, contours, i, color, 2, 8, hierarchy, 0, Point());
+			}
 
-            int posX;
-            int posY;
-
-            if(threshVector.size()>300) {
-                posX = moment10/area;
-                posY = moment01/area;
-            }
-            else {
-                posX=-1;
-                posY=-1;
-            }
-
-            //line(frameSmall, Point(325,0), Point(325,480), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(315,0), Point(315,480), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(0,250), Point(640,250), cvScalar(0,255,0),2,0);
-            //line(frameSmall, Point(0,230), Point(640,230), cvScalar(0,255,0),2,0);
-
-            circle(frameSmall, Point(posX,posY), 30, cvScalar(255,0,0), 5, 8, 0);
+            //circle(frameSmall, Point(posX,posY), 30, cvScalar(255,0,0), 5, 8, 0);
 
             //imshow("ColorTrackerRGB", frameSmall);
             //imshow("ColorTrackerThresh", finalImage);
@@ -137,6 +122,9 @@ class ColorDetector
             threshSmallYellow.release();
             threshSmallGreen.release();
             frameSmall.release();
+
+			int posX = -1;
+			int posY = -1;
 
             boundmsg.pointX=posX;
             boundmsg.pointY=posY;
