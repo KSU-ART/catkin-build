@@ -32,7 +32,7 @@ enum State {
 
 State currentState = TakeOff;
 
-ros::Time interactWithRobotStartTime = ros::Time::now();
+ros::Time interactWithRobotStartTime = ros::Time();
 bool interactWithRobotTimeStarted = false;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
