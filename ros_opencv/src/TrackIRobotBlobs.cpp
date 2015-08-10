@@ -17,6 +17,8 @@
 
 using namespace std;
 
+namespace enc = sensor_msgs::image_encodings;
+
 class TrackIRobotBlobs
 {
 	ros::NodeHandle nh_;
@@ -31,7 +33,7 @@ public:
 		: it_(nh_)
 	{
 		result_pub = nh_.advertise<ros_opencv::TrackingPoint>("image_point", 1);
-		image_sub_ = it_.subscribe("/image_raw", 1, &ColorDetector::imageCb, this);
+		image_sub_ = it_.subscribe("/image_raw", 1, &TrackIRobotBlobs::imageCb, this);
 	}
 
 	~TrackIRobotBlobs()
@@ -115,7 +117,7 @@ public:
 		vector<cv::KeyPoint> filtered_keypoints;
 		cv::SimpleBlobDetector::Params params;
 
-		resize(input_img, input_img, Size(640, 480));
+		resize(input_img, input_img, cv::Size(640, 480));
 
 		cv::GaussianBlur(input_img.clone(), blur, cv::Size(5, 5), 2, 2);
 
@@ -144,11 +146,10 @@ public:
 
 		cv::waitKey(1);
 
-		frame.release();
-		frameSmall.release();
+		input_img.release();
 
-		trackingPoint.pointX = posX;
-		trackingPoint.pointY = posY;
+		trackingPoint.pointX = -1;
+		trackingPoint.pointY = -1;
 		result_pub.publish(trackingPoint);
 	}
 };
