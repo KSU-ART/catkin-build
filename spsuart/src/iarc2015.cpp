@@ -34,11 +34,12 @@ enum State {
 State currentState = TakeOff;
 
 ros::Time interactWithRobotStartTime = ros::Time();
+ros::Time interactWithRobotCoolDown = ros::Time();
 bool interactWithRobotTimeStarted = false;
 
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 
-	if (currentState == RandomTraversal && msg->pointX != -1 && msg->pointY != -1){
+	if (currentState == RandomTraversal && msg->pointX != -1 && msg->pointY != -1 && interactWithRobotCoolDown < ros::Time::now()){
 		currentState = InteractWithRobot;
 		interactWithRobotTimeStarted = false;
 		cout << "Current state: Engaging a ground robot" << endl;
@@ -64,6 +65,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 			//If we have interacted with the ground robot for more than 15 seconds go back to random traversal
 			else if (ros::Time::now() >= interactWithRobotStartTime + ros::Duration(15)){
 				currentState = RandomTraversal;
+				interactWithRobotCoolDown = ros::Time::now() + ros::Duration(10);
 				cout << "Current state: Random Traversal" << endl;
 			}
 		}
@@ -192,13 +194,15 @@ int main(int argc, char **argv)
 	bool randomTraversalWait = false;
 	bool obstacleTimerStarted = false;
 
-	cout << "Current state: Take off" << endl;
+	// Init cooldown
+	interactWithRobotCoolDown = ros::Time::now();
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
 
 		switch (currentState){
 		case TakeOff:
+			cout << "Current state: Take off" << endl;
 			roll = msg.CHAN_RELEASE;
 			pitch = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
