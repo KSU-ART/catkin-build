@@ -79,7 +79,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 	msg) {
 	/* If an obstacle is detected override the state to avoid*/
-	if (msg->obstacleDetected){
+	if (msg->obstacleDetected && ground_distance>.4){
 		currentState = AvoidObstacle;
 		cout << "Current state: AVODING OBSTACLE!!" << endl;
 	}
@@ -196,13 +196,13 @@ int main(int argc, char **argv)
 
 	// Init cooldown
 	interactWithRobotCoolDown = ros::Time::now();
+	cout << "Current state: Take off" <<endl;
 
 	//While node is alive send RC values to the FC @ fcuCommRate hz
 	while (ros::ok()){
 
 		switch (currentState){
 		case TakeOff:
-			cout << "Current state: Take off" << endl;
 			roll = msg.CHAN_RELEASE;
 			pitch = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
