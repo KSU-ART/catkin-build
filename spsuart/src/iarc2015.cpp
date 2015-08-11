@@ -44,7 +44,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 		cout << "Current state: Engaging a ground robot" << endl;
 	}
 	// If we lose sight of the ground robot go back to random traversal state
-	else if (currentState == InteractWithRobot && msg->pointX != -1 && msg->pointY != -1){
+	else if (currentState == InteractWithRobot && msg->pointX == -1 && msg->pointY == -1){
 		currentState = RandomTraversal;
 		cout << "Current state: Random Traversal" << endl;
 	}
