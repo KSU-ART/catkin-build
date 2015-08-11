@@ -15,6 +15,7 @@ int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
 int mode = ALT_HOLD_MODE;
+int centerRadius = 60;
 
 double target_altitude = 1.5;
 
@@ -50,8 +51,10 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	else if (currentState == InteractWithRobot){
 		roll = MID_PWM + xPosCtrl->calc(msg->pointX);
 		pitch = MID_PWM - xPosCtrl->calc(msg->pointX);
-
-		if (msg->pointX > 210 && msg->pointX < 270 && msg->pointY > 290 && msg->pointY < 350){
+		
+		
+		
+		if (msg->pointX > (320 - centerRadius) && msg->pointX < (320 + centerRadius) && msg->pointY > (240 - centerRadius) && msg->pointY < (240 + centerRadius)){
 			//If the ground robot is centered try to hover over it
 			altPosCtrl->targetSetpoint(0.5);
 			if (!interactWithRobotTimeStarted){
