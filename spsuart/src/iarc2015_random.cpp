@@ -15,6 +15,7 @@ int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
 int mode = ALT_HOLD_MODE;
+int retract = LOW_PWM; 
 int centerRadius = 60;
 
 double target_altitude = 1.5;
@@ -56,6 +57,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 		
 		
 		if (msg->pointX > (320 - centerRadius) && msg->pointX < (320 + centerRadius) && msg->pointY > (240 - centerRadius) && msg->pointY < (240 + centerRadius)){
+			cout<<"Descending..."<<endl;
 			//If the ground robot is centered try to hover over it
 			altPosCtrl->targetSetpoint(0.5);
 			if (!interactWithRobotTimeStarted){
@@ -78,7 +80,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 	msg) {
-	/* If an obstacle is detected override the state to avoid*/
+	/* If an obstacle is detected and the vehicle is at aleast .4 m altitude override the state to avoid*/
 	if (msg->obstacleDetected && ground_distance>.4){
 		currentState = AvoidObstacle;
 		cout << "Current state: AVODING OBSTACLE!!" << endl;
@@ -106,6 +108,16 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		currentState = EnterArena;
 		cout << "Current state: Enter arena" << endl;
 	}
+	
+	//Retract the landing gear
+	if(ground_distance > 1.0){
+		retract = HIGH_PWM;
+	}
+	//Deploy the landing gear
+	else if (ground_distance > .8){
+		retract = LOW_PWM;
+	}
+	
 }
 
 int constrain(int value, int min, int max)
