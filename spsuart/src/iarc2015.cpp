@@ -28,7 +28,7 @@ PIDController* altPosCtrl = new PIDController(500, 0, 0, -200, 300);
 
 enum State {
 	TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
-	InteractWithRobot = 3, AvoidObstacle = 4, Land = 5
+	InteractWithRobot = 3, AvoidObstacle = 4, Land = 5, ReturnToArena = 6
 };
 
 State currentState = TakeOff;
@@ -37,6 +37,19 @@ ros::Time interactWithRobotStartTime = ros::Time();
 ros::Time interactWithRobotCoolDown = ros::Time();
 bool interactWithRobotTimeStarted = false;
 
+void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
+	if (mag > 500) {
+		mag = 500;
+	}
+	else if (mag < -500) {
+		mag = -500;
+	}
+	theta = theta * (M_PI / 180);
+	*xVar = int(MID_PWM - mag * sin(theta));
+	*yVar = int(MID_PWM - mag * cos(theta));
+}
+
+/* Closest ground robot image point callback*/
 void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 
 	if (currentState == RandomTraversal && msg->pointX != -1 && msg->pointY != -1 && interactWithRobotCoolDown < ros::Time::now()){
@@ -76,10 +89,29 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	}
 }
 
+/* Average position of grid squares callback */
+void boundaryCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) 
+{
+	if(msg->pointX != -1 && msg->pointY != -1)
+	{
+		if(msg->pointX > 520 || msg->pointX < 120 || msg->pointY > 420 || msg->pointY < 60){
+			if(currentState != ReturnToArena){
+				currentState = ReturnToArena;
+				cout << "Current state: Return to arena" <<endl;
+			}
+			currentState = ReturnToArena;
+			pwmVector(60, (atan2((msg->pointY-240),(msg->pointX-320)) * 180 / M_PI) - 90, &roll, &pitch);
+			cout << "Angle Pitch Roll " << (atan2((msg->pointY-240),(msg->pointX-320)) * 180 / M_PI) - 90 << " " << pitch << " " << roll << endl;
+		}
+	}
+	return;
+}
+
+/* Obstacled detected callback */
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 	msg) {
 	/* If an obstacle is detected override the state to avoid*/
-	if (msg->obstacleDetected && ground_distance>.4){
+	if (msg->obstacleDetected && ground_distance>.4 && currentState != ReturnToArena){
 		currentState = AvoidObstacle;
 		cout << "Current state: AVODING OBSTACLE!!" << endl;
 	}
@@ -149,18 +181,6 @@ int getchNonBlocking()
 	return key;
 }
 
-void pwmVector(int mag, double theta, int*  xVar, int* yVar) {
-	if (mag > 500) {
-		mag = 500;
-	}
-	else if (mag < -500) {
-		mag = -500;
-	}
-	theta = theta * (M_PI / 180);
-	*xVar = int(MID_PWM - mag * sin(theta));
-	*yVar = int(MID_PWM - mag * cos(theta));
-}
-
 int main(int argc, char **argv)
 {
 	//ROS node init and NodeHandle init
@@ -169,6 +189,9 @@ int main(int argc, char **argv)
 
 	//Image point subscriber
 	ros::Subscriber subPoint = n.subscribe("image_point", 1, imagePointCallback);
+	
+	//Grid average square point
+	ros::Subscriber subBound = n.subscribe("boundaryinfo", 1, boundaryCallback);
 
 	//Obstacle detection subscriber
 	ros::Subscriber subObstacle = n.subscribe("spsuart/obstacle_detected", 1, obstacleDetectedCallback);
@@ -210,7 +233,7 @@ int main(int argc, char **argv)
 			break;
 		case EnterArena:
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
-			pwmVector(30, 0, &roll, &pitch);
+			pwmVector(100, 0, &roll, &pitch);
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				enterArenaStartTime = ros::Time::now();
@@ -230,7 +253,7 @@ int main(int argc, char **argv)
 				randomTraversalTimeStarted = true;
 				if (!randomTraversalWait){
 					double angle = (rand() % 359) + 1;
-					pwmVector(30, angle, &roll, &pitch);
+					pwmVector(60, angle, &roll, &pitch);
 					cout << "Angle Pitch Roll " << angle << " " << pitch << " " << roll << endl;
 				}
 				else{
@@ -248,7 +271,6 @@ int main(int argc, char **argv)
 		case InteractWithRobot:
 			xPosCtrl->targetSetpoint(320); // target X coordinate in pixels
 			yPosCtrl->targetSetpoint(240); // target Y coordinate in pixels
-			
 			mode = ALT_HOLD_MODE;
 			break;
 		case AvoidObstacle:
@@ -272,6 +294,10 @@ int main(int argc, char **argv)
 			pitch = msg.CHAN_RELEASE;
 			throttle = MID_PWM;
 			mode = LAND_MODE;
+			break;
+		case ReturnToArena:
+			altPosCtrl->targetSetpoint(1.5);
+			mode = ALT_HOLD_MODE;
 			break;
 		}
 

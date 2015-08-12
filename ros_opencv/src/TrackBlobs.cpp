@@ -149,12 +149,12 @@ class ColorDetector
 				}
 				
 			/// Draw contours
-			//Mat drawing = Mat::zeros(finalImage.size(), CV_8UC3);
-			//for (int i = 0; i< filteredContours.size(); i++)
-			//{
-				//Scalar color = Scalar(0, 255, 0);
-				//drawContours(drawing, filteredContours, i, color, 2, 8, hierarchy, 0, Point());
-			//}
+			Mat drawing = Mat::zeros(finalImage.size(), CV_8UC3);
+			for (int i = 0; i< filteredContours.size(); i++)
+			{
+				Scalar color = Scalar(0, 255, 0);
+				drawContours(drawing, filteredContours, i, color, 2, 8, hierarchy, 0, Point());
+			}
 			
 			int posX = -1;
 			int posY = -1;
@@ -175,9 +175,9 @@ class ColorDetector
 			
 			//cout<<"Pos: "<<posX<<","<<posY<<endl;
 			
-            imshow("ColorTrackerRGB", frameSmall);
-            imshow("ColorTrackerThresh", thresh);
-			//imshow("Contours", drawing);
+            //imshow("ColorTrackerRGB", frameSmall);
+            //imshow("ColorTrackerThresh", thresh);
+			imshow("Blob contours", drawing);
             cv::waitKey(3);
 
             threshSmallRed.release();
@@ -194,10 +194,6 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "track_irobot");
     ColorDetector ld;
-    
-
-     
-
     ros::spin();
     return 0;
 }

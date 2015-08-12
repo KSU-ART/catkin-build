@@ -1,0 +1,5 @@
+<launch>
+	<node name="ProcessLines" pkg="ros_opencv" type="processLines"/>
+	<node name="ObjectAvoid" pkg="ros_opencv" type="object_avoid"/>
+	<node name="TrackBlobs" pkg="ros_opencv" type="trackBlobs"/>
+</launch>
