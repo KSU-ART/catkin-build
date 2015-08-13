@@ -25,7 +25,7 @@ double ground_distance;
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(0.5, 0, 0, -150, 150);
 PIDController* yPosCtrl = new PIDController(0.6, 0, 0, -150, 150);
-PIDController* altPosCtrl = new PIDController(700, 0, 0, -200, 500);
+PIDController* altPosCtrl = new PIDController(450, 0, 0, -500, 500);
 
 enum State {
 	TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
