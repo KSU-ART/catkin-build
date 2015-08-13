@@ -15,6 +15,7 @@ namespace enc = sensor_msgs::image_encodings;
 int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
+int yaw = MID_PWM;
 int mode = ALT_HOLD_MODE;
 int retract = HIGH_PWM; 
 int centerRadius = 60;
@@ -26,9 +27,9 @@ double ground_distance;
 ros::Publisher alt_pub;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(0.5, 0, 0, -150, 150);
-PIDController* yPosCtrl = new PIDController(0.6, 0, 0, -150, 150);
-PIDController* altPosCtrl = new PIDController(450, 0, 0, -500, 500);
+PIDController* xPosCtrl = new PIDController(0.85, 0, 0, -275, 275);
+PIDController* yPosCtrl = new PIDController(0.75, 0, 0, -275, 275);
+PIDController* altPosCtrl = new PIDController(150, 0, 0, -500, 500);
 
 enum State {
 	TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
@@ -55,7 +56,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	}
 	else if (currentState == InteractWithRobot){
 		roll = MID_PWM - xPosCtrl->calc(msg->pointX);
-		pitch = MID_PWM + xPosCtrl->calc(msg->pointY);
+		pitch = MID_PWM - xPosCtrl->calc(msg->pointY);
 		
 		
 		
@@ -84,7 +85,8 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 	msg) {
 	/* If an obstacle is detected and the vehicle is at aleast .4 m altitude override the state to avoid*/
-	if (msg->obstacleDetected && ground_distance>.4){
+	if (msg->obstacleDetected && ground_distance>.4 || currentState == Land
+|| currentState == TakeOff){
 		currentState = AvoidObstacle;
 		cout << "Current state: AVODING OBSTACLE!!" << endl;
 	}
@@ -224,12 +226,14 @@ int main(int argc, char **argv)
 		switch (currentState){
 		case TakeOff:
 			pwmVector(20, 0, &roll, &pitch);
+			yaw = MID_PWM + 16;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			break;
 		case EnterArena:
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
-			pwmVector(100, 0, &roll, &pitch);
+			pwmVector(225, 0, &roll, &pitch);
+			yaw = msg.CHAN_RELEASE;
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				enterArenaStartTime = ros::Time::now();
@@ -249,7 +253,7 @@ int main(int argc, char **argv)
 				randomTraversalTimeStarted = true;
 				if (!randomTraversalWait){
 					double angle = (rand() % 359) + 1;
-					pwmVector(100, angle, &roll, &pitch);
+					pwmVector(30, angle, &roll, &pitch);
 					cout << "Angle Pitch Roll " << angle << " " << pitch << " " << roll << endl;
 				} 
 				else{
@@ -289,6 +293,7 @@ int main(int argc, char **argv)
 		case Land:
 			roll = msg.CHAN_RELEASE;
 			pitch = msg.CHAN_RELEASE;
+			yaw = msg.CHAN_RELEASE;
 			throttle = MID_PWM;
 			mode = LAND_MODE;
 			retract = HIGH_PWM;
@@ -299,7 +304,7 @@ int main(int argc, char **argv)
 		msg.channels[PITCH_CHANNEL] = pitch;
 		msg.channels[THROTTLE_CHANNEL] = throttle;
 		msg.channels[MODE_CHANNEL] = mode;
-		msg.channels[YAW_CHANNEL] = msg.CHAN_RELEASE;
+		msg.channels[YAW_CHANNEL] = yaw;
 		msg.channels[RETRACT_CHANNEL]=retract;
 		msg.channels[GIMBAL_PITCH_CHANNEL]= msg.CHAN_RELEASE; //constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
 		msg.channels[GIMBAL_YAW_CHANNEL]= msg.CHAN_RELEASE; //constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
