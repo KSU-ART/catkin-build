@@ -87,8 +87,8 @@ class ObstacleDetector
 		
 		//Disabling showing for testing
 	    //imshow("grayscale", original_image);
-	    imshow("Detected obstacles",processed_image);
-		cv::waitKey(3);	
+	    //imshow("Detected obstacles",processed_image);
+		//cv::waitKey(3);	
 		
 		if (threshVector.size() > 15000)
 		{

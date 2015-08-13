@@ -4,6 +4,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "ros_opencv/TrackingPoint.h"
 #include "ros_opencv/ObstacleDetected.h"
+#include "ros_opencv/Alt.h"
 #include "math.h"
 
 using namespace std;
@@ -21,6 +22,8 @@ int centerRadius = 60;
 double target_altitude = 1.5;
 
 double ground_distance;
+
+ros::Publisher alt_pub;
 
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(0.5, 0, 0, -150, 150);
@@ -51,8 +54,8 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 		cout << "Current state: Random Traversal" << endl;
 	}
 	else if (currentState == InteractWithRobot){
-		roll = MID_PWM + xPosCtrl->calc(msg->pointX);
-		pitch = MID_PWM - xPosCtrl->calc(msg->pointY);
+		roll = MID_PWM - xPosCtrl->calc(msg->pointX);
+		pitch = MID_PWM + xPosCtrl->calc(msg->pointY);
 		
 		
 		
@@ -89,6 +92,8 @@ void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 
 /* Lidar based alt-hold callback */
 void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+	ros_opencv::Alt altmsg;
+	 
 	double avg = 0;
 	for (int i = 0; i < sizeof(msg->ranges) / 4; i++) {
 		if (msg->ranges[i] < 4){
@@ -118,6 +123,8 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		retract = HIGH_PWM;
 	}
 	
+	altmsg.alt = ground_distance;
+	alt_pub.publish(altmsg);
 }
 
 int constrain(int value, int min, int max)
@@ -188,6 +195,7 @@ int main(int argc, char **argv)
 	ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
 	//Mavros rc override publisher
 	ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+	alt_pub = n.advertise<ros_opencv::Alt>("/spsuart/alt", 1);
 
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
 	mavros::OverrideRCIn msg;
@@ -215,14 +223,13 @@ int main(int argc, char **argv)
 
 		switch (currentState){
 		case TakeOff:
-			roll = msg.CHAN_RELEASE;
-			pitch = msg.CHAN_RELEASE;
+			pwmVector(20, 0, &roll, &pitch);
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			break;
 		case EnterArena:
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
-			pwmVector(40, 0, &roll, &pitch);
+			pwmVector(100, 0, &roll, &pitch);
 			mode = ALT_HOLD_MODE;
 			if (!enterArenaTimerStarted){
 				enterArenaStartTime = ros::Time::now();
@@ -242,7 +249,7 @@ int main(int argc, char **argv)
 				randomTraversalTimeStarted = true;
 				if (!randomTraversalWait){
 					double angle = (rand() % 359) + 1;
-					pwmVector(60, angle, &roll, &pitch);
+					pwmVector(100, angle, &roll, &pitch);
 					cout << "Angle Pitch Roll " << angle << " " << pitch << " " << roll << endl;
 				} 
 				else{

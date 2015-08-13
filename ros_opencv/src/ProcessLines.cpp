@@ -187,7 +187,7 @@ const char* wndname = "Square Detection Demo";
 	trackingPoint.pointY=avgPosY;
 	result_pub.publish(trackingPoint);
 
-    imshow("Grid Squares", image);
+    //imshow("Grid Squares", image);
 }
 
  void imageCb(const sensor_msgs::ImageConstPtr& msg)
@@ -212,7 +212,7 @@ resize(frame, frameSmall, Size(640,480));
         drawSquares(frameSmall, squares);
 
 //imshow("ColorTrackerRGB", frameSmall);
-waitKey(1);
+//waitKey(1);
 
 }
 };

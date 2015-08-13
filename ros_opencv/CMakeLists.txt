@@ -27,6 +27,7 @@ add_message_files(
    Depthmessage.msg
    TrackingPoint.msg
    ObstacleDetected.msg
+   Alt.msg
 )
 
 ## Generate services in the 'srv' folder
