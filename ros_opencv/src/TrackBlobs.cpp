@@ -175,9 +175,9 @@ class ColorDetector
 			
 			//cout<<"Pos: "<<posX<<","<<posY<<endl;
 			
-            //imshow("ColorTrackerRGB", frameSmall);
+            imshow("ColorTrackerRGB", frameSmall);
             //imshow("ColorTrackerThresh", thresh);
-			imshow("Blob contours", drawing);
+			//imshow("Blob contours", drawing);
             cv::waitKey(3);
 
             threshSmallRed.release();

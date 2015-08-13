@@ -23,15 +23,15 @@
 #include "px_comm/OpticalFlow.h"
 #include "ros_opencv/TrackingPoint.h"
 #include <spsuart/pid-controller/PIDController.h>
-
+ 
 #define ROLL_CHANNEL 0
 #define PITCH_CHANNEL 1
 #define THROTTLE_CHANNEL 2
 #define YAW_CHANNEL 3
 #define MODE_CHANNEL 4
-#define NOT_USED_CHANNEL 5
-#define GIMBAL_ROLL_CHANNEL 7
-#define GIMBAL_TILT_CHANNEL 6
+#define RETRACT_CHANNEL 6
+#define GIMBAL_PITCH_CHANNEL 5
+#define GIMBAL_YAW_CHANNEL 7
 
 #define LOW_PWM 1000
 #define MID_PWM 1500

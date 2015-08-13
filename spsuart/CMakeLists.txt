@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(spsuart)
-
+ 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -130,62 +130,67 @@ find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 ## Declare a cpp executable
-add_executable(mavros_flight_test src/mavros_flight_test.cpp)
-add_executable(of_loiter_test src/of_loiter_test.cpp)
-add_executable(gps_interface_node src/gps_interface_node.cpp)
-add_executable(offboard_mode src/offboard_mode.cpp)
-add_executable(iarc2015 src/iarc2015.cpp)
+#add_executable(mavros_flight_test src/mavros_flight_test.cpp)
+#add_executable(of_loiter_test src/of_loiter_test.cpp)
+#add_executable(gps_interface_node src/gps_interface_node.cpp)
+#add_executable(offboard_mode src/offboard_mode.cpp)
+#add_executable(iarc2015 src/iarc2015.cpp)
 add_executable(iarc_random src/iarc2015_random.cpp)
+add_executable(disable_overrides src/disable_rc_overrides.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
+#add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
 #add_dependencies(follow_irobot spsuart_generate_messages_cpp)
-add_dependencies(of_loiter_test spsuart_generate_messages_cpp)
-add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
-add_dependencies(offboard_mode spsuart_generate_messages_cpp)
-add_dependencies(iarc2015 spsuart_generate_messages_cpp)
+#add_dependencies(of_loiter_test spsuart_generate_messages_cpp)
+#add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
+#add_dependencies(offboard_mode spsuart_generate_messages_cpp)
+#add_dependencies(iarc2015 spsuart_generate_messages_cpp)
 add_dependencies(iarc_random spsuart_generate_messages_cpp)
-
+add_dependencies(disable_overrides spsuart_generate_messages_cpp)
 ## Specify libraries to link a library or executable target against
 
  target_link_libraries(pid-controller
     ${Boost_LIBRARIES}
 )
 
- target_link_libraries(mavros_flight_test
-   ${catkin_LIBRARIES}
-   ${Boost_LIBRARIES}
-   pid-controller
-)
+ #target_link_libraries(mavros_flight_test
+ #  ${catkin_LIBRARIES}
+ #  ${Boost_LIBRARIES}
+ #  pid-controller
+#)
 
- target_link_libraries(of_loiter_test
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-    pid-controller
-)
+ #target_link_libraries(of_loiter_test
+ #   ${catkin_LIBRARIES}
+ #   ${Boost_LIBRARIES}
+ #   pid-controller
+#)
 
- target_link_libraries(gps_interface_node
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-    pid-controller
-    iir
-)
+ #target_link_libraries(gps_interface_node
+ #   ${catkin_LIBRARIES}
+ #   ${Boost_LIBRARIES}
+ #   pid-controller
+ #   iir
+#)
 
-target_link_libraries(offboard_mode
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-)  
+#target_link_libraries(offboard_mode
+#    ${catkin_LIBRARIES}
+#    ${Boost_LIBRARIES}
+#)  
 
-target_link_libraries(iarc2015
-    ${catkin_LIBRARIES}
-	pid-controller
-)  
+#target_link_libraries(iarc2015
+#    ${catkin_LIBRARIES}
+#	pid-controller
+#)  
 
 target_link_libraries(iarc_random
     ${catkin_LIBRARIES}
 	pid-controller
-)  
+)
+
+target_link_libraries(disable_overrides
+    ${catkin_LIBRARIES}
+)    
 #############
 ## Install ##
 #############

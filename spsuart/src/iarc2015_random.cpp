@@ -15,7 +15,7 @@ int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
 int mode = ALT_HOLD_MODE;
-int retract = LOW_PWM; 
+int retract = HIGH_PWM; 
 int centerRadius = 60;
 
 double target_altitude = 1.5;
@@ -23,8 +23,8 @@ double target_altitude = 1.5;
 double ground_distance;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(1.5, 0, 0, -100, 100);
-PIDController* yPosCtrl = new PIDController(1.5, 0, 0, -100, 100);
+PIDController* xPosCtrl = new PIDController(0.5, 0, 0, -150, 150);
+PIDController* yPosCtrl = new PIDController(0.6, 0, 0, -150, 150);
 PIDController* altPosCtrl = new PIDController(700, 0, 0, -200, 500);
 
 enum State {
@@ -110,12 +110,12 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	}
 	
 	//Retract the landing gear
-	if(ground_distance > 1.0){
-		retract = HIGH_PWM;
+	if(ground_distance > 1.1){
+		retract = LOW_PWM;
 	}
 	//Deploy the landing gear
-	else if (ground_distance > .8){
-		retract = LOW_PWM;
+	else if (ground_distance < .9){
+		retract = HIGH_PWM;
 	}
 	
 }
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 					double angle = (rand() % 359) + 1;
 					pwmVector(60, angle, &roll, &pitch);
 					cout << "Angle Pitch Roll " << angle << " " << pitch << " " << roll << endl;
-				}
+				} 
 				else{
 					roll = msg.CHAN_RELEASE;
 					pitch = msg.CHAN_RELEASE;
@@ -284,6 +284,7 @@ int main(int argc, char **argv)
 			pitch = msg.CHAN_RELEASE;
 			throttle = MID_PWM;
 			mode = LAND_MODE;
+			retract = HIGH_PWM;
 			break;
 		}
 
@@ -292,9 +293,9 @@ int main(int argc, char **argv)
 		msg.channels[THROTTLE_CHANNEL] = throttle;
 		msg.channels[MODE_CHANNEL] = mode;
 		msg.channels[YAW_CHANNEL] = msg.CHAN_RELEASE;
-		msg.channels[NOT_USED_CHANNEL] = msg.CHAN_RELEASE;
-		msg.channels[GIMBAL_TILT_CHANNEL] = constrain(GIMBAL_TILT_MAX, GIMBAL_TILT_MIN, GIMBAL_TILT_MAX);
-		msg.channels[GIMBAL_ROLL_CHANNEL] = constrain(GIMBAL_ROLL_TRIM, GIMBAL_ROLL_MIN, GIMBAL_ROLL_MAX);
+		msg.channels[RETRACT_CHANNEL]=retract;
+		msg.channels[GIMBAL_PITCH_CHANNEL]= msg.CHAN_RELEASE; //constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
+		msg.channels[GIMBAL_YAW_CHANNEL]= msg.CHAN_RELEASE; //constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
 
 		inputChar = getchNonBlocking();   // call non-blocking input function to get keyboard inputs
 
