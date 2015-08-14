@@ -18,7 +18,7 @@ int pitch = MID_PWM;
 int yaw = MID_PWM;
 int mode = ALT_HOLD_MODE;
 int retract = HIGH_PWM; 
-int centerRadius = 60;
+int centerRadius = 70;
 
 double target_altitude = 1.5;
 
@@ -27,9 +27,9 @@ double ground_distance;
 ros::Publisher alt_pub;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(0.85, 0, 0, -275, 275);
-PIDController* yPosCtrl = new PIDController(0.75, 0, 0, -275, 275);
-PIDController* altPosCtrl = new PIDController(150, 0, 0, -500, 500);
+PIDController* xPosCtrl = new PIDController(1.3, 0, 0, -380, 380);
+PIDController* yPosCtrl = new PIDController(1.0, 0, 0, -380, 380);
+PIDController* altPosCtrl = new PIDController(250, 0, 0, -500, 500);
 
 enum State {
 	TakeOff = 0, EnterArena = 1, RandomTraversal = 2,
@@ -85,8 +85,8 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 void obstacleDetectedCallback(const ros_opencv::ObstacleDetected::ConstPtr&
 	msg) {
 	/* If an obstacle is detected and the vehicle is at aleast .4 m altitude override the state to avoid*/
-	if (msg->obstacleDetected && ground_distance>.4 || currentState == Land
-|| currentState == TakeOff){
+	if (msg->obstacleDetected && ground_distance>.4 && currentState != Land
+&& currentState != TakeOff){
 		currentState = AvoidObstacle;
 		cout << "Current state: AVODING OBSTACLE!!" << endl;
 	}
@@ -225,8 +225,8 @@ int main(int argc, char **argv)
 
 		switch (currentState){
 		case TakeOff:
-			pwmVector(20, 0, &roll, &pitch);
-			yaw = MID_PWM + 16;
+			pwmVector(30, 0, &roll, &pitch);
+			yaw = MID_PWM + 24;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			break;

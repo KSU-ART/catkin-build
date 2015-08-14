@@ -92,9 +92,11 @@ class ObstacleDetector
 		
 		if (threshVector.size() > 15000)
 		{
+			cout<<"Obstacle detected!"<<endl;
 			obstaclemsg.obstacleDetected = true;
 		}else
 		{
+			cout<<"No obstacle detected."<<endl;
 			obstaclemsg.obstacleDetected = false;
 		}
 		result_pub.publish(obstaclemsg);
