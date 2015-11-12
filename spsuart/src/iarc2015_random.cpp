@@ -56,7 +56,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	}
 	else if (currentState == InteractWithRobot){
 		roll = MID_PWM - xPosCtrl->calc(msg->pointX);
-		pitch = MID_PWM - xPosCtrl->calc(msg->pointY);
+		pitch = MID_PWM - yPosCtrl->calc(msg->pointY);
 		
 		
 		
