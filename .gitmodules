@@ -1,7 +1,3 @@
-[submodule "pid-controller"]
-path = spsuart/include/spsuart/pid-controller
-url = https://github.com/silentreverb/pid-controller.git
-
 [submodule "imu_tools"]
 path = imu_tools
 url = https://github.com/ccny-ros-pkg/imu_tools.git

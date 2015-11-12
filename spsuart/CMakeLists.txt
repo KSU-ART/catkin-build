@@ -106,8 +106,11 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 #   src/${PROJECT_NAME}/PIDLoop.h
 # )
 
-add_library(pid-controller
-	include/spsuart/pid-controller/PIDController.cpp
+add_library(pid-controller SHARED IMPORTED
+  /usr/local/lib/libpid-controller.so
+)
+set_target_properties(pid-controller PROPERTIES
+    IMPORTED_LOCATION /usr/local/lib/libpid-controller.so
 )
 
 add_library(iir
@@ -149,10 +152,6 @@ add_executable(disable_overrides src/disable_rc_overrides.cpp)
 add_dependencies(iarc_random spsuart_generate_messages_cpp)
 add_dependencies(disable_overrides spsuart_generate_messages_cpp)
 ## Specify libraries to link a library or executable target against
-
- target_link_libraries(pid-controller
-    ${Boost_LIBRARIES}
-)
 
  #target_link_libraries(mavros_flight_test
  #  ${catkin_LIBRARIES}
