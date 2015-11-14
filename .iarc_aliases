@@ -1,0 +1,7 @@
+alias sensors='roslaunch spsuart PreStateMachine.launch'
+alias vision='roslaunch ros_opencv Vision.launch'
+alias beginmission='rosrun spsuart iarc_random'
+alias endmission='rosrun spsuart disable_overrides'
+alias arm='rosrun mavros mavsafety arm'
+alias disarm='rosrun mavros mavsafety disarm'
+alias rbc='rosbag record /image_point /image_point /mavros/rc/out'

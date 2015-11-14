@@ -215,6 +215,10 @@ int main(int argc, char **argv)
 	bool randomTraversalTimeStarted = false;
 	bool randomTraversalWait = false;
 	bool obstacleTimerStarted = false;
+	
+	altPosCtrl->on();
+	xPosCtrl->on();
+	yPosCtrl->on();
 
 	// Init cooldown
 	interactWithRobotCoolDown = ros::Time::now();
@@ -226,7 +230,7 @@ int main(int argc, char **argv)
 		switch (currentState){
 		case TakeOff:
 			pwmVector(30, 0, &roll, &pitch);
-			yaw = MID_PWM + 24;
+			yaw = msg.CHAN_RELEASE;
 			altPosCtrl->targetSetpoint(1.5); // target altitude in meters
 			mode = ALT_HOLD_MODE;
 			break;
