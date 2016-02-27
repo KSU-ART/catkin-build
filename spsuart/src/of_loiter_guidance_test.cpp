@@ -11,6 +11,8 @@ namespace enc = sensor_msgs::image_encodings;
 int throttle = LOW_PWM;
 int roll = MID_PWM;
 int pitch = MID_PWM;
+int mode = ALT_HOLD_MODE;
+int retract = HIGH_PWM;
 
 double target_altitude = 1.5;
 
@@ -19,7 +21,8 @@ double ground_distance;
 // Instantiate PID controllers
 PIDController* xVelCtrl = new PIDController(50,0,0,-100,100);
 PIDController* yVelCtrl = new PIDController(50,0,0,-100,100);
-PIDController* altPosCtrl = new PIDController(500,0,0,-200,300);
+PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
+
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
 
@@ -71,7 +74,13 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	double out = altPosCtrl->calc(ground_distance);
 	ROS_DEBUG("PID Out: %d", out);
 	throttle = MID_PWM + out;
-	
+
+	if(ground_distance > 1.1) {
+		retract = LOW_PWM;
+	}
+	else if (ground_distance < 0.9) {
+		retract = HIGH_PWM;
+	}
 }
 
 void optFlowCallback(const px_comm::OpticalFlow::ConstPtr& msg) 
@@ -139,7 +148,7 @@ int getchNonBlocking()
 int main(int argc, char **argv)
 {
   //ROS node init and NodeHandle init
-  ros::init(argc, argv, "mavros_flight_test");
+  ros::init(argc, argv, "of_loiter_guidance_test");
   ros::NodeHandle n;
   
   //Image and mavlink message subscriber
@@ -153,6 +162,10 @@ int main(int argc, char **argv)
   mavros::OverrideRCIn msg;
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
+  altPosCtrl->on();
+  xVelCtrl->on();
+  yVelCtrl->on();
+
   // Set PID controller targets  
   xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
   yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
@@ -163,24 +176,21 @@ int main(int argc, char **argv)
   
     //While node is alive send RC values to the FC @ fcuCommRate hz
     while(ros::ok()){
-			if(ground_distance > 0.5) {
-            msg.channels[ROLL_CHANNEL]=roll;
+			if(ground_distance > 1.0) {
+                        msg.channels[ROLL_CHANNEL]=roll;
 			msg.channels[PITCH_CHANNEL]=pitch;
 			}
 			else {
 			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
 			}
-           	msg.channels[THROTTLE_CHANNEL]=throttle;
+           	        msg.channels[THROTTLE_CHANNEL]=throttle;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
-			msg.channels[MODE_CHANNEL]=ALT_HOLD_MODE;
-			msg.channels[NOT_USED_CHANNEL]=msg.CHAN_RELEASE;
-			msg.channels[GIMBAL_TILT_CHANNEL]=constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
-			msg.channels[GIMBAL_ROLL_CHANNEL]=constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
-		ROS_DEBUG("ROLL : %d PITCH: %d THROTTLE: %d YAW: %d MODE: %d",
-msg.channels[ROLL_CHANNEL], msg.channels[PITCH_CHANNEL],
-msg.channels[THROTTLE_CHANNEL], msg.channels[YAW_CHANNEL],
-msg.channels[MODE_CHANNEL]);	
+			msg.channels[MODE_CHANNEL]=mode;
+			msg.channels[RETRACT_CHANNEL]=retract;
+			msg.channels[GIMBAL_PITCH_CHANNEL]=msg.CHAN_RELEASE;
+			msg.channels[GIMBAL_YAW_CHANNEL]=msg.CHAN_RELEASE;
+	
 		inputChar = getchNonBlocking();   // call non-blocking input function
 		
 		if(inputChar == ' ' || land){
@@ -193,6 +203,7 @@ msg.channels[MODE_CHANNEL]);
 			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[THROTTLE_CHANNEL]=MID_PWM;
 			msg.channels[MODE_CHANNEL]=LAND_MODE;
+			msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
 
 		}
 		

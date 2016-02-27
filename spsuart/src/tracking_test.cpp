@@ -1,7 +1,7 @@
 #include "spsuart/autonomous.h"
 #include <termios.h>
 #include "sensor_msgs/LaserScan.h"
-#include "mavros_msgs/RCIn.h"
+#include "mavros/RCIn.h"
 #include "ros_opencv/TrackingPoint.h"
 #include "ros_opencv/Alt.h"
 #include "math.h"
@@ -48,7 +48,7 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 	}
 }
 
-void rcInputCallback(const mavros_msgs::RCIn::ConstPtr& msg) {
+void rcInputCallback(const mavros::RCIn::ConstPtr& msg) {
     if(msg->channels[] == HIGH_PWM) {
         
     }
