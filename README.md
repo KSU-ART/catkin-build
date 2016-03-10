@@ -1,3 +1,5 @@
+<h1>catkin-build</h1>[![Build Status](https://travis-ci.com/KSU-ART/catkin-build.svg?token=D18XHYknLk1xzGmf6kuz&branch=master)](https://travis-ci.com/KSU-ART/catkin-build)
+
 ## How to use
 
 Please visit the wiki for this repository for setup and usage instructions.
