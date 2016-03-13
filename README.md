@@ -1,4 +1,4 @@
-<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=D18XHYknLk1xzGmf6kuz&branch=master"/></a></h1>
+<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=ugRLvxzsf9tqqaFW7vdm&branch=master"/></a></h1>
 
 ## How to use
 
