@@ -29,9 +29,9 @@ env:
 
 before_install:
   # Install barebones ROS Indigo
-  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'; sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
-  - sudo apt-get update; sudo apt-get install -y ros-indigo-ros-base python-rosinstall
-  - sudo rosdep init; rosdep update
+  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' && sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
+  - sudo apt-get update && sudo apt-get install -y ros-indigo-ros-base python-rosinstall
+  - sudo rosdep init && rosdep update
   - echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc && source ~/.bashrc
 
 install:
@@ -43,7 +43,7 @@ install:
   - cd ~/opencv/release
   - sudo make install
   # Get and install pid-controller library
-  - cd ~/; git clone https://github.com/silentreverb/pid-controller.git; cd pid-controller; mkdir release; cd release
+  - cd ~/ && git clone https://github.com/silentreverb/pid-controller.git && cd pid-controller && mkdir release && cd release
   - cmake ..
   - make -j8
   - sudo make install
@@ -57,6 +57,6 @@ before_script:
 
 script:
   # Move the repo to the catkin workspace and build
-  - cd ~/ros/catkin_ws; rm -rf src; mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
+  - cd ~/ros/catkin_ws && rm -rf src && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
   - catkin_make --pkg ros_opencv
   - catkin_make -j8
