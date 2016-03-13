@@ -1,4 +1,4 @@
-<h1>catkin-build</h1>[![Build Status](https://travis-ci.com/KSU-ART/catkin-build.svg?token=D18XHYknLk1xzGmf6kuz&branch=master)](https://travis-ci.com/KSU-ART/catkin-build)
+<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=D18XHYknLk1xzGmf6kuz&branch=apmpid"/></a></h1>
 
 ## How to use
 
