@@ -1,4 +1,4 @@
-<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=D18XHYknLk1xzGmf6kuz&branch=apmpid"/></a></h1>
+<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=D18XHYknLk1xzGmf6kuz&branch=master"/></a></h1>
 
 ## How to use
 
@@ -8,12 +8,9 @@ Please visit the wiki for this repository for setup and usage instructions.
 
 Please follow the guidelines below when committing to this repository.
 
-### 1. Do not commit experimental/untested code
+### 1. Commits to master must be verified
 
-Please only commit stable/tested code to this repository. For
-experimental changes or untested bug fixes, please fork this repository
-and commit your changes there. Once you have verified that your code
-works and does not break anything else, create a pull request.
+To ensure that new changes are free of errors, commits to `master` must pass a Travis CI build test in addition to being approved by a senior team member. Create a new branch for new changes and submit a pull request to `master` when it is complete.
 
 ### 2. Follow the commit message style guide
 
