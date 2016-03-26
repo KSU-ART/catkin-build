@@ -211,7 +211,7 @@ std::cout<<"Error: "<<(e_sdk_err_code)err_code<<" at "<<__LINE__<<","<<__FILE__<
 
 int main(int argc, char** argv)
 {
-	if(argc>1){
+	if(argc>9999){
 		printf("This is demo program showing data from Guidance.\n\t" 
 			" 'a','d','w','s','x' to select sensor direction.\n\t"
 			" 'j','k' to change the exposure parameters.\n\t"

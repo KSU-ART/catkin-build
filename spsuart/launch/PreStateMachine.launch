@@ -1,11 +1,11 @@
 <launch>
-	<node name="uvc_camera_node" pkg="uvc_camera" type="uvc_camera_node">
+<!--	<node name="uvc_camera_node" pkg="uvc_camera" type="uvc_camera_node">
 	  <param name="device" type="string" value="/dev/video0"/>
       <param name="width" type="int" value="640"/>
       <param name="height" type="int" value="480"/>
       <param name="fps" type="int" value="30"/>
 	</node>
-	
+-->	
 	<node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
 		<!-- Starts up faster, but timestamps will be inaccurate. --> 
 		<param name="calibrate_time" type="bool" value="false"/> 
@@ -24,8 +24,10 @@
 		<arg name="fcu_url" default="/dev/ttyACM1:115200" />
 	</include>
 
+<!--
 	<include file="$(find openni2_launch)/launch/openni2.launch">
 	</include>
-	
+-->	
 	<node name="settings.sh" pkg="spsuart" type="settings.sh" />
+	<node name="guidanceNode" pkg="guidance" type="guidanceNode"/>
 </launch>
