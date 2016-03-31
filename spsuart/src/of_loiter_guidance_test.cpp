@@ -2,6 +2,7 @@
 //#include "px_comm/OpticalFlow.h"
 #include <termios.h>
 #include "sensor_msgs/LaserScan.h"
+#include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Vector3Stamped.h"
 
 using namespace std;
@@ -19,9 +20,12 @@ bool land = false;
 double target_altitude = 1.5;
 double ground_distance;
 
+geometry_msgs::PointStamped pos_est;
+geometry_msgs::Vector3Stamped prev_vel;
+
 // Instantiate PID controllers
-PIDController* xVelCtrl = new PIDController(50,0,0,-100,100);
-PIDController* yVelCtrl = new PIDController(50,0,0,-100,100);
+PIDController* xPosCtrl = new PIDController(50,0,0,-100,100);
+PIDController* yPosCtrl = new PIDController(50,0,0,-100,100);
 PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
 
 mavlink_message_t* msgt = NULL;
@@ -55,13 +59,21 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 	double vel_x = msg->vector.x;
 	double vel_y = msg->vector.y;
 
-    double x_out = xVelCtrl->calc(vel_x);
-    double y_out = yVelCtrl->calc(vel_y);
+	ros::Time current_time = msg->header.stamp;
+	
+	pos_est.point.x += (vel_x + prev_vel.vector.x)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
+	pos_est.point.y += (vel_y + prev_vel.vector.y)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
+
+    double x_out = xPosCtrl->calc(pos_est.point.x);
+    double y_out = yPosCtrl->calc(pos_est.point.y);
     
     cout << "x: " << x_out << ", y: " << y_out << endl;
     
     roll = MID_PWM + x_out;
     pitch = MID_PWM - y_out;
+    
+    pos_est.header.stamp = current_time;
+    prev_vel = *msg;
 }
 
 int constrain(int value, int min, int max)
@@ -128,14 +140,21 @@ int main(int argc, char **argv)
     mavros::OverrideRCIn msg;
     ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
+	// Init xy pose
+	pos_est.header.stamp = ros::Time::now();
+	pos_est.header.frame_id = "global_frame";
+	pos_est.point.x = 0;
+	pos_est.point.y = 0;
+	pos_est.point.z = 0;
+
 	// Init PID controllers
     altPosCtrl->on();
-    xVelCtrl->on();
-    yVelCtrl->on();
+    xPosCtrl->on();
+    yPosCtrl->on();
 
     // Set PID controller targets
-    xVelCtrl->targetSetpoint(0); // target X coordinate in pixels
-    yVelCtrl->targetSetpoint(0); // target Y coordinate in pixels
+    xPosCtrl->targetSetpoint(0); // target X coordinate in pixels
+    yPosCtrl->targetSetpoint(0); // target Y coordinate in pixels
     altPosCtrl->targetSetpoint(target_altitude); // target altitude in meters
     int inputChar = 'a';
 
