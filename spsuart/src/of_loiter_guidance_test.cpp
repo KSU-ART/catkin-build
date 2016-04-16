@@ -23,6 +23,8 @@ double ground_distance;
 geometry_msgs::PointStamped pos_est;
 geometry_msgs::Vector3Stamped prev_vel;
 
+ros::Publisher pos_est_pub;
+
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
 PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
@@ -63,6 +65,9 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 	
 	pos_est.point.x += (vel_x + prev_vel.vector.x)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
 	pos_est.point.y += (vel_y + prev_vel.vector.y)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
+	pos_est.header.seq++;
+	pos_est.header.stamp = current_time;
+	pos_est_pub.publish(pos_est);
 
     double x_out = xPosCtrl->calc(pos_est.point.x);
     double y_out = yPosCtrl->calc(pos_est.point.y);
@@ -73,8 +78,6 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
     roll = MID_PWM + y_out;
     pitch = MID_PWM - x_out;
     
-    pos_est.header.seq++;
-    pos_est.header.stamp = current_time;
     prev_vel = *msg;
 }
 
@@ -137,6 +140,7 @@ int main(int argc, char **argv)
     ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
     //Mavros rc override publisher
     ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+    pos_est_pub = n.advertise<geometry_msgs::PointStamped>("/fatcat/pos_est", 1);
 
     //RC msg container that will be sent to the FC @ fcuCommRate hz
     mavros::OverrideRCIn msg;
