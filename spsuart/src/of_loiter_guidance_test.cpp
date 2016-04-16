@@ -24,8 +24,8 @@ geometry_msgs::PointStamped pos_est;
 geometry_msgs::Vector3Stamped prev_vel;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(50,0,0,-100,100);
-PIDController* yPosCtrl = new PIDController(50,0,0,-100,100);
+PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
+PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
 PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
 
 mavlink_message_t* msgt = NULL;
@@ -67,11 +67,13 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
     double x_out = xPosCtrl->calc(pos_est.point.x);
     double y_out = yPosCtrl->calc(pos_est.point.y);
     
-    cout << "x: " << x_out << ", y: " << y_out << endl;
+    cout << "est: " << pos_est << endl;
+    cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;
     
-    roll = MID_PWM + x_out;
-    pitch = MID_PWM - y_out;
+    roll = MID_PWM + y_out;
+    pitch = MID_PWM - x_out;
     
+    pos_est.header.seq++;
     pos_est.header.stamp = current_time;
     prev_vel = *msg;
 }
@@ -141,6 +143,7 @@ int main(int argc, char **argv)
     ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
 	// Init xy pose
+	pos_est.header.seq = 0;
 	pos_est.header.stamp = ros::Time::now();
 	pos_est.header.frame_id = "global_frame";
 	pos_est.point.x = 0;
