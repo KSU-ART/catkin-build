@@ -23,9 +23,11 @@ double ground_distance;
 geometry_msgs::PointStamped pos_est;
 geometry_msgs::Vector3Stamped prev_vel;
 
+ros::Publisher pos_est_pub;
+
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(50,0,0,-100,100);
-PIDController* yPosCtrl = new PIDController(50,0,0,-100,100);
+PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
+PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
 PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
 
 mavlink_message_t* msgt = NULL;
@@ -63,16 +65,19 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 	
 	pos_est.point.x += (vel_x + prev_vel.vector.x)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
 	pos_est.point.y += (vel_y + prev_vel.vector.y)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
+	pos_est.header.seq++;
+	pos_est.header.stamp = current_time;
+	pos_est_pub.publish(pos_est);
 
     double x_out = xPosCtrl->calc(pos_est.point.x);
     double y_out = yPosCtrl->calc(pos_est.point.y);
     
-    cout << "x: " << x_out << ", y: " << y_out << endl;
+    cout << "est: " << pos_est << endl;
+    cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;
     
-    roll = MID_PWM + x_out;
-    pitch = MID_PWM - y_out;
+    roll = MID_PWM + y_out;
+    pitch = MID_PWM - x_out;
     
-    pos_est.header.stamp = current_time;
     prev_vel = *msg;
 }
 
@@ -135,12 +140,14 @@ int main(int argc, char **argv)
     ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
     //Mavros rc override publisher
     ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+    pos_est_pub = n.advertise<geometry_msgs::PointStamped>("/fatcat/pos_est", 1);
 
     //RC msg container that will be sent to the FC @ fcuCommRate hz
     mavros::OverrideRCIn msg;
     ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
 	// Init xy pose
+	pos_est.header.seq = 0;
 	pos_est.header.stamp = ros::Time::now();
 	pos_est.header.frame_id = "global_frame";
 	pos_est.point.x = 0;
