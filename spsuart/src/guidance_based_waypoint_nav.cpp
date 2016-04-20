@@ -3,7 +3,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Vector3Stamped.h"
-#include "mav_msgs/Path.h"
+#include "nav_msgs/Path.h"
 #include <cmath>
 
 using namespace std;
