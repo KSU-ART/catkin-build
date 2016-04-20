@@ -143,7 +143,7 @@ add_executable(iarc_random src/iarc2015_random.cpp)
 #add_executable(tracking_test src/tracking_test.cpp)
 add_executable(disable_overrides src/disable_rc_overrides.cpp)
 add_executable(of_loiter_guidance_test src/of_loiter_guidance_test.cpp)
-add_executable(guidance_waypoint_navigation src/guidance_based_waypoint_navigation.cpp)
+add_executable(guidance_waypoint_navigation src/guidance_based_waypoint_nav.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
