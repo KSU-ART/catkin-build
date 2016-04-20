@@ -10,6 +10,7 @@ find_package(catkin
   rospy
   std_msgs
   geometry_msgs
+  nav_msgs
   message_generation
   ros_opencv
   cv_bridge
@@ -142,6 +143,7 @@ add_executable(iarc_random src/iarc2015_random.cpp)
 #add_executable(tracking_test src/tracking_test.cpp)
 add_executable(disable_overrides src/disable_rc_overrides.cpp)
 add_executable(of_loiter_guidance_test src/of_loiter_guidance_test.cpp)
+add_executable(guidance_waypoint_navigation src/guidance_based_waypoint_navigation.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -155,6 +157,7 @@ add_dependencies(iarc_random spsuart_generate_messages_cpp)
 #add_dependencies(tracking_test spsuart_generate_messages_cpp)
 add_dependencies(disable_overrides spsuart_generate_messages_cpp)
 add_dependencies(of_loiter_guidance_test spsuart_generate_messages_cpp)
+add_dependencies(guidance_waypoint_navigation spsuart_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 
@@ -202,6 +205,12 @@ target_link_libraries(disable_overrides
 )
 
 target_link_libraries(of_loiter_guidance_test
+    ${catkin_LIBRARIES}
+    ${Boost_LIBRARIES}
+    pid-controller
+)
+
+target_link_libraries(guidance_waypoint_navigation
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES}
     pid-controller
