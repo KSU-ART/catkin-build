@@ -60,6 +60,42 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     }
 }
 
+void updateWayPoints(){
+    // Check to see if there are more goal poses
+    if(current_goal+1 < nav_path.poses.size){
+        // Check to see if the current pos is within a reasonable range of the goal
+        if(abs(pos_est.point.x - nav_path.poses[current_goal].point.x) < .1 && abs(pos_est.point.y - nav_path.poses[current_goal].point.y) < .1){
+            // Move on to the next goal and update set points 
+            ++current_goal;
+            xPosCtrl->targetSetpoint(nav_path.poses[current_goal].point.x);
+            yPosCtrl->targetSetpoint(nav_path.poses[current_goal].point.y);
+        }
+    }
+}
+
+void defineWayPoints(){
+    
+    nav_path.header.seq = 0;
+    nav_path.header.stamp = ros::Time::now();
+    nav_path.header.frame_id = "global_frame";
+
+    // Clear waypoints
+    nav_path.poses.clear();
+
+    // Add waypoints to path
+    for (int i = 0; i < 1; i++)
+    {
+        geometry_msgs::PointStamped goal_pos;
+        goal_pos.header.seq = i;
+        goal_pos.header.stamp = ros::Time::now();
+        goal_pos.header.frame_id = "global_frame";
+        goal_pos.point.x = 0;
+        goal_pos.point.y = 0;
+        goal_pos.point.z = 0;
+        nav_path.poses.push_back(goal_pos);
+    }
+}
+
 void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg) {
 	double vel_x = msg->vector.x;
 	double vel_y = msg->vector.y;
@@ -129,42 +165,6 @@ int getchNonBlocking()
     tcsetattr(0, TCSANOW, &initial_settings);
 
     return key;
-}
-
-void updateWayPoints(){
-    // Check to see if there are more goal poses
-    if(current_goal+1 < nav_path.poses.size){
-        // Check to see if the current pos is within a reasonable range of the goal
-        if(abs(pos_est.point.x - nav_path.poses[current_goal].point.x) < .1 && abs(pos_est.point.y - nav_path.poses[current_goal].point.y) < .1){
-            // Move on to the next goal and update set points 
-            ++current_goal;
-            xPosCtrl->targetSetpoint(nav_path.poses[current_goal].point.x);
-            yPosCtrl->targetSetpoint(nav_path.poses[current_goal].point.y);
-        }
-    }
-}
-
-void defineWayPoints(){
-    
-    nav_path.header.seq = 0;
-    nav_path.header.stamp = ros::Time::now();
-    nav_path.header.frame_id = "global_frame";
-
-    // Clear waypoints
-    nav_path.poses.clear();
-
-    // Add waypoints to path
-    for (int i = 0; i < 1; i++)
-    {
-        geometry_msgs::PointStamped goal_pos;
-        goal_pos.header.seq = i;
-        goal_pos.header.stamp = ros::Time::now();
-        goal_pos.header.frame_id = "global_frame";
-        goal_pos.point.x = 0;
-        goal_pos.point.y = 0;
-        goal_pos.point.z = 0;
-        nav_path.poses.push_back(goal_pos);
-    }
 }
 
 int main(int argc, char **argv)
