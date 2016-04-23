@@ -5,3 +5,6 @@ alias endmission='rosrun spsuart disable_overrides'
 alias arm='rosrun mavros mavsafety arm'
 alias disarm='rosrun mavros mavsafety disarm'
 alias rbc='rosbag record /guidance/velocity /mavros/rc/out'
+function setPos() {
+    rostopic pub --once /fatcat/setpoint geometry_msgs/Point '(x:$1,y:$2,z:$3)'
+}
