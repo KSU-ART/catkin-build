@@ -29,8 +29,8 @@ int current_goal = 0;
 ros::Publisher pos_est_pub;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(100,0,0,-250,250);
-PIDController* yPosCtrl = new PIDController(100,0,0,-250,250);
+PIDController* xPosCtrl = new PIDController(80,0,0,-250,250);
+PIDController* yPosCtrl = new PIDController(80,0,0,-250,250);
 PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
 
 mavlink_message_t* msgt = NULL;
@@ -53,10 +53,7 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     throttle = MID_PWM + out;
 
     if(ground_distance > 1.1) {
-        retract = LOW_PWM;
-    }
-    else if (ground_distance < 0.9) {
-        retract = HIGH_PWM;
+        retract = LOW_PWM;
     }
 }
 
@@ -82,18 +79,32 @@ void defineWayPoints(){
     // Clear waypoints
     nav_path.poses.clear();
 
-    // Add waypoints to path
-    for (int i = 0; i < 1; i++)
-    {
+    // Hard code square pattern
         geometry_msgs::PoseStamped goal_pos;
         goal_pos.header.seq = i;
         goal_pos.header.stamp = ros::Time::now();
         goal_pos.header.frame_id = "global_frame";
+        goal_pos.pose.position.z = 0;
+        
         goal_pos.pose.position.x = 0;
         goal_pos.pose.position.y = 0;
-        goal_pos.pose.position.z = 0;
         nav_path.poses.push_back(goal_pos);
-    }
+        
+        goal_pos.pose.position.x = -2;
+        goal_pos.pose.position.y = 0;
+        nav_path.poses.push_back(goal_pos);
+        
+        goal_pos.pose.position.x = -2;
+        goal_pos.pose.position.y = -2;
+        nav_path.poses.push_back(goal_pos);
+        
+        goal_pos.pose.position.x = 0;
+        goal_pos.pose.position.y = -2;
+        nav_path.poses.push_back(goal_pos);
+        
+        goal_pos.pose.position.x = 0;
+        goal_pos.pose.position.y = 0;
+        nav_path.poses.push_back(goal_pos);
 }
 
 void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg) {
