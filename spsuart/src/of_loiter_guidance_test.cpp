@@ -143,7 +143,7 @@ int main(int argc, char **argv)
     //Image and mavlink message subscriber
     //ros::Subscriber subflow = n.subscribe("px4flow/opt_flow",1,optFlowCallback);
     ros::Subscriber subGuidanceVelocity = n.subscribe("/guidance/velocity",1,guidanceVelocityCallback);
-    ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback)
+    ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
     ros::Subscriber subSetpoint = n.subscribe("/fatcat/setpoint", 1, setpointCallback);
     //Mavros rc override publisher
     ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
