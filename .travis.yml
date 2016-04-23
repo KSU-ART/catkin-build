@@ -36,7 +36,7 @@ before_install:
 
 install:
   # Install APT dependencies
-  - sudo apt-get install -y ros-indigo-mavlink ros-indigo-rviz ros-indigo-cv-bridge ros-indigo-pcl-ros ros-indigo-diagnostic-updater ros-indigo-eigen-conversions libgsl0-dev
+  - sudo apt-get install -y ros-indigo-nav-msgs ros-indigo-mavlink ros-indigo-rviz ros-indigo-cv-bridge ros-indigo-pcl-ros ros-indigo-diagnostic-updater ros-indigo-eigen-conversions libgsl0-dev ros-indigo-ecl-geometry
   # Get OpenCV if not already in cache
   # Uncomment the next line to manually build OpenCV  
   # - cd ~ && git clone https://github.com/Itseez/opencv.git && cd ~/opencv && git checkout 2.4.12 && mkdir release && cd release && cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local .. && make -j8

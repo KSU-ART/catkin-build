@@ -1,26 +1,22 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(spsuart)
- 
+project(plot_demo)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin 
- COMPONENTS
+find_package(catkin REQUIRED COMPONENTS
+  ecl_geometry
+  geometry_msgs
+  nav_msgs
   roscpp
   rospy
   std_msgs
-  geometry_msgs
-  nav_msgs
-  message_generation
-  ros_opencv
-  cv_bridge
-  image_transport
-  mavros
-  mavros_extras
+  plot_tool
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system chrono timer)
+# find_package(Boost REQUIRED COMPONENTS system)
+
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -52,16 +48,17 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
- add_message_files(
-   FILES
-   PosEst.msg
- #  Message2.msg
- )
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
-#   ChangeAlt.srv
+#   Service1.srv
+#   Service2.srv
 # )
 
 ## Generate actions in the 'action' folder
@@ -71,11 +68,6 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
- )
 
 ###################################
 ## catkin specific configuration ##
@@ -87,10 +79,10 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES spsuart
-  CATKIN_DEPENDS cv_bridge image_transport roscpp rospy std_msgs message_runtime ros_opencv mavros mavros_extras
-#  DEPENDS system_lib boost
+#  INCLUDE_DIRS include
+#  LIBRARIES curve_fit
+   CATKIN_DEPENDS ecl_geometry geometry_msgs nav_msgs roscpp rospy std_msgs plot_tool
+#  DEPENDS system_lib
 )
 
 ###########
@@ -100,121 +92,26 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
 
 ## Declare a cpp library
-# add_library(spsuart
-#   src/${PROJECT_NAME}/PIDLoop.h
+# add_library(curve_fit
+#   src/${PROJECT_NAME}/curve_fit.cpp
 # )
 
-add_library(pid-controller SHARED IMPORTED
-  /usr/local/lib/libpid-controller.so
-)
-set_target_properties(pid-controller PROPERTIES
-    IMPORTED_LOCATION /usr/local/lib/libpid-controller.so
-)
-
-add_library(iir
-    include/spsuart/iir/Bessel.cpp
-    include/spsuart/iir/Biquad.cpp
-    include/spsuart/iir/Butterworth.cpp
-    include/spsuart/iir/Cascade.cpp
-    include/spsuart/iir/ChebyshevI.cpp
-    include/spsuart/iir/ChebyshevII.cpp
-    include/spsuart/iir/Custom.cpp
-    include/spsuart/iir/Elliptic.cpp
-    include/spsuart/iir/Legendre.cpp
-    include/spsuart/iir/PoleFilter.cpp
-    include/spsuart/iir/RBJ.cpp
-    include/spsuart/iir/RootFinder.cpp
-    include/spsuart/iir/State.cpp
-)
-
-find_package(OpenCV)
-include_directories(${OpenCV_INCLUDE_DIRS})
-
 ## Declare a cpp executable
-#add_executable(mavros_flight_test src/mavros_flight_test.cpp)
-#add_executable(of_loiter_px4flow_test src/of_loiter_px4flow_test.cpp)
-#add_executable(gps_interface_node src/gps_interface_node.cpp)
-#add_executable(offboard_mode src/offboard_mode.cpp)
-#add_executable(iarc2015 src/iarc2015.cpp)
-add_executable(iarc_random src/iarc2015_random.cpp)
-#add_executable(tracking_test src/tracking_test.cpp)
-add_executable(disable_overrides src/disable_rc_overrides.cpp)
-add_executable(of_loiter_guidance_test src/of_loiter_guidance_test.cpp)
-add_executable(guidance_waypoint_navigation src/guidance_based_waypoint_nav.cpp)
+ add_executable(demo src/demo.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-#add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
-#add_dependencies(follow_irobot spsuart_generate_messages_cpp)
-#add_dependencies(of_loiter_px4flow_test spsuart_generate_messages_cpp)
-#add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
-#add_dependencies(offboard_mode spsuart_generate_messages_cpp)
-#add_dependencies(iarc2015 spsuart_generate_messages_cpp)
-add_dependencies(iarc_random spsuart_generate_messages_cpp)
-#add_dependencies(tracking_test spsuart_generate_messages_cpp)
-add_dependencies(disable_overrides spsuart_generate_messages_cpp)
-add_dependencies(of_loiter_guidance_test spsuart_generate_messages_cpp)
-add_dependencies(guidance_waypoint_navigation spsuart_generate_messages_cpp)
+ add_dependencies(demo plot_tool_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-
- #target_link_libraries(mavros_flight_test
- #  ${catkin_LIBRARIES}
- #  ${Boost_LIBRARIES}
- #  pid-controller
-#)
-
- #target_link_libraries(of_loiter_px4flow_test
- #   ${catkin_LIBRARIES}
- #   ${Boost_LIBRARIES}
- #   pid-controller
-#)
-
- #target_link_libraries(gps_interface_node
- #   ${catkin_LIBRARIES}
- #   ${Boost_LIBRARIES}
- #   pid-controller
- #   iir
-#)
-
-#target_link_libraries(offboard_mode
-#    ${catkin_LIBRARIES}
-#    ${Boost_LIBRARIES}
-#)  
-
-#target_link_libraries(iarc2015
-#    ${catkin_LIBRARIES}
-#	pid-controller
-#)  
-
-target_link_libraries(iarc_random
-    ${catkin_LIBRARIES}
-	pid-controller
-)
-
-#target_link_libraries(tracking_test
-#    ${catkin_LIBRARIES}
-#    pid-controller
-#)
-
-target_link_libraries(disable_overrides
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(of_loiter_guidance_test
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-    pid-controller
-)
-
-target_link_libraries(guidance_waypoint_navigation
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-    pid-controller
-)
+ target_link_libraries(demo
+   ${catkin_LIBRARIES}
+ )
 
 #############
 ## Install ##
@@ -231,7 +128,7 @@ target_link_libraries(guidance_waypoint_navigation
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS spsuart spsuart_node
+# install(TARGETS curve_fit curve_fit_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -256,7 +153,7 @@ target_link_libraries(guidance_waypoint_navigation
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_spsuart.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_curve_fit.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
