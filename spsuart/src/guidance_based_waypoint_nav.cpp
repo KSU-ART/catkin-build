@@ -53,7 +53,7 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     throttle = MID_PWM + out;
 
     if(ground_distance > 1.1) {
-        retract = LOW_PWM;
+        retract = LOW_PWM;
     }
 }
 
@@ -81,7 +81,7 @@ void defineWayPoints(){
 
     // Hard code square pattern
         geometry_msgs::PoseStamped goal_pos;
-        goal_pos.header.seq = i;
+        goal_pos.header.seq = 0;
         goal_pos.header.stamp = ros::Time::now();
         goal_pos.header.frame_id = "global_frame";
         goal_pos.pose.position.z = 0;
@@ -112,9 +112,12 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 	double vel_y = msg->vector.y;
 
 	ros::Time current_time = msg->header.stamp;
+    
+	// Only update waypoints if velocity is low
+	if(vel_x <= .1 && vel_x >=-.1 && vel_y <=.1 && vel_y >=-.1){		
+    		updateWayPoints();
+	}
 	
-    updateWayPoints();
-
 	pos_est.point.x += (vel_x + prev_vel.vector.x)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
 	pos_est.point.y += (vel_y + prev_vel.vector.y)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
 	pos_est.header.seq++;
