@@ -5,6 +5,8 @@
 #include "geometry_msgs/Vector3Stamped.h"
 #include "nav_msgs/Path.h"
 #include <cmath>
+#include "plot_tool/PlotPath.h"
+#include "plot_tool/PlotPose.h"
 
 using namespace std;
 using namespace cv;
@@ -16,17 +18,24 @@ int roll = MID_PWM;
 int pitch = MID_PWM;
 int mode = ALT_HOLD_MODE;
 int retract = HIGH_PWM;
+int current_goal = 0;
 
 bool land = false;
 double target_altitude = 1.5;
 double ground_distance;
+bool plotPath = false;
 
 geometry_msgs::PointStamped pos_est;
 geometry_msgs::Vector3Stamped prev_vel;
 nav_msgs::Path nav_path;
-int current_goal = 0;
+nav_msgs::Path points_visited;
 
 ros::Publisher pos_est_pub;
+ros::ServiceClient path_srv_h;
+ros::ServiceClient pose_srv_h;
+plot_tool::PlotPath path_srv;
+plot_tool::PlotPose pose_srv;
+
 
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(80,0,0,-250,250);
@@ -105,6 +114,28 @@ void defineWayPoints(){
         goal_pos.pose.position.x = 0;
         goal_pos.pose.position.y = 0;
         nav_path.poses.push_back(goal_pos);
+        
+        if(plotPath){
+			// clear graph
+			for (int i = 0; i < 2; i++)
+			{
+				path_srv.request.append=false;
+				path_srv.request.series=i;
+				path_srv_h.call(path_srv);
+			}
+	
+			// draw the individual waypoints
+			path_srv.request.msg = nav_path;
+			path_srv.request.series=0;
+			path_srv.request.append=true;
+			path_srv.request.symbol='0';
+			path_srv.request.symbol_size=10;
+			path_srv_h.call(path_srv);
+			
+			// draw the lines connecting the waypoints
+			path_srv.request.symbol='-';
+			path_srv_h.call(path_srv);
+		}
 }
 
 void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg) {
@@ -135,6 +166,20 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
     pitch = MID_PWM - x_out;
     
     prev_vel = *msg;
+    
+    if(plotPath){
+		geometry_msgs::Pose current_nav_pos;
+        
+        current_nav_pos.position.x = pos_est.point.x;
+        current_nav_pos.position.y = pos_est.point.y;
+        
+		// Plot the current estimated pose
+		pose_srv.request.msg = current_nav_pos;
+		pose_srv.request.series=2;
+		pose_srv.request.append=false;			
+		pose_srv.request.symbol='+';
+		pose_srv.request.symbol_size=10;
+	}
 }
 
 int constrain(int value, int min, int max)
@@ -187,6 +232,19 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "of_loiter_guidance_test");
     ros::NodeHandle n;
 
+	if(std::strcmp(argv[1], "plot") == 0){
+		//Subscribe to the plotting services
+		path_srv_h = n.serviceClient<plot_tool::PlotPath>("plot_tool/draw_path");
+		pose_srv_h = n.serviceClient<plot_tool::PlotPose>("plot_tool/draw_pose");
+		
+		plotPath = true;
+	}
+
+    //Define navigation waypoints
+    defineWayPoints();
+
+
+
     //Image and mavlink message subscriber
     ros::Subscriber subGuidanceVelocity = n.subscribe("/guidance/velocity",1,guidanceVelocityCallback);
     ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
@@ -198,9 +256,6 @@ int main(int argc, char **argv)
     //RC msg container that will be sent to the FC @ fcuCommRate hz
     mavros::OverrideRCIn msg;
     ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
-
-    //Define navigation waypoints
-    defineWayPoints();
 
 	// Init xy pose
 	pos_est.header.seq = 0;
