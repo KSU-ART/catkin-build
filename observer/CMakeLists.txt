@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(opencv_funlab)
+project(observer)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -103,7 +103,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES opencv_fun
+#  LIBRARIES observer
 #  CATKIN_DEPENDS cv_bridge image_transport roscpp std_msgs
 #  DEPENDS system_lib
 )
@@ -116,35 +116,53 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(opencv_fun
-#   src/${PROJECT_NAME}/opencv_fun.cpp
+# add_library(observer
+#   src/${PROJECT_NAME}/observer.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(opencv_fun ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(observer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-
-add_executable(opencv_fun_tracking_lab_node src/opencv_tracking.cpp src/LAB_Object.cpp)
-add_executable(opencv_fun_subscriber_node src/sub_node.cpp)
-add_executable(plate_angle src/plate_angle.cpp)
+add_executable(color_tracker src/color_tracker.cpp src/LAB_Object.cpp)
+add_executable(color_finder src/color_finder.cpp src/LAB_Object.cpp)
+add_executable(plate_angler src/plate_angler.cpp)
+add_executable(line_tracker src/line_tracker.cpp)
+add_executable(cartographer src/cartographer.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(opencv_fun_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(observer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- 
-target_link_libraries(opencv_fun_tracking_lab_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
-target_link_libraries(opencv_fun_subscriber_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
-target_link_libraries(plate_angle ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
+ target_link_libraries(color_tracker
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+ )
+ target_link_libraries(color_finder 
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+ )
+  target_link_libraries(plate_angler 
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+ )
+ target_link_libraries(line_tracker
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+ ) 
+ target_link_libraries(cartographer
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
@@ -160,7 +178,7 @@ target_link_libraries(plate_angle ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS opencv_fun opencv_fun_node
+# install(TARGETS observer observer_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -185,7 +203,7 @@ target_link_libraries(plate_angle ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} )
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_opencv_fun.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_observer.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
