@@ -20,6 +20,9 @@
 //this function returns the smallest angle between 2 vectors, measured in cosines.
 static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 {
+	//cout for debugging on jetson:
+	std::cout << "Point 1: " << pt1.x<< " ' " <<pt1.y << "\nPoint 2: "
+	 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n" 
 	double dx1 = pt1.x - pt0.x;
 	double dy1 = pt1.y - pt0.y;
 	double dx2 = pt2.x - pt0.x;
@@ -27,7 +30,7 @@ static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 	return(dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 +dy2*dy2) + 1e-10);
 }
 
-//this function returns the angle between 2 cv::Point's in degrees.
+//this function returns the angle made by 2 cv::Point's in degrees.
 double angle(cv::Point pt1, cv::Point pt2)
 {
 	double dy = (pt1.y-pt2.y);//pt1.y-pt2.y fixes y component being inverted
@@ -53,6 +56,7 @@ cv::Point findMidpoint(cv::Point pt1, cv::Point pt2)
 	
 }
 
+//to sort vertices if this is the problem:
 /*std::vector<cv::Point> sortVertices(std::vector<cv::Point> original)
 {
 	std::vector<cv::point> sorted;
@@ -170,10 +174,11 @@ public:
 				for (int j = 2; j < vertices + 2; j++)
 					cos.push_back( angle(approx[j%vertices], approx[j-2], approx[(j-1)%vertices]) );
 					
-				//output angles to terminal:
-				/*std::cout << "\n\n" << cos.size() << "\n\n";
+				//output angles to terminal (for debugging):
+				///*
+				std::cout << "\n\n" << cos.size() << "\n\n";
 				for (int a = 0; a < cos.size(); a++)
-					std::cout <<"angle " <<a+1 << ": " << cos[a] << "\n";*/
+					std::cout <<"angle " <<a+1 << ": " << cos[a] << "\n";//*/
 					
 				//sort ascending the corner degree values:
 				std::sort( cos.begin(), cos.end() );
@@ -214,7 +219,8 @@ public:
 						//	 this is the orientation:
 						orientation = angle(longmid, frontmid);
 						
-						//std::cout << "the angle of the plate is "  << orientation << " degrees."<< std::endl;					
+						//cout for debugging:
+						std::cout << "the angle of the plate is "  << orientation << " degrees."<< std::endl;					
 					}
 					else
 						orientation = 0.0;
