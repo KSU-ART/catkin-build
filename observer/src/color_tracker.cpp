@@ -33,7 +33,7 @@ const int FRAME_HEIGHT = 720;
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS=10;
 //minimum and maximum object area
-const int MIN_OBJECT_AREA = 20*20;
+const int MIN_OBJECT_AREA = 50*50;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 
 //The following for location publishers

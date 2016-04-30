@@ -53,6 +53,12 @@ cv::Point findMidpoint(cv::Point pt1, cv::Point pt2)
 	
 }
 
+/*std::vector<cv::Point> sortVertices(std::vector<cv::Point> original)
+{
+	std::vector<cv::point> sorted;
+	
+}*/
+
 namespace enc = sensor_msgs::image_encodings;
 using namespace std;
 using namespace cv;

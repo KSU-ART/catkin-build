@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 	
 	ros::Subscriber sub2 = n.subscribe("red_loc", 100, redArrayCallback);
 	
-	ros::Subscriber sub3 = n.subscribe("plate_angle", 100, plateAngleCallback);
+	ros::Subscriber sub3 = n.subscribe("green_plate_angle", 100, plateAngleCallback);
 	
 	ros::Rate loop_rate(10);
 	  
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 			}	
 		}*/
 		
-		if (plateAngle != 0.0000000000)
+		if (not(plateAngle == 0.0))
 			printf("\nPlate Angle: %f\n", plateAngle);
 		
 		ros::spinOnce();

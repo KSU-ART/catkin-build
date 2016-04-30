@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   roscpp
   std_msgs
+  roslaunch
 )
 
 ## System dependencies are found with CMake's conventions
@@ -71,6 +72,8 @@ find_package(catkin REQUIRED COMPONENTS
 #   DEPENDENCIES
 #   std_msgs
 # )
+
+roslaunch_add_file_check(launch)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
