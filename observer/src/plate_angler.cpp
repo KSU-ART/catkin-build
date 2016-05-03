@@ -22,7 +22,7 @@ static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 {
 	//cout for debugging on jetson:
 	std::cout << "Point 1: " << pt1.x<< " ' " <<pt1.y << "\nPoint 2: "
-	 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n" 
+	 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n";
 	double dx1 = pt1.x - pt0.x;
 	double dy1 = pt1.y - pt0.y;
 	double dx2 = pt2.x - pt0.x;
