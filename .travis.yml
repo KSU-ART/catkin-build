@@ -1,8 +1,6 @@
 ## VM settings ##
 dist: trusty # Ubuntu distro to use
 sudo: required # enable admin rights in VM
-language:
-  - generic # Setup VM with build tools for the most common languages
 services:
   - docker
 notifications:
