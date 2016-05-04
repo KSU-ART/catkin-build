@@ -3,10 +3,8 @@ dist: trusty # Ubuntu distro to use
 sudo: required # enable admin rights in VM
 language:
   - generic # Setup VM with build tools for the most common languages
-cache:
-  apt: true # Cache APT packages for faster builds
-  directories:
-    - ~/opencv # Cache OpenCV binaries for much faster builds
+services:
+  - docker
 notifications:
   email: # Email these scrubs when builds/tests fails
     - bhopewel@students.kennesaw.edu
@@ -27,36 +25,12 @@ env:
 #    OPTIONAL deploy
 #    OPTIONAL after_deploy
 
-before_install:
-  # Install barebones ROS Indigo
-  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' && sudo apt-key adv --keyserver hkp://pool.sks-keyservers.net --recv-key 0xB01FA116
-  - sudo apt-get update && sudo apt-get install -y ros-indigo-ros-base python-rosinstall
-  - sudo rosdep init && rosdep update
-  - echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc && source ~/.bashrc
-
 install:
-  # Install APT dependencies
-  - sudo apt-get install -y ros-indigo-mavlink ros-indigo-rviz ros-indigo-cv-bridge ros-indigo-pcl-ros ros-indigo-diagnostic-updater ros-indigo-eigen-conversions libgsl0-dev
-  # Get OpenCV if not already in cache
-  # Uncomment the next line to manually build OpenCV  
-  # - cd ~ && git clone https://github.com/Itseez/opencv.git && cd ~/opencv && git checkout 2.4.12 && mkdir release && cd release && cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local .. && make -j8
-  - cd ~/opencv/release
-  - sudo make install
-  # Get and install pid-controller library
-  - cd ~/ && git clone https://github.com/silentreverb/pid-controller.git && cd pid-controller && mkdir release && cd release
-  - cmake ..
-  - make -j8
-  - sudo make install
+  - docker pull ksuart/catkin-build
 
-before_script:
-  # Initialize a catkin workspace
-  - mkdir -p ~/ros/catkin_ws/src; cd ~/ros/catkin_ws/src
-  - catkin_init_workspace
-  - cd ~/ros/catkin_ws; catkin_make
-  - source devel/setup.bash
+before-script:
+  - mkdir -p ~/ros/catkin_ws/
+  - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  # Move the repo to the catkin workspace and build
-  - cd ~/ros/catkin_ws && rm -rf src && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
-  - catkin_make --pkg ros_opencv
-  - catkin_make -j8
+  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build /bin/bash -c "catkin_make -C ~/ros/catkin_ws --pkg ros_opencv; catkin_make -C ~/ros/catkin_ws"
