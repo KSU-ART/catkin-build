@@ -31,4 +31,4 @@ before-script:
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -i -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build /bin/bash -c "source /opt/ros/indigo/setup.bash && catkin_make -C ~/ros/catkin_ws"
+  - docker run -it -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build /bin/bash -c "source /opt/ros/indigo/setup.bash && catkin_make -C ~/ros/catkin_ws"
