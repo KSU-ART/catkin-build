@@ -27,8 +27,10 @@ install:
   - docker pull ksuart/catkin-build
 
 before-script:
+  - ls
   - mkdir -p ~/ros/catkin_ws/
-  - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
+  - cd ~/ros/catkin_ws && ls && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src && ls
+  - cd src && ls
 
 script:
   - docker run -it -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build /bin/bash -c "source /opt/ros/indigo/setup.bash && catkin_make -C ~/ros/catkin_ws"
