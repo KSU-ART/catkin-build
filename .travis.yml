@@ -26,11 +26,9 @@ env:
 install:
   - docker pull ksuart/catkin-build
 
-before-script:
-  - ls
+before_script:
   - mkdir -p ~/ros/catkin_ws/
-  - cd ~/ros/catkin_ws && ls && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src && ls
-  - cd src && ls
+  - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -it -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build /bin/bash -c "source /opt/ros/indigo/setup.bash && catkin_make -C ~/ros/catkin_ws"
+  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build /bin/bash -c "cd ~/ros/catkin_ws; catkin_make --pkg ros_opencv; catkin_make"
