@@ -136,6 +136,8 @@ int getchNonBlocking()
 
 int main(int argc, char **argv)
 {
+    thisvarwillfailthebuild = 3;    
+
     //ROS node init and NodeHandle init
     ros::init(argc, argv, "of_loiter_guidance_test");
     ros::NodeHandle n;
