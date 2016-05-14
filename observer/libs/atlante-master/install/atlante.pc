@@ -1,0 +1,9 @@
+# Package Information for pkg-config
+
+prefix=/usr/local
+
+Name: Atlante
+Description: Open source basic utility library
+Version: 1.0.0
+Libs: -L${prefix}/lib -latlante
+Cflags: -I${prefix}/include/atlante

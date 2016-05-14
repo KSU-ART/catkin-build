@@ -12,6 +12,7 @@
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int16MultiArray.h"
 #include "std_msgs/Float32.h"
+#include "camera_model.h"
 
 int greenArr[100];
 int redArr[100];
