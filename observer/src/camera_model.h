@@ -152,7 +152,7 @@ public:
 	
 };
 
-/* ///I realized that library has this...
+///I realized that library has this...
 class my_quaternion{
 private:
 	std::vector< double > q;
@@ -195,7 +195,7 @@ public:
 		euler_angs.push_back(bank*180/pi);//rotation about x
 		return euler_angs;
 	}
-};*/
+};
 
 
 	
