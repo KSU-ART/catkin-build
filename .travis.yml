@@ -13,6 +13,10 @@ env:
     - CI_SOURCE_PATH=$(pwd) # Save default repo location to environment variable 
     - OPENCV_VER=2.4.9
 
+branches:
+  only:
+   - master
+
 # NOTE: The build lifecycle on Travis.ci is something like this:
 #    before_install
 #    install
