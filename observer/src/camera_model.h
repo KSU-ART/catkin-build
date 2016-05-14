@@ -123,7 +123,7 @@ public:
 		RotMatrix3 rot = q1.getRotMatrix();
 		
 		///This is assuming that z of the postition matrix in Pose message is the altitude:
-		HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.position.y + roomba_height));
+		HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.position.y - roomba_height));
 		
 		HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 		HTMatrix4 worldFromCam = camFromWorld.inverse();
