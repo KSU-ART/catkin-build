@@ -23,8 +23,9 @@ public:
 		loadModel(camID);
 	}
 	cameraModel(char camID, double pH, double pW, int h, int w, double fx, 
-			double fy, double x0, double y0, double t1, double t2, double t3){
-		saveModel(camID, pH, pW, h, w, fx, fy, x0, y0, t1, t2, t3);
+			double fy, double x0, double y0, double t1, double t2, double t3, 
+			double qw, double qx, double qy, double qz){
+		saveModel(camID, pH, pW, h, w, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz);
 	}
 	cameraModel(){
 		makeNewCam();
@@ -32,7 +33,7 @@ public:
 	void makeNewCam(){
 		using namespace std;
 		char cameraNum, option = 'n';
-		double fx, fy, x0, y0,t1, t2, t3, pHeight, pWidth;
+		double fx, fy, x0, y0,t1, t2, t3, pHeight, pWidth, qw, qx, qy, qz;
 		int width, height;
 		do{
 			cout << "input camera number (a character): ";
@@ -57,13 +58,20 @@ public:
 			cin >> t1; cout << endl;
 			cin >> t2; cout << endl;
 			cin >> t2;
+			cout << "\ninput camera rotation quaternion relative to IMU\n"
+			<<"(ex. (0,0,0,0) if no rotation relative to IMU and facing straight down):\n";
+			cin >> qw; cout << endl;
+			cin >> qx; cout << endl;
+			cin >> qy;cout << endl;
+			cin >> qz;
 			cout << "\nis the information correct? Y or N: ";
 			cin >> option;
 		}while (option != 'y' || option !='Y');
-		saveModel(cameraNum, pHeight, pWidth, height, width, fx, fy, x0, y0, t1, t2, t3);
+		saveModel(cameraNum, pHeight, pWidth, height, width, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz);
 	}
 	void saveModel(char camID, double pH, double pW, int h, int w, double fx, 
-		double fy, double x0, double y0, double t1, double t2, double t3){
+		double fy, double x0, double y0, double t1, double t2, double t3,
+		double qw, double qx, double qy, double qz){
 		using namespace std;
 		string s1 = "cameraModel"; s1+=camID; s1+=".dat";
 		ofstream save;
@@ -79,6 +87,10 @@ public:
 		save.write( (char*)&t1 , sizeof(double) );
 		save.write( (char*)&t2 , sizeof(double) );
 		save.write( (char*)&t3 , sizeof(double) );
+		save.write( (char*)&qw , sizeof(double) );
+		save.write( (char*)&qx , sizeof(double) );
+		save.write( (char*)&qy , sizeof(double) );
+		save.write( (char*)&qz , sizeof(double) );
 		save.close();
 		loadModel(camID);
 	}
@@ -86,7 +98,7 @@ public:
 	void loadModel(char camID){
 		using namespace std;
 		int h, w;
-		double pH, pW, fx, fy, x0, y0, t1, t2, t3;
+		double pH, pW, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz;
 		string s1 = "cameraModel"; s1+=camID; s1+=".dat";
 		ifstream load;
 		load.open(s1.c_str(), ifstream::binary);
@@ -101,6 +113,10 @@ public:
 		load.read( (char*)&t1 , sizeof(double) );
 		load.read( (char*)&t2 , sizeof(double) );
 		load.read( (char*)&t3 , sizeof(double) );
+		load.read( (char*)&qw , sizeof(double) );
+		load.read( (char*)&qx , sizeof(double) );
+		load.read( (char*)&qy , sizeof(double) );
+		load.read( (char*)&qz , sizeof(double) );
 		load.close();
 		camera_focal_distance_x = fx;
 		camera_focal_distance_y = fy;
@@ -108,7 +124,8 @@ public:
 		camera_center_y_pixels = y0;
 		camera_pixel_width_meters = pW;
 		camera_pixel_height_meters = pH;
-		camera_transform_from_drone = HTMatrix4(RotMatrix3::identity(), Vector3(t1, t2, t3));
+		Quaternion cam_from_imu(qw, qx, qy, qz);
+		camera_transform_from_drone = HTMatrix4(cam_from_imu.getRotMatrix(), Vector3(t1, t2, t3));
 		
 	}
 	
@@ -134,20 +151,18 @@ public:
 	}
 	
 	
-	Vector3 getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point p1){
+	Vector3 getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel){
 		 
 		Quaternion q1(uavPose.orientation.x, uavPose.orientation.y, 
 						uavPose.orientation.z, uavPose.orientation.w);
 						
 		RotMatrix3 rot = q1.getRotMatrix();
 		
-		///This is assuming that z of the postition matrix in Pose message is the altitude:
 		HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.position.y + roomba_height));
-		
 		HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 		HTMatrix4 worldFromCam = camFromWorld.inverse();
-		Vector4 floorNormalFromCam4 = worldFromCam * Vector4(0, 0, 1, 1);
 		Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
+		Vector4 floorNormalFromCam4 = worldFromCam * Vector4(0, 0, 1, 1) - floorCenterFromCam4;
 		
 		Vector3 floorNormalFromCam = Vector3(floorNormalFromCam4.x, 
 											floorNormalFromCam4.y, 
@@ -159,11 +174,11 @@ public:
 		
 		
 		//find 3D point of feature detected on camera:				
-		Vector3 p2 = Vector3( (p1.x - camera_center_x_pixels) * camera_pixel_width_meters,
-								(p1.y - camera_center_y_pixels) * camera_pixel_height_meters,
+		Vector3 s = Vector3( (pixel.x - camera_center_x_pixels) * camera_pixel_width_meters,
+								(pixel.y - camera_center_y_pixels) * camera_pixel_height_meters,
 								camera_focal_distance_x * camera_pixel_width_meters );
 								
-		Vector4 pointOnFloorFromWorld4 = camFromWorld * findLinePlaneIntersection(p2.normalize(), 
+		Vector4 pointOnFloorFromWorld4 = camFromWorld * findLinePlaneIntersection(s.normalize(), 
 																				floorNormalFromCam, 
 																				floorCenterFromCam);
 								
