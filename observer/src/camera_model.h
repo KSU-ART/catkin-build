@@ -4,9 +4,10 @@
 #include <vector>
 #include <cv.h>
 #include <highgui.h>
-#include "../libs/atlante-master/atlante.h"
+#include <atlante.h>
 #include <fstream>
 #include <geometry_msgs/Pose.h>
+#include <string.h>
 
 class cameraModel{
 private:
@@ -64,7 +65,7 @@ public:
 	void saveModel(char camID, double pH, double pW, int h, int w, double fx, 
 		double fy, double x0, double y0, double t1, double t2, double t3){
 		using namespace std;
-		string s1 = "cameraModel"; s1.push_back(camID); s1 = s1 + ".dat";
+		string s1 = "cameraModel"; s1+=camID; s1+=".dat";
 		ofstream save;
 		save.open(s1.c_str(), ofstream::binary);
 		save.write( (char*)&pH , sizeof(double) );
@@ -86,7 +87,7 @@ public:
 		using namespace std;
 		int h, w;
 		double pH, pW, fx, fy, x0, y0, t1, t2, t3;
-		string s1 = "cameraModel"; s1.push_back(camID); s1 = s1 + ".dat";
+		string s1 = "cameraModel"; s1+=camID; s1+=".dat";
 		ifstream load;
 		load.open(s1.c_str(), ifstream::binary);
 		load.read( (char*)&pH , sizeof(double) );
@@ -110,16 +111,34 @@ public:
 		camera_transform_from_drone = HTMatrix4(RotMatrix3::identity(), Vector3(t1, t2, t3));
 		
 	}
+	
+	void printModel(){
+		using namespace std;
+		cout << "Pixel width (m): " << camera_pixel_width_meters << endl;
+		cout << "Pixel height (m): " << camera_pixel_height_meters << endl;
+		cout << "Image sensor width (pix): " << image_width << endl;
+		cout << "Image sensor height (pix): " << image_height << endl;
+		cout << "\nSensor location from IMU (m):\n" << camera_transform_from_drone << "\n";
+		cout << "\nCamera Intrinsic Matrix:" << endl;
+		cout << camera_focal_distance_x << "\t" << "0\t" << camera_center_x_pixels <<"\n";
+		cout << "0\t" << camera_focal_distance_y  << "\t" << camera_center_y_pixels << "\n";
+		cout << "0\t" << "0\t" << "1" << endl<<endl;
+		
+	}
+			
+							
 		
 	Vector3 findLinePlaneIntersection(const Vector3 &lineVector, const Vector3 &planeNormal, const Vector3 &planeCenter) {
 			double lambda = (planeCenter * planeNormal) / (lineVector * planeNormal);
 			return lambda * lineVector;
 	}
 	
-	///I am still working on this part!!!!!!:!!!!!:!::!!!:!:!:!
-	Vector3 getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point p1){ 
+	
+	Vector3 getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point p1){
+		 
 		Quaternion q1(uavPose.orientation.x, uavPose.orientation.y, 
-			uavPose.orientation.z, uavPose.orientation.w);
+						uavPose.orientation.z, uavPose.orientation.w);
+						
 		RotMatrix3 rot = q1.getRotMatrix();
 		
 		///This is assuming that z of the postition matrix in Pose message is the altitude:
@@ -131,10 +150,12 @@ public:
 		Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
 		
 		Vector3 floorNormalFromCam = Vector3(floorNormalFromCam4.x, 
-						floorNormalFromCam4.y, floorNormalFromCam4.z);
+											floorNormalFromCam4.y, 
+											floorNormalFromCam4.z);
 						
 		Vector3 floorCenterFromCam = Vector3(floorCenterFromCam4.x, 
-						floorCenterFromCam4.y, floorCenterFromCam4.z);
+											floorCenterFromCam4.y, 
+											floorCenterFromCam4.z);
 		
 		
 		//find 3D point of feature detected on camera:				
@@ -143,10 +164,14 @@ public:
 								camera_focal_distance_x * camera_pixel_width_meters );
 								
 		Vector4 pointOnFloorFromWorld4 = camFromWorld * findLinePlaneIntersection(p2.normalize(), 
-								floorNormalFromCam, floorCenterFromCam);
+																				floorNormalFromCam, 
+																				floorCenterFromCam);
 								
 		Vector3 pointOnFloorFromWorld = Vector3(pointOnFloorFromWorld4.x, 
-								pointOnFloorFromWorld4.y, pointOnFloorFromWorld4.z);						
+												pointOnFloorFromWorld4.y, 
+												pointOnFloorFromWorld4.z);
+		
+		return pointOnFloorFromWorld;						
 	}
 		
 	
