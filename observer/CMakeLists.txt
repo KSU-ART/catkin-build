@@ -4,7 +4,7 @@ project(observer)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(OpenCV REQUIRED)
+find_package(ATLANTE)
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roslaunch
 )
+find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -119,8 +120,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${OpenCV_INCLUDE_DIRS}
+  ${ATLANTE_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -146,24 +148,25 @@ add_executable(cartographer src/cartographer.cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(color_tracker
-   ${OpenCV_LIBRARIES}
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
  )
  target_link_libraries(color_finder 
-   ${OpenCV_LIBRARIES}
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
  )
   target_link_libraries(plate_angler 
-   ${OpenCV_LIBRARIES}
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
  )
  target_link_libraries(line_tracker
-   ${OpenCV_LIBRARIES}
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
  ) 
  target_link_libraries(cartographer
-   ${OpenCV_LIBRARIES}
+   ${ATLANTE_LIBRARIES}
    ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
 )
 
 #############
