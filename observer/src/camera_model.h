@@ -184,7 +184,7 @@ public:
 								
 		Vector3 pointOnFloorFromWorld = Vector3(pointOnFloorFromWorld4.x, 
 												pointOnFloorFromWorld4.y, 
-												pointOnFloorFromWorld4.z);
+												pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
 		
 		return pointOnFloorFromWorld;						
 	}
