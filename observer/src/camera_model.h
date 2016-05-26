@@ -159,7 +159,44 @@ public:
 		RotMatrix3 rot = q1.getRotMatrix();
 		
 		HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.position.y - roomba_height));
+		HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
+		HTMatrix4 worldFromCam = camFromWorld.inverse();
+		Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
+		Vector4 floorNormalFromCam4 = worldFromCam * Vector4(0, 0, 1, 1) - floorCenterFromCam4;
 		
+		Vector3 floorNormalFromCam = Vector3(floorNormalFromCam4.x, 
+											floorNormalFromCam4.y, 
+											floorNormalFromCam4.z);
+						
+		Vector3 floorCenterFromCam = Vector3(floorCenterFromCam4.x, 
+											floorCenterFromCam4.y, 
+											floorCenterFromCam4.z + roomba_height);
+		
+		
+		//find 3D point of feature detected on camera:				
+		Vector3 s = Vector3( (pixel.x - camera_center_x_pixels) * camera_pixel_width_meters,
+								(pixel.y - camera_center_y_pixels) * camera_pixel_height_meters,
+								camera_focal_distance_x * camera_pixel_width_meters );
+								
+		Vector4 pointOnFloorFromWorld4 = camFromWorld * findLinePlaneIntersection(s.normalize(), 
+																				floorNormalFromCam, 
+																				floorCenterFromCam);
+								
+		Vector3 pointOnFloorFromWorld = Vector3(pointOnFloorFromWorld4.x, 
+												pointOnFloorFromWorld4.y, 
+												pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
+		
+		return pointOnFloorFromWorld;						
+	}
+	
+	Vector3 getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel){
+		 
+		Quaternion q1(uavPose.orientation.x, uavPose.orientation.y, 
+						uavPose.orientation.z, uavPose.orientation.w);
+						
+		RotMatrix3 rot = q1.getRotMatrix();
+		
+		HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.position.y));
 		HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 		HTMatrix4 worldFromCam = camFromWorld.inverse();
 		Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
@@ -189,7 +226,6 @@ public:
 		
 		return pointOnFloorFromWorld;						
 	}
-		
 	
 };
 
