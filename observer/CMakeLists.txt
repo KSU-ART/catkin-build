@@ -4,7 +4,7 @@ project(observer)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(ATLANTE)
+find_package(ATLANTE REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
