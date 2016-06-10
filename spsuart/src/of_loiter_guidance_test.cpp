@@ -26,6 +26,9 @@ geometry_msgs::Vector3Stamped prev_vel;
 
 ros::Publisher pos_est_pub;
 
+ros::Publisher pid_x_error_pub;
+ros::Publisher pid_y_error_pub;
+
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
 PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
@@ -72,6 +75,9 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 
     double x_out = xPosCtrl->calc(pos_est.point.x);
     double y_out = yPosCtrl->calc(pos_est.point.y);
+    
+    pid_x_error_pub.publish(xPosCtrl->GetError());
+    pid_y_error_pub.publish(yPosCtrl->GetError());
     
     cout << "est: " << pos_est << endl;
     cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;
@@ -148,6 +154,9 @@ int main(int argc, char **argv)
     //Mavros rc override publisher
     ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
     pos_est_pub = n.advertise<geometry_msgs::PointStamped>("/fatcat/pos_est", 1);
+    
+    pid_x_error_pub = n.advertise<float>("/fatcat/pidx", 1);
+    pid_y_error_pub = n.advertise<float>("/fatcat/pidy", 1);
 
     //RC msg container that will be sent to the FC @ fcuCommRate hz
     mavros::OverrideRCIn msg;
