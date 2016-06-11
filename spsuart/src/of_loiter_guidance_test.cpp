@@ -77,8 +77,13 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
     double x_out = xPosCtrl->calc(pos_est.point.x);
     double y_out = yPosCtrl->calc(pos_est.point.y);
     
-    pid_x_error_pub.publish(xPosCtrl->getError());
-    pid_y_error_pub.publish(yPosCtrl->getError());
+    std_msgs::Float64 xPosCtrlMsg;
+    xPosCtrlMsg.data = xPosCtrl->getError();
+    std_msgs::Float64 yPosCtrlMsg;
+    yPosCtrlMsg.data = yPosCtrl->getError();
+    
+    pid_x_error_pub.publish(xPosCtrlMsg);
+    pid_y_error_pub.publish(yPosCtrlMsg);
     
     cout << "est: " << pos_est << endl;
     cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;
