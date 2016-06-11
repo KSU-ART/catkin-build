@@ -5,6 +5,7 @@
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Vector3Stamped.h"
+#include "std_msgs/Float64.h"
 
 using namespace std;
 using namespace cv;
@@ -155,8 +156,8 @@ int main(int argc, char **argv)
     ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
     pos_est_pub = n.advertise<geometry_msgs::PointStamped>("/fatcat/pos_est", 1);
     
-    pid_x_error_pub = n.advertise<float>("/fatcat/pidx", 1);
-    pid_y_error_pub = n.advertise<float>("/fatcat/pidy", 1);
+    pid_x_error_pub = n.advertise<std_msgs::Float64>("/fatcat/pidx", 1);
+    pid_y_error_pub = n.advertise<std_msgs::Float64>("/fatcat/pidy", 1);
 
     //RC msg container that will be sent to the FC @ fcuCommRate hz
     mavros::OverrideRCIn msg;
