@@ -179,6 +179,7 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 		pose_srv.request.append=false;			
 		pose_srv.request.symbol='+';
 		pose_srv.request.symbol_size=10;
+		pose_srv_h.call(pose_srv);
 	}
 }
 

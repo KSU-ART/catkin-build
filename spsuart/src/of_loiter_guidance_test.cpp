@@ -27,8 +27,8 @@ geometry_msgs::Vector3Stamped prev_vel;
 ros::Publisher pos_est_pub;
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
-PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
+PIDController* xPosCtrl = new PIDController(105,0,0,-500,500);
+PIDController* yPosCtrl = new PIDController(105,0,0,-500,500);
 PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
 
 mavlink_message_t* msgt = NULL;
