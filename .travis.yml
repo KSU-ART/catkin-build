@@ -11,7 +11,6 @@ notifications:
 env:
   global:
     - CI_SOURCE_PATH=$(pwd) # Save default repo location to environment variable 
-    - OPENCV_VER=2.4.9
 
 branches:
   only:
@@ -29,13 +28,11 @@ branches:
 #    OPTIONAL after_deploy
 
 install:
-  - if [ $OPENCV_VER == 2.4.9 ]; then docker pull ksuart/catkin-build:depends-ros-cv2; fi
-  - if [ $OPENCV_VER == 3.1.0 ]; then docker pull ksuart/catkin-build:depends-ros-cv3; fi
+  - docker pull ksuart/catkin-build:depends-ros-cv2
 
 before_script:
   - mkdir -p ~/ros/catkin_ws/
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - if [ $OPENCV_VER == 2.4.9 ]; then docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros-cv2 /bin/bash -c "cd ~/ros/catkin_ws; catkin_make -j8 --pkg ros_opencv; catkin_make -j8"; fi
-  - if [ $OPENCV_VER == 3.1.0 ]; then docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros-cv3 /bin/bash -c "cd ~/ros/catkin_ws; catkin_make -j8 --pkg ros_opencv; catkin_make -j8"; fi
+  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros-cv2 /bin/bash -c "cd ~/ros/catkin_ws; catkin_make -j8 --pkg mavros; catkin_make -j8 --pkg ros_opencv; catkin_make -j8;"
