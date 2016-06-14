@@ -35,4 +35,4 @@ before_script:
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros-cv2 /bin/bash -c "cd ~/ros/catkin_ws; cd src; git submodule init; git submodule update;  cd ..; catkin_make -j8 --pkg mavros; catkin_make -j8 --pkg mavros_msgs; catkin_make -j8 --pkg mavros_extras; catkin_make -j8 --pkg ros_opencv; catkin_make -j8; catkin_make -j8;"
+  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros-cv2 /bin/bash -c "cd ~/ros/catkin_ws; catkin_make -j8 --pkg mavros; catkin_make -j8 --pkg ros_opencv; catkin_make -j8;"
