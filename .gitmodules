@@ -9,7 +9,3 @@ url = https://github.com/KSU-ART/px-ros-pkg.git
 [submodule "scan_tools"]
 path = scan_tools
 url = https://github.com/ccny-ros-pkg/scan_tools.git
-
-[submodule "mavros"]
-path = mavros
-url = https://github.com/KSU-ART/mavros.git
