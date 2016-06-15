@@ -158,14 +158,14 @@ int main(int argc, char **argv)
     ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
     ros::Subscriber subSetpoint = n.subscribe("/fatcat/setpoint", 1, setpointCallback);
     //Mavros rc override publisher
-    ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+    ros::Publisher rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
     pos_est_pub = n.advertise<geometry_msgs::PointStamped>("/fatcat/pos_est", 1);
     
     pid_x_error_pub = n.advertise<std_msgs::Float64>("/fatcat/pidx", 1);
     pid_y_error_pub = n.advertise<std_msgs::Float64>("/fatcat/pidy", 1);
 
     //RC msg container that will be sent to the FC @ fcuCommRate hz
-    mavros::OverrideRCIn msg;
+    mavros_msgs::OverrideRCIn msg;
     ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
 	// Init xy pose

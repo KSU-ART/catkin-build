@@ -1,5 +1,5 @@
 #include "spsuart/autonomous.h"
-#include "px_comm/OpticalFlow.h"
+//#include "px_comm/OpticalFlow.h"
 #include <termios.h>
 #include "sensor_msgs/LaserScan.h"
 #include "ros_opencv/TrackingPoint.h"
@@ -196,11 +196,11 @@ int main(int argc, char **argv)
 
 	ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
 	//Mavros rc override publisher
-	ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+	ros::Publisher rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
 	alt_pub = n.advertise<ros_opencv::Alt>("/spsuart/alt", 1);
 
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
-	mavros::OverrideRCIn msg;
+	mavros_msgs::OverrideRCIn msg;
 	ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
 	int inputChar = 'a';
