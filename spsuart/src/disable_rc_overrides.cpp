@@ -9,10 +9,10 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   
   //Mavros rc override publisher
-  ros::Publisher rc_pub = n.advertise<mavros::OverrideRCIn>("/mavros/rc/override", 1);
+  ros::Publisher rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
   
   //RC msg container that will be sent to the FC @ fcuCommRate hz
-  mavros::OverrideRCIn msg;
+  mavros_msgs::OverrideRCIn msg;
   ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
   
   

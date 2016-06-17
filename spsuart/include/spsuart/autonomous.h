@@ -3,9 +3,9 @@
 
 #include "ros/ros.h"
 
-#include <mavros/OverrideRCIn.h>
-#include <mavros/VFR_HUD.h>
-#include <mavros/Mavlink.h>
+#include <mavros_msgs/OverrideRCIn.h>
+#include <mavros_msgs/VFR_HUD.h>
+#include <mavros_msgs/Mavlink.h>
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 
 #include "opencv/cv.h"
@@ -20,7 +20,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 
-#include "px_comm/OpticalFlow.h"
+//#include "px_comm/OpticalFlow.h"
 #include "ros_opencv/TrackingPoint.h"
 #include <PIDController.h>
  
