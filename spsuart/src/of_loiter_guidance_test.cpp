@@ -30,6 +30,8 @@ ros::Publisher pos_est_pub;
 ros::Publisher pid_x_error_pub;
 ros::Publisher pid_y_error_pub;
 
+ros::Publisher altitude_pub; 
+
 // Instantiate PID controllers
 PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
 PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
@@ -53,7 +55,11 @@ void splitScanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
     double out = altPosCtrl->calc(ground_distance);
     ROS_DEBUG("PID Out: %d", out);
     throttle = MID_PWM + out;
-
+	
+	std_msgs::Float64 alt_msgs;
+	alt_msgs.data = avg;
+	altitude_pub.publish(alt_msgs);
+	
     if(ground_distance > 1.1) {
         retract = LOW_PWM;
     }
@@ -163,6 +169,8 @@ int main(int argc, char **argv)
     
     pid_x_error_pub = n.advertise<std_msgs::Float64>("/fatcat/pidx", 1);
     pid_y_error_pub = n.advertise<std_msgs::Float64>("/fatcat/pidy", 1);
+    
+    altitude_pub = n.advertise<std_msgs::Float64>("/fatcat/altitude", 1);
 
     //RC msg container that will be sent to the FC @ fcuCommRate hz
     mavros_msgs::OverrideRCIn msg;
