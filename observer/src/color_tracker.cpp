@@ -138,8 +138,8 @@ public:
     : it_(nh_)
     {
         image_sub_ = it_.subscribe("/usb_cam/image_raw", 1, &trackobjects::imageCb, this);
-        image_pub2_=it_.advertise("green_binary",1);
-        image_pub3_=it_.advertise("red_binary",1);
+        image_pub2_= it_.advertise("green_binary",1);
+        image_pub3_= it_.advertise("red_binary",1);
 		red_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("red_loc", 50);
 		green_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("green_loc", 50);
     }

@@ -17,52 +17,6 @@
 #include <sensor_msgs/image_encodings.h>
 #include "std_msgs/Float32.h"
 
-//this function returns the smallest angle between 2 vectors, measured in cosines.
-static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
-{
-	//cout for debugging on jetson:
-	std::cout << "Point 1: " << pt1.x<< " ' " <<pt1.y << "\nPoint 2: "
-	 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n";
-	double dx1 = pt1.x - pt0.x;
-	double dy1 = pt1.y - pt0.y;
-	double dx2 = pt2.x - pt0.x;
-	double dy2 = pt2.y - pt0.y;
-	return(dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 +dy2*dy2) + 1e-10);
-}
-
-//this function returns the angle made by 2 cv::Point's in degrees.
-double angle(cv::Point pt1, cv::Point pt2)
-{
-	double dy = (pt1.y-pt2.y);//pt1.y-pt2.y fixes y component being inverted
-	double dx = (pt2.x-pt1.x + 1e-10);
-	return (atan2(dy,dx)*180/3.14159265);
-}
-
-//this function returns the length between two cv::Point's in pixels.
-double length(cv::Point pt1, cv::Point pt2)
-{
-	double dy = (pt2.y-pt1.y);
-	double dx = (pt2.x-pt1.x + 1e-10);
-	return (sqrt(dx*dx+dy*dy));
-}
-
-//the following returns the midpoint of 2 cv::Point's as a cv::Point.
-cv::Point findMidpoint(cv::Point pt1, cv::Point pt2)
-{
-	cv::Point mid;
-	mid.x = (pt1.x+pt2.x)/2;
-	mid.y = (pt1.y+pt2.y)/2;
-	return(mid);
-	
-}
-
-//to sort vertices if this is the problem:
-/*std::vector<cv::Point> sortVertices(std::vector<cv::Point> original)
-{
-	std::vector<cv::point> sorted;
-	
-}*/
-
 namespace enc = sensor_msgs::image_encodings;
 using namespace std;
 using namespace cv;
@@ -82,24 +36,53 @@ public:
   findAngle()
     : it_(nh_)
   {
-	angle_pub = n.advertise<std_msgs::Float32>("green_plate_angle", 100);
-	angle_pub_2 = n.advertise<std_msgs::Float32>("red_plate_angle", 100);
+	angle_pub = n.advertise<std_msgs::Float32>("plate_angle", 100);
     image_sub_ = it_.subscribe("green_binary", 1, &findAngle::greenCb, this);
-    image_sub_2_ = it_.subscribe("red_binary", 1, &findAngle::redCb, this);
   }
 
   ~findAngle()
   {
 	
   }
-
-  void redCb(const sensor_msgs::ImageConstPtr& msg)
-  {
-	std_msgs::Float32 pubVar;
-	pubVar.data = imageCb(msg);
-	angle_pub_2.publish(pubVar);
-  }
   
+  //this function returns the smallest angle between 2 vectors, measured in cosines.
+	static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
+	{
+		//cout for debugging on jetson:
+		std::cout << "Point 1: " << pt1.x<< " ' " <<pt1.y << "\nPoint 2: "
+		 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n";
+		double dx1 = pt1.x - pt0.x;
+		double dy1 = pt1.y - pt0.y;
+		double dx2 = pt2.x - pt0.x;
+		double dy2 = pt2.y - pt0.y;
+		return(dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 +dy2*dy2) + 1e-10);
+	}
+
+	//this function returns the angle made by 2 cv::Point's in degrees.
+	double angle(cv::Point pt1, cv::Point pt2)
+	{
+		double dy = (pt1.y-pt2.y);//pt1.y-pt2.y fixes y component being inverted
+		double dx = (pt2.x-pt1.x + 1e-10);
+		return (atan2(dy,dx)*180/3.14159265);
+	}
+
+	//this function returns the length between two cv::Point's in pixels.
+	double length(cv::Point pt1, cv::Point pt2)
+	{
+		double dy = (pt2.y-pt1.y);
+		double dx = (pt2.x-pt1.x + 1e-10);
+		return (sqrt(dx*dx+dy*dy));
+	}
+
+	//the following returns the midpoint of 2 cv::Point's as a cv::Point.
+	cv::Point findMidpoint(cv::Point pt1, cv::Point pt2)
+	{
+		cv::Point mid;
+		mid.x = (pt1.x+pt2.x)/2;
+		mid.y = (pt1.y+pt2.y)/2;
+		return(mid);
+		
+	}
   
   void greenCb(const sensor_msgs::ImageConstPtr& msg)
   {
@@ -220,7 +203,7 @@ public:
 						orientation = angle(longmid, frontmid);
 						
 						//cout for debugging:
-						std::cout << "the angle of the plate is "  << orientation << " degrees."<< std::endl;					
+						//std::cout << "the angle of the plate is "  << orientation << " degrees."<< std::endl;					
 					}
 					else
 						orientation = 0.0;
