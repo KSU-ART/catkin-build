@@ -212,7 +212,7 @@ public:
 		trackFilteredObject(green,threshold);
 		green_loc_arr.publish(greenArr);
 		
-		waitKey(30);
+		waitKey(100);
 	}
 };
  

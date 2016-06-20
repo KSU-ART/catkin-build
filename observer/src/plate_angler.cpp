@@ -90,7 +90,7 @@ public:
 
   ~findAngle()
   {
-	  
+	
   }
 
   void redCb(const sensor_msgs::ImageConstPtr& msg)
