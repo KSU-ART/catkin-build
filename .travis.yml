@@ -11,10 +11,6 @@ notifications:
 env:
   global:
     - CI_SOURCE_PATH=$(pwd) # Save default repo location to environment variable 
-<<<<<<< HEAD
-    - OPENCV_VER=3.1.0
-=======
->>>>>>> 66731b205544e653c364282782c1f34fe417403e
 
 branches:
   only:

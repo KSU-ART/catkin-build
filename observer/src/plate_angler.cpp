@@ -1,7 +1,7 @@
 /********************************************************
  * This program is to get shape location and orientation
  * (specifically of IARC ground-bot plates) using opencv.
- * Note cruuently for this program to function, the camera 
+ * Note currently for this program to function, the camera 
  *  must be nearly centered over the plate. This restriction 
  *  could be removed through implementation of an algorithm 
  * 	using more complicated geometrical characteristics of the plate.

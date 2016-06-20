@@ -6,17 +6,11 @@
  * There is also a calibrationMode for finding desired color range.
 ********************************************************************/
 #include <ros/ros.h>
-#include <stdlib.h>
-#include <iostream>
-#include "std_msgs/String.h"
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp> 
 #include <opencv2/highgui/highgui.hpp>
-#include <sstream>
-#include <string>
-#include <iostream>
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
 #include "std_msgs/Int16MultiArray.h"
@@ -27,26 +21,15 @@ using namespace cv;
 
 namespace enc = sensor_msgs::image_encodings;
 
-//default capture width and height
-const int FRAME_WIDTH = 1280;
-const int FRAME_HEIGHT = 720;
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS=10;
 //minimum and maximum object area
 const int MIN_OBJECT_AREA = 50*50;
-const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 
 //The following for location publishers
 std_msgs::Int16MultiArray greenArr;
 std_msgs::Int16MultiArray redArr;
 std_msgs::Int16MultiArray testArr;
-
-int edgeThresh = 1;
-int lowThreshold;
-int const max_lowThreshold = 100;
-int ratio = 3;
-int kernel_size = 3;
-
 
 void setLocArrs(vector<LAB_Object> theObjects)
 {
@@ -149,7 +132,6 @@ class trackobjects
     image_transport::Publisher image_pub2_; //image publishers
     image_transport::Publisher image_pub3_;
     
-    std_msgs::String msg;
 
 public:
     trackobjects()

@@ -140,7 +140,6 @@ add_executable(color_tracker src/color_tracker.cpp src/LAB_Object.cpp)
 add_executable(color_finder src/color_finder.cpp src/LAB_Object.cpp)
 add_executable(plate_angler src/plate_angler.cpp)
 add_executable(line_tracker src/line_tracker.cpp)
-add_executable(cartographer src/cartographer.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -163,11 +162,6 @@ add_executable(cartographer src/cartographer.cpp)
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
  ) 
- target_link_libraries(cartographer
-   ${ATLANTE_LIBRARIES}
-   ${catkin_LIBRARIES}
-   ${OpenCV_LIBRARIES}
-)
 
 #############
 ## Install ##
