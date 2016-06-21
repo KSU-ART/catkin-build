@@ -35,4 +35,4 @@ before_script:
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros /bin/bash -c "cd ~/opencv/cv3-release; sudo make install; cd ~/ros/catkin_ws; catkin_make -j4 --pkg observer; cd ~/opencv/cv3-release; sudo make uninstall; cd ~/opencv/cv2-release; sudo make install; cd ~/ros/catkin_ws; catkin_make -j4"
+  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros /bin/bash -c "cd ~/opencv/cv2-release; sudo make install; sudo make uninstall;cd ~/opencv/cv3-release; sudo make install; cd ~/ros/catkin_ws; catkin_make --pkg observer; cd ~/opencv/cv3-release; sudo make uninstall; cd ~/opencv/cv2-release; sudo make install; cd ~/ros/catkin_ws; catkin_make -j2"
