@@ -88,6 +88,8 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	waitKey(100);
 }
 
+void broadcastAngles(bool angler){}
+
 void trackobjects::setLocArrs(vector<LAB_Object> theObjects)
 {
 	//set the location arrays for the green and red objects :

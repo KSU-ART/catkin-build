@@ -23,14 +23,16 @@ private:
     image_transport::Publisher image_pub2_;
 	int MAX_NUM_OBJECTS;
 	int MIN_OBJECT_AREA;
-public:
 	bool angler;
 	
+public:
     trackobjects();
     
     trackobjects(std::string camID);
 
     ~trackobjects();
+    
+    void broadcastAngles(bool angler);
     
     void track(const sensor_msgs::ImageConstPtr& original_image);
     
