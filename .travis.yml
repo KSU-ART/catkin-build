@@ -28,11 +28,11 @@ branches:
 #    OPTIONAL after_deploy
 
 install:
-  - docker pull ksuart/catkin-build:depends-ros-cv2
+  - docker pull ksuart/catkin-build:depends-ros
 
 before_script:
   - mkdir -p ~/ros/catkin_ws/
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros-cv2 /bin/bash -c "cd ~/ros/catkin_ws; catkin_make -j8;"
+  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros /bin/bash -c "cd ~/opencv/cv3-release/; sudo make -j4 install; cd ~/ros/catkin_ws; catkin_make -j4 --pkg observer; sudo make -j4 uninstall; cd ~/opencv/cv2-release/; sudo make -j4 install; cd ~/ros/catkin_ws; catkin_make -j4"
