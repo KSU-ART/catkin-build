@@ -11,21 +11,24 @@ namespace enc = sensor_msgs::image_encodings;
 trackobjects::trackobjects()
 : it_(nh_)
 {
+	angler = false;
 	MIN_OBJECT_AREA = 50*50;
 	MAX_NUM_OBJECTS=10;
 	image_sub_ = it_.subscribe("/usb_cam/image_raw", 1, &trackobjects::track, this);
+    image_pub1_=it_.advertise("red_binary",1);
+	image_pub2_=it_.advertise("green_binary",1);
 }
 trackobjects::trackobjects(std::string camID)
 : it_(nh_)
 {
-	MIN_OBJECT_AREA = 50*50;
+	angler = false;
+	MIN_OBJECT_AREA = 20*20;
 	MAX_NUM_OBJECTS=10;
 	string topicName = "/usb_cam_" + camID + "/image_raw";
 	image_sub_ = it_.subscribe(topicName.c_str(), 1, &trackobjects::track, this);
 }
 
 trackobjects::~trackobjects() { }
-
 
 void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 {
@@ -58,16 +61,26 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	
 	//first track red objects
 	inRange(LAB,red.getLABmin(),red.getLABmax(),threshold);
-	//thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
-	//image_pub3_.publish(thresh);
+	
+	if (angler)
+	{
+		thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
+		image_pub1_.publish(thresh);
+	}
+	
 	morphOps(threshold);
 	trackFilteredObject(red,threshold);
 	//red_loc_arr.publish(redArr);
 	
 	//then greens
 	inRange(LAB,green.getLABmin(),green.getLABmax(),threshold);
-	//thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
-	//image_pub2_.publish(thresh);
+	
+	if (angler)
+	{
+		thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
+		image_pub2_.publish(thresh);
+	}
+	
 	morphOps(threshold);
 	trackFilteredObject(green,threshold);
 	//green_loc_arr.publish(greenArr);

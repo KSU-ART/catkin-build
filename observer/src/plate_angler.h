@@ -21,15 +21,24 @@
 
 class angleFinder
 {
-  ros::NodeHandle n;
-  ros::Publisher angle_pub;
+	ros::NodeHandle n;
+	ros::Publisher g_ang;
+	ros::Publisher r_ang;
+	image_transport::Subscriber g_sub;
+	image_transport::Subscriber r_sub;
+	image_transport::ImageTransport it_;
   
 public:
 	angleFinder();
 	
 	~angleFinder();
 	
-	
+	float getPlateAngle(const sensor_msgs::ImageConstPtr& msg);
+
+	void greenCb(const sensor_msgs::ImageConstPtr& msg);
+
+	void redCb(const sensor_msgs::ImageConstPtr& msg);
+
 	double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0);
 	
 	double angle(cv::Point pt1, cv::Point pt2);
@@ -38,7 +47,6 @@ public:
 	
 	cv::Point findMidpoint(cv::Point pt1, cv::Point pt2);
 	
-	float getAngle(cv::Mat binary_image);
 	
 };
 

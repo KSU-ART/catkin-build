@@ -15,13 +15,33 @@ using namespace std;
 using namespace cv;
 
     angleFinder::angleFinder()
+		:it_(n)
 	{
-	angle_pub = n.advertise<std_msgs::Float32>("green_plate_angle", 100);
+		g_ang = n.advertise<std_msgs::Float32>("green_plate_angle", 100);
+		r_ang = n.advertise<std_msgs::Float32>("red_plate_angle", 100);
+		g_sub = it_.subscribe("green_binary", 1, &angleFinder::greenCb, this);
+		r_sub = it_.subscribe("red_binary", 1, &angleFinder::redCb, this);
 	}
 	
 	angleFinder::~angleFinder(){ }
 	
-  //this function returns the smallest angle between 2 vectors, measured in cosines.
+	void angleFinder::greenCb(const sensor_msgs::ImageConstPtr& msg)
+	{
+		std_msgs::Float32 pubVar;
+		pubVar.data = getPlateAngle(msg);
+		if (pubVar.data > 0.01 || pubVar.data < -0.01)
+			g_ang.publish(pubVar);
+	}
+	
+	void angleFinder::redCb(const sensor_msgs::ImageConstPtr& msg)
+	{
+		std_msgs::Float32 pubVar;
+		pubVar.data = getPlateAngle(msg);
+		if (pubVar.data > 0.01 || pubVar.data < -0.01)
+			r_ang.publish(pubVar);
+	}
+	
+	//this function returns the smallest angle between 2 vectors, measured in cosines.
 	double angleFinder::angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 	{
 		/*//cout for debugging on jetson:
@@ -60,116 +80,127 @@ using namespace cv;
 		
 	}
 
-	float angleFinder::getAngle(cv::Mat binary_image)
+	float angleFinder::getPlateAngle(const sensor_msgs::ImageConstPtr& msg)
 	{
-	
-		float orientation;
-		
-		//find contours
-		std::vector<std::vector<cv::Point> > contours_vec;
-		cv::findContours(
-			binary_image.clone(), 
-			contours_vec, 
-			CV_RETR_EXTERNAL,//retrieves only extreme outer contours 
-			CV_CHAIN_APPROX_SIMPLE //compresses horizontal, vertical, and diagonal segments to leave only their endpoints
-		);
-		
-
-		//get approximate polygonal curbs from all contours:
-		//array containing the approximation endpoints:
-		std::vector<cv::Point> approx;
-		
-		
-		//loop through all the contours:
-		for (int i = 0; i < contours_vec.size(); i++)
+		bool cont = true;
+		cv_bridge::CvImagePtr cv_ptr;
+		cv::Mat binary_image;
+		try
 		{
-			//approximate edge points with accuracy proportional
-			//	to the contour perimeter
-			cv::approxPolyDP
-			(
-				cv::Mat (contours_vec[i]),
-				approx,
-				cv::arcLength(cv::Mat(contours_vec[i]), true) * 0.02,
-				true
+		  cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+		}
+		catch (cv_bridge::Exception& e)
+		{
+		  ROS_ERROR("cv_bridge exception: %s", e.what());
+		  cont = false;
+		}
+		if (cont)
+		{
+			binary_image = cv_ptr->image;
+			float orientation = 1e-10;
+			
+			//find contours
+			std::vector<std::vector<cv::Point> > contours_vec;
+			cv::findContours(
+				binary_image.clone(), 
+				contours_vec, 
+				CV_RETR_EXTERNAL,//retrieves only extreme outer contours 
+				CV_CHAIN_APPROX_SIMPLE //compresses horizontal, vertical, and diagonal segments to leave only their endpoints
 			);
 			
-			//skip small and convex objects:
+
+			//get approximate polygonal curbs from all contours:
+			//array containing the approximation endpoints:
+			std::vector<cv::Point> approx;
 			
-			if (std::fabs( cv::contourArea(contours_vec[i]) ) < 500 || cv::isContourConvex(approx))
-				continue;
 			
-			
-			//std::cout << "the number of vertices is " <<approx.size() << std::endl;	
-			
-			//where number of verticies is 8 (like in the plate we want to detect):
-			if (approx.size() == 8)
+			//loop through all the contours:
+			for (int i = 0; i < contours_vec.size(); i++)
 			{
-				//number of vertices:
-				int vertices = approx.size();
+				//approximate edge points with accuracy proportional
+				//	to the contour perimeter
+				cv::approxPolyDP
+				(
+					cv::Mat (contours_vec[i]),
+					approx,
+					cv::arcLength(cv::Mat(contours_vec[i]), true) * 0.02,
+					true
+				);
 				
-				//get angle (in cosines) of all corners:
-				std::vector<double> cos;
-				for (int j = 2; j < vertices + 2; j++)
-					cos.push_back( angle(approx[j%vertices], approx[j-2], approx[(j-1)%vertices]) );
-					
-				//output angles to terminal (for debugging):
-				///*
-				std::cout << "\n\n" << cos.size() << "\n\n";
-				for (int a = 0; a < cos.size(); a++)
-					std::cout <<"angle " <<a+1 << ": " << cos[a] << "\n";//*/
-					
-				//sort ascending the corner degree values:
-				std::sort( cos.begin(), cos.end() );
+				//skip small and convex objects:
 				
-				//get lowest and highest angle:
-				double mincos = cos.front();
-				double maxcos = cos.back();
+				if (std::fabs( cv::contourArea(contours_vec[i]) ) < 500 || cv::isContourConvex(approx))
+					continue;
 				
-				//use angles above and the number of vertices
-				//	to make sure all corners are about 90 (72-107) degrees and 
-				//	consequently that we are about centered on the plate:
-				if (mincos > -0.3 && maxcos < 0.3)
+				
+				//std::cout << "the number of vertices is " <<approx.size() << std::endl;	
+				
+				//where number of verticies is 8 (like in the plate we want to detect):
+				if (approx.size() == 8)
 				{
-					//Make sure rectangular boundaries
-					cv::Rect r = cv::boundingRect(contours_vec[i]);
-					double ratio = std::abs(1 - (double)r.width / r.height);
-					if (ratio >= 0.02)
+					//number of vertices:
+					int vertices = approx.size();
+					
+					//get angle (in cosines) of all corners:
+					std::vector<double> cos;
+					for (int j = 2; j < vertices + 2; j++)
+						cos.push_back( angle(approx[j%vertices], approx[j-2], approx[(j-1)%vertices]) );
+						
+					//output angles to terminal (for debugging):
+					/*
+					std::cout << "\n\n" << cos.size() << "\n\n";
+					for (int a = 0; a < cos.size(); a++)
+						std::cout <<"angle " <<a+1 << ": " << cos[a] << "\n";//*/
+						
+					//sort ascending the corner degree values:
+					std::sort( cos.begin(), cos.end() );
+					
+					//get lowest and highest angle:
+					double mincos = cos.front();
+					double maxcos = cos.back();
+					
+					//use angles above and the number of vertices
+					//	to make sure all corners are about 90 (72-107) degrees and 
+					//	consequently that we are about centered on the plate:
+					if (mincos > -0.3 && maxcos < 0.3)
 					{
-						//find the longest side:
-						int longest[] = {0,0};
-						for (int j = 1; j < vertices + 1; j++)
+						//Make sure rectangular boundaries
+						cv::Rect r = cv::boundingRect(contours_vec[i]);
+						double ratio = std::abs(1 - (double)r.width / r.height);
+						if (ratio >= 0.02)
 						{
-							double length1 = length(approx[j-1], approx[j%vertices]);
-							if (length1 > longest[1]) 
+							//find the longest side:
+							int longest[] = {0,0};
+							for (int j = 1; j < vertices + 1; j++)
 							{
-								longest[1] = length1;
-								longest[2] = j-1;	
+								double length1 = length(approx[j-1], approx[j%vertices]);
+								if (length1 > longest[1]) 
+								{
+									longest[1] = length1;
+									longest[2] = j-1;	
+								}
 							}
+							
+							//find center of longest side:
+							cv::Point longmid = findMidpoint(approx[longest[2]], approx[(longest[2]+1)%vertices]);
+							
+							//find center of side 4 sides from the longest side (the front side):
+							cv::Point frontmid = findMidpoint(approx[ (longest[2]+4)%vertices ], approx[(longest[2]+5)%vertices]);
+							
+							//calc angle of the vector formed from longest side center to front center
+							//	 this is the orientation:
+							orientation = angle(longmid, frontmid);
+							
+							//cout for debugging:
+							//std::cout << "the angle of the plate is "  << orientation << " degrees."<< std::endl;					
 						}
-						
-						//find center of longest side:
-						cv::Point longmid = findMidpoint(approx[longest[2]], approx[(longest[2]+1)%vertices]);
-						
-						//find center of side 4 sides from the longest side (the front side):
-						cv::Point frontmid = findMidpoint(approx[ (longest[2]+4)%vertices ], approx[(longest[2]+5)%vertices]);
-						
-						//calc angle of the vector formed from longest side center to front center
-						//	 this is the orientation:
-						orientation = angle(longmid, frontmid);
-						
-						//cout for debugging:
-						//std::cout << "the angle of the plate is "  << orientation << " degrees."<< std::endl;					
 					}
-					else
-						orientation = 0.0;
 				}
-				else 
-					orientation = 0.0;
+				
+				return (orientation);
 			}
-			return (orientation);
+			cv::waitKey(3);
 		}
-		
-		cv::waitKey(3);
-		
-	}
+	}//getAngle
+
 

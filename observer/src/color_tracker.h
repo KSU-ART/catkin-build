@@ -19,15 +19,19 @@ private:
 	ros::NodeHandle nh_;
     image_transport::ImageTransport it_;    
     image_transport::Subscriber image_sub_;
+    image_transport::Publisher image_pub1_;
+    image_transport::Publisher image_pub2_;
 	int MAX_NUM_OBJECTS;
 	int MIN_OBJECT_AREA;
 public:
+	bool angler;
+	
     trackobjects();
     
     trackobjects(std::string camID);
 
     ~trackobjects();
-
+    
     void track(const sensor_msgs::ImageConstPtr& original_image);
     
 	void setLocArrs(vector<LAB_Object> theObjects);
