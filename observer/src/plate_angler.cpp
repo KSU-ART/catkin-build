@@ -14,7 +14,13 @@ namespace enc = sensor_msgs::image_encodings;
 using namespace std;
 using namespace cv;
 
-  
+    angleFinder::angleFinder()
+	{
+	angle_pub = n.advertise<std_msgs::Float32>("green_plate_angle", 100);
+	}
+	
+	angleFinder::~angleFinder(){ }
+	
   //this function returns the smallest angle between 2 vectors, measured in cosines.
 	double angleFinder::angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 	{
