@@ -28,7 +28,7 @@ branches:
 #    OPTIONAL after_deploy
 
 install:
-  - docker pull ksuart/catkin-build:depends-ros-cv2
+  - docker pull ksuart/catkin-build:depends-ros
 
 before_script:
   - mkdir -p ~/ros/catkin_ws/
