@@ -7,50 +7,20 @@
  * 	using more complicated geometrical characteristics of the plate.
  * Created by SPSU/KSU in 2016
  * ******************************************************/
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <iostream>
-#include <cmath>
-#include <ros/ros.h>
-#include <image_transport/image_transport.h>
-#include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/image_encodings.h>
-#include "std_msgs/Float32.h"
+
+#include "plate_angler.h"
 
 namespace enc = sensor_msgs::image_encodings;
 using namespace std;
 using namespace cv;
 
-
-class findAngle
-{
-  ros::NodeHandle n;
-  ros::Publisher angle_pub;
-  ros::Publisher angle_pub_2;
-  ros::NodeHandle nh_;
-  image_transport::ImageTransport it_;
-  image_transport::Subscriber image_sub_;
-  image_transport::Subscriber image_sub_2_;
-  
-public:
-  findAngle()
-    : it_(nh_)
-  {
-	angle_pub = n.advertise<std_msgs::Float32>("plate_angle", 100);
-    image_sub_ = it_.subscribe("green_binary", 1, &findAngle::greenCb, this);
-  }
-
-  ~findAngle()
-  {
-	
-  }
   
   //this function returns the smallest angle between 2 vectors, measured in cosines.
-	static double angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
+	double angleFinder::angle(cv::Point pt1, cv::Point pt2, cv::Point pt0)
 	{
-		//cout for debugging on jetson:
+		/*//cout for debugging on jetson:
 		std::cout << "Point 1: " << pt1.x<< " ' " <<pt1.y << "\nPoint 2: "
-		 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n";
+		 << pt2.x <<" , " << pt2.y << "\nPoint 0: " <<pt0.x << " , " << pt0.y << "\n\n";//*/
 		double dx1 = pt1.x - pt0.x;
 		double dy1 = pt1.y - pt0.y;
 		double dx2 = pt2.x - pt0.x;
@@ -59,7 +29,7 @@ public:
 	}
 
 	//this function returns the angle made by 2 cv::Point's in degrees.
-	double angle(cv::Point pt1, cv::Point pt2)
+	double angleFinder::angle(cv::Point pt1, cv::Point pt2)
 	{
 		double dy = (pt1.y-pt2.y);//pt1.y-pt2.y fixes y component being inverted
 		double dx = (pt2.x-pt1.x + 1e-10);
@@ -67,7 +37,7 @@ public:
 	}
 
 	//this function returns the length between two cv::Point's in pixels.
-	double length(cv::Point pt1, cv::Point pt2)
+	double angleFinder::length(cv::Point pt1, cv::Point pt2)
 	{
 		double dy = (pt2.y-pt1.y);
 		double dx = (pt2.x-pt1.x + 1e-10);
@@ -75,7 +45,7 @@ public:
 	}
 
 	//the following returns the midpoint of 2 cv::Point's as a cv::Point.
-	cv::Point findMidpoint(cv::Point pt1, cv::Point pt2)
+	cv::Point angleFinder::findMidpoint(cv::Point pt1, cv::Point pt2)
 	{
 		cv::Point mid;
 		mid.x = (pt1.x+pt2.x)/2;
@@ -83,32 +53,10 @@ public:
 		return(mid);
 		
 	}
-  
-  void greenCb(const sensor_msgs::ImageConstPtr& msg)
-  {
-	std_msgs::Float32 pubVar;
-	pubVar.data = imageCb(msg);
-	angle_pub.publish(pubVar);
-  }
-  
-  float imageCb(const sensor_msgs::ImageConstPtr& msg)
-  {
-	bool cont = true;
-	cv_bridge::CvImagePtr cv_ptr;
-	cv::Mat binary_image;
-    try
-    {
-      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      cont = false;
-    }
-    if (cont)
-    {
-		binary_image = cv_ptr->image;
 
+	float angleFinder::getAngle(cv::Mat binary_image)
+	{
+	
 		float orientation;
 		
 		//find contours
@@ -131,7 +79,8 @@ public:
 		{
 			//approximate edge points with accuracy proportional
 			//	to the contour perimeter
-			cv::approxPolyDP(
+			cv::approxPolyDP
+			(
 				cv::Mat (contours_vec[i]),
 				approx,
 				cv::arcLength(cv::Mat(contours_vec[i]), true) * 0.02,
@@ -217,13 +166,4 @@ public:
 		cv::waitKey(3);
 		
 	}
- }
-};
 
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "find_angle");
-  findAngle ic;
-  ros::spin();
-  return 0;
-}
