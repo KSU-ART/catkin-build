@@ -8,7 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
 )
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV 2 REQUIRED PATHS /root/opencv/cv2-release)
 
 catkin_package(
 )

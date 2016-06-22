@@ -133,8 +133,7 @@ include_directories(include
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-find_package(OpenCV)
+find_package(OpenCV 2 REQUIRED PATHS /root/opencv/cv2-release)
 include_directories(${OpenCV_INCLUDE_DIRS})
 #add_executable(bluelight src/Light.cpp)
 #target_link_libraries(bluelight ${catkin_LIBRARIES} ${OPENCV_LIBRARIES})

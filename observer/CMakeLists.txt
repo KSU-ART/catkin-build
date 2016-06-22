@@ -12,7 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roslaunch
 )
-find_package(OpenCV REQUIRED)
+#set(OpenCV_DIR "/root/opencv/cv3-release")
+find_package(OpenCV REQUIRED PATHS /root/opencv/cv3-release)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
