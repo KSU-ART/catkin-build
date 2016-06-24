@@ -11,7 +11,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <opencv2/imgproc/imgproc.hpp> 
 #include <opencv2/highgui/highgui.hpp>
-#include "LAB_Object.h" //uses namespaces cv and std
+#include "LAB_Object.h"
 #include <string.h>
 
 class trackobjects{
@@ -24,6 +24,11 @@ private:
 	int MAX_NUM_OBJECTS;
 	int MIN_OBJECT_AREA;
 	bool angler;
+	vector <LAB_Object> objects;
+	
+	//std_msgs::UInt32MultiArray greenArr;
+	//std_msgs::UInt32MultiArray redArr;
+	
 	
 public:
     trackobjects();
@@ -32,13 +37,18 @@ public:
 
     ~trackobjects();
     
+    ///Post: publishes binary to angler switch
     void broadcastAngles(bool angler);
     
+    ///Post: runs tracking
     void track(const sensor_msgs::ImageConstPtr& original_image);
     
+    ///Post: differentiates between grean and red objects
 	void setLocArrs(vector<LAB_Object> theObjects);
 
+	///Post: returns solid objects from binary image (denoising)
 	void morphOps(Mat &thresh);
-
+	
+	///Post: takes binary into 
 	void trackFilteredObject(LAB_Object theObject,Mat threshold);
  };

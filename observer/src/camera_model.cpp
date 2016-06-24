@@ -17,7 +17,6 @@ using namespace Projection_space
  * 		X: direction from green line to red line.
  * 		Y: down the length of green line.
  * 		Z: altitude.
- * 
  */
 
 
@@ -183,7 +182,7 @@ Vector3 cameraModel::getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Poin
 	Vector4 pointOnFloorFromWorld4 = camFromWorld * findLinePlaneIntersection(s.normalize(), 
 																			floorNormalFromCam, 
 																			floorCenterFromCam);
-							
+	
 	Vector3 pointOnFloorFromWorld = Vector3(pointOnFloorFromWorld4.x, 
 											pointOnFloorFromWorld4.y, 
 											pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
@@ -226,7 +225,7 @@ Vector3 cameraModel::getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, 
 											pointOnFloorFromWorld4.y, 
 											pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
 	
-	return pointOnFloorFromWorld;						
+	return pointOnFloorFromWorld;
 }
 
 

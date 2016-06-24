@@ -129,7 +129,7 @@ void trackobjects::morphOps(Mat &thresh)
 
 void trackobjects::trackFilteredObject(LAB_Object theObject,Mat threshold)
 {
-	vector <LAB_Object> objects;
+	objects.clear();
 	//these two vectors needed for output of findContours
 	vector< vector<Point> > contours;
 	vector<Vec4i> hierarchy;
