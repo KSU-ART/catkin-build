@@ -91,22 +91,22 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 
 void broadcastAngles(bool angler){}
 
-void trackobjects::setLocArrs(const vector<LAB_Object>& theObjects)
+void trackobjects::setLocArrs(vector<LAB_Object>& theObjects)
 {
 	greenObjects.clear();
 	redObjects.clear();
 	//set the location arrays for the green and red objects :
 	//(the arrays are global data)
-	for (int i = 0; i<theObjects->size(); i++)
+	for (int i = 0; i<theObjects.size(); i++)
 	{
 		Point p;
-		p.x = theObjects->at(i).getXPos();
-		p.y = theObjects->at(i).getYPos();
-		if (theObjects->at(i).getColor() == Scalar(0,255,0))//green objects
+		p.x = theObjects.at(i).getXPos();
+		p.y = theObjects.at(i).getYPos();
+		if (theObjects.at(i).getColor() == Scalar(0,255,0))//green objects
 		{
 			greenObjects.push_back(p);
 		}
-		else //~ if (theObjects->at(i).getColor() == Scalar(0,0,255))//red objects
+		else //~ if (theObjects.at(i).getColor() == Scalar(0,0,255))//red objects
 		{
 			redObjects.push_back(p);
 		}
@@ -131,7 +131,7 @@ void trackobjects::morphOps(Mat&thresh)
 }
 
 
-void trackobjects::trackFilteredObject(const LAB_Object& theObject, Mat threshold)
+void trackobjects::trackFilteredObject(LAB_Object& theObject, Mat threshold)
 {
 	objects.clear();
 	//these two vectors needed for output of findContours
@@ -168,8 +168,8 @@ void trackobjects::trackFilteredObject(const LAB_Object& theObject, Mat threshol
 
 					object.setXPos(moment.m10/area);
 					object.setYPos(moment.m01/area);
-					object.setType(theObject->getType());
-					object.setColor(theObject->getColor());
+					object.setType(theObject.getType());
+					object.setColor(theObject.getColor());
 
 					objects.push_back(object);
 

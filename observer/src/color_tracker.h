@@ -46,11 +46,11 @@ public:
     void track(const sensor_msgs::ImageConstPtr& original_image);
     
     ///Post: differentiates between grean and red objects
-	void setLocArrs(const vector<LAB_Object>& theObjects);
+	void setLocArrs(vector<LAB_Object>& theObjects);
 
 	///Post: returns solid objects from binary image (denoising)
 	void morphOps(Mat& thresh);
 	
 	///Post: takes binary into 
-	void trackFilteredObject(const LAB_Object& theObject,Mat threshold);
+	void trackFilteredObject(LAB_Object& theObject,Mat threshold);
  };
