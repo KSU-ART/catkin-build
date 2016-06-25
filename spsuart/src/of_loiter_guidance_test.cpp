@@ -34,13 +34,13 @@ ros::Publisher pid_y_error_pub;
 ros::Publisher altitude_pub; 
 
 // Instantiate PID controllers
-PIDController* xPosCtrl_CONST = new PIDController(100,0,0,-500,500);
-PIDController* yPosCtrl_CONST = new PIDController(100,0,0,-500,500);
-PIDController* altPosCtrl_CONST = new PIDController(250,0,0,-500,500);
+PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
+PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
+PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
 
-PIDController* xPosCtrl(xPosCtrl_CONST);
-PIDController* yPosCtrl(yPosCtrl_CONST);
-PIDController* altPosCtrl(altPosCtrl_CONST);
+//~ PIDController* xPosCtrl(xPosCtrl_CONST);
+//~ PIDController* yPosCtrl(yPosCtrl_CONST);
+//~ PIDController* altPosCtrl(altPosCtrl_CONST);
 
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
@@ -156,13 +156,25 @@ int getchNonBlocking()
     return key;
 }
 
+int MAN_throttle;
+int MAN_roll;
+int MAN_pitch;
+int MAN_yaw;
+int MAN_retract;
+int MAN_mode;
+
 void rcInCallback(const mavros_msgs::RCIn& msg) {
 	int listen_switch = msg.channels[MANUAL_CONTROL];
+	MAN_throttle = msg.channels[THROTTLE_CHANNEL];
+	MAN_roll = msg.channels[ROLL_CHANNEL];
+	MAN_pitch = msg.channels[PITCH_CHANNEL];
+	MAN_yaw = msg.channels[YAW_CHANNEL];
+	MAN_retract = msg.channels[RETRACT_CHANNEL];
+	MAN_mode = msg.channels[MODE_CHANNEL];
 	if (listen_switch >= MID_PWM)
 	{
 		manOverride = true;
 	}
-	
 }
 
 int main(int argc, char **argv)
@@ -261,17 +273,27 @@ int main(int argc, char **argv)
 			prev_vel.vector.y = 0;
 			
 			//reinitialize pids?
-			PIDController* xPosCtrl(xPosCtrl_CONST);
-			PIDController* yPosCtrl(yPosCtrl_CONST);
-			PIDController* altPosCtrl(altPosCtrl_CONST);
+			//~ PIDController* xPosCtrl(xPosCtrl_CONST);
+			//~ PIDController* yPosCtrl(yPosCtrl_CONST);
+			//~ PIDController* altPosCtrl(altPosCtrl_CONST);
 		}
-        if (manOverride)
+        if (manOverride && !land)
 		{
+			
 			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
             msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
             msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
             msg.channels[MODE_CHANNEL]=msg.CHAN_RELEASE;
             msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
+            //*/
+            /*
+			msg.channels[ROLL_CHANNEL]=MAN_roll;
+			msg.channels[YAW_CHANNEL]=MAN_yaw;
+            msg.channels[PITCH_CHANNEL]=MAN_pitch;
+            msg.channels[THROTTLE_CHANNEL]=MAN_throttle;
+            msg.channels[MODE_CHANNEL]=MAN_mode;
+            msg.channels[RETRACT_CHANNEL]=MAN_retract;
+            //*/
 		}
 		
 
