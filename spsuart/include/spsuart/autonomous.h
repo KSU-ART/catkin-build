@@ -6,6 +6,7 @@
 #include <mavros_msgs/OverrideRCIn.h>
 #include <mavros_msgs/VFR_HUD.h>
 #include <mavros_msgs/Mavlink.h>
+#include <mavros_msgs/RCIn.h>
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 
 #include "opencv/cv.h"
