@@ -18,6 +18,7 @@ int pitch = MID_PWM;
 int mode = ALT_HOLD_MODE;
 int retract = HIGH_PWM;
 
+bool manOverride = false;
 bool land = false;
 double target_altitude = 1.5;
 double ground_distance;
@@ -129,8 +130,6 @@ int getchNonBlocking()
 
     unsigned char key;
 
-
-
     tcgetattr(0,&initial_settings);
 
     new_settings = initial_settings;
@@ -152,6 +151,15 @@ int getchNonBlocking()
     return key;
 }
 
+void rcInCallback(const mavros_msgs::RCIn& msg) {
+	int listen_switch = msg->channels[MANUAL_CONTROL];
+	if (listen_switch >= MID_PWM)
+	{
+		manOverride = true;
+	}
+	
+}
+
 int main(int argc, char **argv)
 {
     //ROS node init and NodeHandle init
@@ -163,6 +171,7 @@ int main(int argc, char **argv)
     ros::Subscriber subGuidanceVelocity = n.subscribe("/guidance/velocity",1,guidanceVelocityCallback);
     ros::Subscriber subHokuyo = n.subscribe("scan3", 1, splitScanCallback);
     ros::Subscriber subSetpoint = n.subscribe("/fatcat/setpoint", 1, setpointCallback);
+    ros::Subscriber subRCIn = n.subscribe("/mavros/rc/in", 1, rcInCallback);
     //Mavros rc override publisher
     ros::Publisher rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
     pos_est_pub = n.advertise<geometry_msgs::PointStamped>("/fatcat/pos_est", 1);
@@ -183,7 +192,7 @@ int main(int argc, char **argv)
 	pos_est.point.x = 0;
 	pos_est.point.y = 0;
 	pos_est.point.z = 0;
-
+	
 	// Init PID controllers
     altPosCtrl->on();
     xPosCtrl->on();
@@ -228,6 +237,16 @@ int main(int argc, char **argv)
             msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
 
         }
+        
+        if (manOverride)
+		{
+			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
+            msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
+            msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
+            msg.channels[MODE_CHANNEL]=msg.CHAN_RELEASE;
+            msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
+		}
+		
 
         rc_pub.publish(msg);
         ros::spinOnce();
