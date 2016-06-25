@@ -152,7 +152,7 @@ int getchNonBlocking()
 }
 
 void rcInCallback(const mavros_msgs::RCIn& msg) {
-	int listen_switch = msg->channels[MANUAL_CONTROL];
+	int listen_switch = msg.channels[MANUAL_CONTROL];
 	if (listen_switch >= MID_PWM)
 	{
 		manOverride = true;
