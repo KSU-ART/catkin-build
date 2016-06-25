@@ -6,6 +6,7 @@
  * There is also a calibrationMode for finding desired color range.
 ********************************************************************/
 #include "color_tracker.h"
+#include "camera_model.h"
 namespace enc = sensor_msgs::image_encodings;
 
 trackobjects::trackobjects()
@@ -90,27 +91,30 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 
 void broadcastAngles(bool angler){}
 
-void trackobjects::setLocArrs(vector<LAB_Object> theObjects)
+void trackobjects::setLocArrs(const vector<LAB_Object>& theObjects)
 {
+	greenObjects.clear();
+	redObjects.clear();
 	//set the location arrays for the green and red objects :
 	//(the arrays are global data)
-	for (int i = 0; i<theObjects.size(); i++)
+	for (int i = 0; i<theObjects->size(); i++)
 	{
-		if (theObjects.at(i).getColor() == Scalar(0,255,0))//green objects
+		Point p;
+		p.x = theObjects->at(i).getXPos();
+		p.y = theObjects->at(i).getYPos();
+		if (theObjects->at(i).getColor() == Scalar(0,255,0))//green objects
 		{
-			//greenArr.data.push_back(theObjects.at(i).getXPos());
-			//greenArr.data.push_back(theObjects.at(i).getYPos());
+			greenObjects.push_back(p);
 		}
-		if (theObjects.at(i).getColor() == Scalar(0,0,255))//red objects
+		else //~ if (theObjects->at(i).getColor() == Scalar(0,0,255))//red objects
 		{
-			//redArr.data.push_back(theObjects.at(i).getXPos());
-			//redArr.data.push_back(theObjects.at(i).getYPos());
+			redObjects.push_back(p);
 		}
 	}
 }
 
 
-void trackobjects::morphOps(Mat &thresh)
+void trackobjects::morphOps(Mat&thresh)
 {
 
 	//create structuring element that will be used to "dilate" and "erode" image.
@@ -127,14 +131,14 @@ void trackobjects::morphOps(Mat &thresh)
 }
 
 
-void trackobjects::trackFilteredObject(LAB_Object theObject,Mat threshold)
+void trackobjects::trackFilteredObject(const LAB_Object& theObject, Mat threshold)
 {
 	objects.clear();
 	//these two vectors needed for output of findContours
 	vector< vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	//find contours of filtered image using openCV findContours function
-	findContours(threshold.clone(),contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );
+	findContours(threshold.clone(),contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );// posible optimization
 	//clear the message arrays:
 	////greenArr.data.clear();
 	////redArr.data.clear();
@@ -164,8 +168,8 @@ void trackobjects::trackFilteredObject(LAB_Object theObject,Mat threshold)
 
 					object.setXPos(moment.m10/area);
 					object.setYPos(moment.m01/area);
-					object.setType(theObject.getType());
-					object.setColor(theObject.getColor());
+					object.setType(theObject->getType());
+					object.setColor(theObject->getColor());
 
 					objects.push_back(object);
 
