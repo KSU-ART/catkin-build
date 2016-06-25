@@ -34,9 +34,13 @@ ros::Publisher pid_y_error_pub;
 ros::Publisher altitude_pub; 
 
 // Instantiate PID controllers
-PIDController* xPosCtrl = new PIDController(100,0,0,-500,500);
-PIDController* yPosCtrl = new PIDController(100,0,0,-500,500);
-PIDController* altPosCtrl = new PIDController(250,0,0,-500,500);
+PIDController* xPosCtrl_CONST = new PIDController(100,0,0,-500,500);
+PIDController* yPosCtrl_CONST = new PIDController(100,0,0,-500,500);
+PIDController* altPosCtrl_CONST = new PIDController(250,0,0,-500,500);
+
+PIDController* xPosCtrl(xPosCtrl_CONST);
+PIDController* yPosCtrl(yPosCtrl_CONST);
+PIDController* altPosCtrl(altPosCtrl_CONST);
 
 mavlink_message_t* msgt = NULL;
 __mavlink_rangefinder_t* x = NULL;
@@ -77,6 +81,7 @@ void guidanceVelocityCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg
 	
 	pos_est.point.x += (vel_x + prev_vel.vector.x)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
 	pos_est.point.y += (vel_y + prev_vel.vector.y)/2*(current_time.toSec() - pos_est.header.stamp.toSec());
+	pos_est.point.z = ground_distance; // added altitude to pos_est
 	pos_est.header.seq++;
 	pos_est.header.stamp = current_time;
 	pos_est_pub.publish(pos_est);
@@ -185,7 +190,7 @@ int main(int argc, char **argv)
     mavros_msgs::OverrideRCIn msg;
     ros::Rate fcuCommRate(45); // emulating speed of dx9 controller
 
-	// Init xy pose
+	// Init xyz pose
 	pos_est.header.seq = 0;
 	pos_est.header.stamp = ros::Time::now();
 	pos_est.header.frame_id = "global_frame";
@@ -243,6 +248,22 @@ int main(int argc, char **argv)
 		}
 		if(inputChar == 'r'){ //reset/return control to AI
 			manOverride = false;
+			//reset all variables
+			// Init xyz pose
+			pos_est.header.seq = 0;
+			pos_est.header.stamp = ros::Time::now();
+			pos_est.point.x = 0;
+			pos_est.point.y = 0;
+			pos_est.point.z = 0;
+			
+			//reset velocity
+			prev_vel.vector.x = 0;
+			prev_vel.vector.y = 0;
+			
+			//reinitialize pids?
+			PIDController* xPosCtrl(xPosCtrl_CONST);
+			PIDController* yPosCtrl(yPosCtrl_CONST);
+			PIDController* altPosCtrl(altPosCtrl_CONST);
 		}
         if (manOverride)
 		{
