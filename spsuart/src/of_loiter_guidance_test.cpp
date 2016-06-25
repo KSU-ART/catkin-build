@@ -238,6 +238,12 @@ int main(int argc, char **argv)
 
         }
         
+        if(inputChar == 'm'){ //mannual override
+			manOverride = true;
+		}
+		if(inputChar == 'r'){ //reset/return control to AI
+			manOverride = false;
+		}
         if (manOverride)
 		{
 			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
