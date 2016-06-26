@@ -137,7 +137,7 @@ include_directories(
 # add_dependencies(observer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(plate_tracker src/color_tracker.cpp src/LAB_Object.cpp src/plate_angler.cpp src/main.cpp )
+add_executable(plate_tracker src/color_tracker.cpp src/LAB_Object.cpp src/plate_angler.cpp src/main.cpp src/cartographer.cpp)
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
 
 ## Add cmake target dependencies of the executable
