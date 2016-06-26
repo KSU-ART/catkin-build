@@ -15,4 +15,4 @@ path = mavros
 url = https://github.com/KSU-ART/mavros.git
 [submodule "Guidance-SDK-ROS"]
 	path = Guidance-SDK-ROS
-	url = ./Guidance-SDK-ROS/
+	url = https://github.com/KSU-ART/Guidance-SDK-ROS.git
