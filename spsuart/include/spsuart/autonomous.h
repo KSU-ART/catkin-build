@@ -6,6 +6,7 @@
 #include <mavros_msgs/OverrideRCIn.h>
 #include <mavros_msgs/VFR_HUD.h>
 #include <mavros_msgs/Mavlink.h>
+#include <mavros_msgs/RCIn.h>
 #include "mavlink/v1.0/ardupilotmega/mavlink.h"
 
 #include "opencv/cv.h"
@@ -31,6 +32,7 @@
 #define RETRACT_CHANNEL 6
 #define GIMBAL_PITCH_CHANNEL 5
 #define GIMBAL_YAW_CHANNEL 7
+#define MANUAL_CONTROL 8
 
 #define LOW_PWM 1000
 #define MID_PWM 1500
