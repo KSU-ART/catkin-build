@@ -154,6 +154,12 @@ add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
    ${OpenCV_LIBRARIES}
  )
 
+add_executable(color_filter src/image_process.cpp)
+add_dependencies(color_filter motion_tracking_generate_messages_cpp)
+target_link_libraries(color_filter
+  ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##
