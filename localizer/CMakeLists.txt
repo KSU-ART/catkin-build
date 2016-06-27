@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(orienter)
+project(localizer)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -102,7 +102,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES orienter
+#  LIBRARIES localizer
 #  CATKIN_DEPENDS geometry_msgs roscpp roslaunch std_msgs
 #  DEPENDS system_lib
 )
@@ -120,30 +120,30 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(orienter
-#   src/${PROJECT_NAME}/orienter.cpp
+# add_library(localizer
+#   src/${PROJECT_NAME}/localizer.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(orienter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-#  add_executable(location_node src/orienter_node.cpp)
+#  add_executable(location_node src/localizer_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(orienter_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(localizer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(orienter_node
+# target_link_libraries(localizer_node
 #   ${catkin_LIBRARIES}
 # )
 
 
-add_executable(orienter_node src/main.cpp src/loc_object.cpp)
-target_link_libraries(orienter_node ${catkin_LIBRARIES})
+add_executable(localizer_node src/main.cpp src/loc_object.cpp)
+target_link_libraries(localizer_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -160,7 +160,7 @@ target_link_libraries(orienter_node ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS orienter orienter_node
+# install(TARGETS localizer localizer_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -185,7 +185,7 @@ target_link_libraries(orienter_node ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_orienter.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_localizer.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
