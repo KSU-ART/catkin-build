@@ -1,7 +1,3 @@
-[submodule "imu_tools"]
-path = imu_tools
-url = https://github.com/ccny-ros-pkg/imu_tools.git
-
 [submodule "px-ros-pkg"]
 path = px-ros-pkg
 url = https://github.com/KSU-ART/px-ros-pkg.git
