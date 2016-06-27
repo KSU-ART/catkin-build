@@ -23,6 +23,8 @@
  * channel 9 (8 in {0-8}) HIGH_PWM is land
  * 
  **************************************************************************************************/
+#ifndef ROBOT_INCLUDES_H
+#define ROBOT_INCLUDES_H
  
 #include "flight_definitions.h"
 
@@ -37,4 +39,4 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int32MultiArray.h"
 
-
+#endif

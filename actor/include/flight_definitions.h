@@ -1,3 +1,6 @@
+#ifndef FLIGHT_DEFINITIONS_H
+#define FLIGHT_DEFINITIONS_H
+
 ///remember: {0-8} is 9 channels.
 #define ROLL_CHANNEL 0
 #define PITCH_CHANNEL 1
@@ -21,3 +24,6 @@
 //#define PITCH_TRIM 1510
 
 #define MAX_HEIGHT 3.0
+
+
+#endif
