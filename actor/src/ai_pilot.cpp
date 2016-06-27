@@ -6,12 +6,12 @@
 class ai_pilot 
 {
 private:
-	ros::NodeHandle n;
+	ros::NodeHandle n,s;
 	ros::Publisher rc_pub;
+	ros::Subscriber setpoint_sub, loc_sub;
 	
-	int throttle, roll, pitch, yaw, mode, retract, centerRadius;
-	//using floats because they have at least micro ( * 10^-6) meter precision.
-	float target_x, cur_x, target_y, cur_y, target_z, cur_z;
+	int throttle, roll, pitch, yaw, mode, retract;
+	double target_x, current_x, target_y, current_y, target_z, current_z;
 	
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
 	mavros_msgs::OverrideRCIn RC_MSG;
@@ -28,6 +28,10 @@ public:
 	{
 		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
 		
+		setpoint_sub = s.subscribe("setpoint", 1, &ai_pilot::setpoint_callback, this);
+		loc_sub = s.subscribe("location", 1, &ai_pilot::loc_callback, this);
+
+		//this part is important:
 		MANNUAL_OVERRIDE = true;
 		EMERGENCY_LAND = false;
 		
@@ -40,19 +44,20 @@ public:
 		retract = HIGH_PWM; 
 
 		target_x = 0;
-		cur_x = 0;
+		current_x = 0;
 		target_y = 0;
-		cur_y = 0;
+		current_y = 0;
 		target_z = 0;
-		cur_z = 0;
+		current_z = 0;
 		
-		xPosCtrl = new PIDController(80,0,0,-250,250);
-		yPosCtrl = new PIDController(80,0,0,-250,250);
+		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
+		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		zPosCtrl = new PIDController(250, 0, 0, -500, 500);
 		
 		xPosCtrl->on();
 		yPosCtrl->on();
 		zPosCtrl->on();
+		
 		
 	}
 	
@@ -63,10 +68,13 @@ public:
 		
 		while (ros::ok())
 		{
-			
+			//This will only work if our coordinate system is consistant.
 			xPosCtrl->targetSetpoint(target_x);
-			zPosCtrl->targetSetpoint(target_y);
+			roll = MID_PWM + xPosCtrl->calc(current_x);
+			yPosCtrl->targetSetpoint(target_y);
+			pitch = MID_PWM + yPosCtrl->calc(current_y);
 			zPosCtrl->targetSetpoint(target_z);
+			throttle = MID_PWM + zPosCtrl->calc(current_z);
 						
 			if(MANNUAL_OVERRIDE)
 			{
@@ -88,7 +96,7 @@ public:
 		}
 	}
 	
-	void pwmVector(int mag, double theta, int*  xVar, int* yVar) 
+	/*void pwmVector(int mag, double theta, int*  xVar, int* yVar) 
 	{
 		if (mag > 500) 
 		{
@@ -103,6 +111,7 @@ public:
 		*xVar = int(MID_PWM - mag * sin(theta));
 		*yVar = int(MID_PWM - mag * cos(theta));
 	}
+	//*/
 	
 	void release_msg_channels()
 	{
@@ -132,6 +141,20 @@ public:
 		RC_MSG.channels[MODE_CHANNEL] = mode;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
 		RC_MSG.channels[RETRACT_CHANNEL]=retract;
+	}
+	
+	void setpoint_callback(const geometry_msgs::Point& setpoint)
+	{
+		target_x = setpoint.x;
+		target_y = setpoint.y;
+		target_z = setpoint.z;
+	}
+	
+	void loc_callback(const geometry_msgs::PoseStamped& cur_loc)
+	{
+		current_x = cur_loc.pose.position.x;
+		current_y = cur_loc.pose.position.y;
+		current_z = cur_loc.pose.position.z;
 	}
 };
 int main(int argc, char **argv)

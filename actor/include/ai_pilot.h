@@ -4,4 +4,7 @@
  **********************************************/
 #include "math.h"
 #include "flight.h"
+#include "geometry_msgs/Point.h"
+#include "geometry_msgs/PoseStamped.h"
+
 
