@@ -1,16 +1,39 @@
-/***********************************************
+/****************************************************************************************************
  * This is the class using the pid controller to 
  * generate output to the pixhawk.
- **********************************************/
+ * 
+ * MSG GUIDE:
+ * Subscribed Topic:	Data Type					Usage
+ * "setpoint"			geometry_msgs::Point		setpoint (desired location)
+ * "curent_pose"		geometry_msgs::PoseStamped	current location
+ * "manOverrideMsg"		std_msgs::Bool				true = override, false = disabled
+ * "EMERGENCY_LAND"		std_msgs::Bool				true = emergencyland, false = normal
+ * "modeMsg"			std_msgs::Bool				true = altitude hold, false = stabilize;
+ * "retractMsg"			std_msgs::Bool				true = retracts down, false = up;
+ * "pid_XY"				std_msgs::Int32MultiArray	{p, i, d, min, max}
+ * "pid_z"				std_msgs::Int32MultiArray	{p, i, d, min, max}
+ * 
+ * PRIORITY OF CONTROL:
+ * physical mannual-override switch overrides software switch
+ * mannual_override overrides emergency_land
+ * emergency_land overrides ai
+ * 
+ * 
+ * Mannual Override Switch: 
+ * channel 9 (8 in {0-8}) HIGH_PWM is land
+ * 
+ **************************************************************************************************/
+
 #include "ai_pilot.h"
+
 class ai_pilot 
 {
 private:
 	ros::NodeHandle n,s;
 	ros::Publisher rc_pub;
-	ros::Subscriber setpoint_sub, loc_sub;
+	ros::Subscriber setpoint_sub, loc_sub, mode_sub, retract_sub, man_override_sub, land_sub, pid_sub;
 	
-	int throttle, roll, pitch, yaw, mode, retract;
+	int throttle, roll, pitch, yaw, mode, retracts;
 	double target_x, current_x, target_y, current_y, target_z, current_z;
 	
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
@@ -21,16 +44,14 @@ private:
 	PIDController* yPosCtrl;
 	PIDController* zPosCtrl;
 
-	bool MANNUAL_OVERRIDE, EMERGENCY_LAND;
+	bool MANNUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH;
 	
 public:
 	ai_pilot()
 	{
+		//pubs:
 		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
 		
-		setpoint_sub = s.subscribe("setpoint", 1, &ai_pilot::setpoint_callback, this);
-		loc_sub = s.subscribe("location", 1, &ai_pilot::loc_callback, this);
-
 		//this part is important:
 		MANNUAL_OVERRIDE = true;
 		EMERGENCY_LAND = false;
@@ -41,7 +62,7 @@ public:
 		pitch = MID_PWM;
 		yaw = MID_PWM;
 		mode = ALT_HOLD_MODE;
-		retract = HIGH_PWM; 
+		retracts = HIGH_PWM; 
 
 		target_x = 0;
 		current_x = 0;
@@ -50,6 +71,7 @@ public:
 		target_z = 0;
 		current_z = 0;
 		
+		//default PIDs
 		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		zPosCtrl = new PIDController(250, 0, 0, -500, 500);
@@ -58,6 +80,16 @@ public:
 		yPosCtrl->on();
 		zPosCtrl->on();
 		
+		//subs:
+		ros::Subscriber subRCIn = s.subscribe("/mavros/rc/in", 1, &ai_pilot::RCIn_callback, this);
+		setpoint_sub = s.subscribe("setpoint", 1, &ai_pilot::setpoint_callback, this);
+		loc_sub = s.subscribe("curent_pose", 1, &ai_pilot::loc_callback, this);
+		man_override_sub = s.subscribe("manOverrideMsg", 1, &ai_pilot::mannual_override_callback, this);
+		land_sub = s.subscribe("EMERGENCY_LAND", 1, &ai_pilot::emer_land_callback, this);
+		mode_sub = s.subscribe("modeMsg", 1, &ai_pilot::mode_callback, this);
+		retract_sub = s.subscribe("retractMsg", 1, &ai_pilot::retract_callback, this);
+		pid_sub = s.subscribe("pid_XY", 1, &ai_pilot::pidXY_callback, this);
+		pid_sub = s.subscribe("pid_Z", 1, &ai_pilot::pidZ_callback, this);
 		
 	}
 	
@@ -86,7 +118,7 @@ public:
 			}
 			else
 			{
-				populate_msg_channels();
+				ai_msg_channels();
 			}
 			
 			rc_pub.publish(RC_MSG);
@@ -95,23 +127,6 @@ public:
 			ros::spinOnce();
 		}
 	}
-	
-	/*void pwmVector(int mag, double theta, int*  xVar, int* yVar) 
-	{
-		if (mag > 500) 
-		{
-			mag = 500;
-		}
-		else if (mag < -500) 
-		{
-			mag = -500;
-		}
-		theta = theta * (M_PI / 180);
-		
-		*xVar = int(MID_PWM - mag * sin(theta));
-		*yVar = int(MID_PWM - mag * cos(theta));
-	}
-	//*/
 	
 	void release_msg_channels()
 	{
@@ -133,21 +148,24 @@ public:
 		RC_MSG.channels[RETRACT_CHANNEL]=HIGH_PWM;
 	}
 	
-	void populate_msg_channels()
+	void ai_msg_channels()
 	{
 		RC_MSG.channels[ROLL_CHANNEL] = roll;
 		RC_MSG.channels[PITCH_CHANNEL] = pitch;
 		RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
 		RC_MSG.channels[MODE_CHANNEL] = mode;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
-		RC_MSG.channels[RETRACT_CHANNEL]=retract;
+		RC_MSG.channels[RETRACT_CHANNEL]=retracts;
 	}
 	
 	void setpoint_callback(const geometry_msgs::Point& setpoint)
 	{
 		target_x = setpoint.x;
 		target_y = setpoint.y;
-		target_z = setpoint.z;
+		if (setpoint.z > MAX_HEIGHT)
+			target_z = MAX_HEIGHT;
+		else
+			target_z = setpoint.z;
 	}
 	
 	void loc_callback(const geometry_msgs::PoseStamped& cur_loc)
@@ -156,7 +174,68 @@ public:
 		current_y = cur_loc.pose.position.y;
 		current_z = cur_loc.pose.position.z;
 	}
+	
+	void mannual_override_callback(const std_msgs::Bool& msg)
+	{
+		MANNUAL_OVERRIDE = msg.data;
+	}
+	
+	
+	void emer_land_callback(const std_msgs::Bool& msg)
+	{
+		if (MAN_SWITCH == false)
+			EMERGENCY_LAND = msg.data;
+	}
+	
+	
+	void mode_callback(const std_msgs::Bool& msg)
+	{
+		if (msg.data == true)
+			mode = ALT_HOLD_MODE;
+		else
+			mode = STABILIZE_MODE;
+	}
+	
+	void retract_callback(const std_msgs::Bool& msg)
+	{
+		if (msg.data == true)
+			retracts = HIGH_PWM;
+		else
+			retracts = LOW_PWM;
+	}
+	
+	void pidXY_callback(const std_msgs::Int32MultiArray& arr_msg)
+	{
+		PIDController* tmp;
+		tmp = xPosCtrl;
+		xPosCtrl = new PIDController(arr_msg.data[0], arr_msg.data[1], arr_msg.data[2], arr_msg.data[3], arr_msg.data[4]);
+		delete tmp;
+		tmp = yPosCtrl;
+		yPosCtrl = new PIDController(arr_msg.data[0], arr_msg.data[1], arr_msg.data[2], arr_msg.data[3], arr_msg.data[4]);
+		delete tmp;
+		
+	}
+	
+	void pidZ_callback(const std_msgs::Int32MultiArray& arr_msg)
+	{
+		PIDController* tmp;
+		tmp = zPosCtrl;
+		zPosCtrl = new PIDController(arr_msg.data[0], arr_msg.data[1], arr_msg.data[2], arr_msg.data[3], arr_msg.data[4]);
+		delete tmp;
+	}
+	
+	void RCIn_callback(const mavros_msgs::RCIn& msg)
+	{
+		if (msg.channels[MANUAL_CONTROL] >= MID_PWM)
+		{
+			MANNUAL_OVERRIDE = true;
+			MAN_SWITCH = true;
+		}
+		else
+			MAN_SWITCH = false;
+	}
 };
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "actor");
