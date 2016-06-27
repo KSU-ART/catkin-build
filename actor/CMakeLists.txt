@@ -1,23 +1,28 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(observer)
+project(actor)
+
+############################################################
+##Pkg to do list:
+##1. Setpoints -> Output
+##2. In the future, change pid library to work like other packages
+############################################################
+
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(ATLANTE REQUIRED)
+
+#find_package(PID-CONTROLLER REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
-  cv_bridge
-  image_transport
-  roscpp
-  std_msgs
-  roslaunch
+	roscpp
+	std_msgs
+	roslaunch
 )
-#set(OpenCV_DIR "/root/opencv/cv3-release")
-find_package(OpenCV REQUIRED PATHS /root/opencv/cv3-release)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Boost REQUIRED COMPONENTS system chrono timer)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -72,10 +77,8 @@ find_package(OpenCV REQUIRED PATHS /root/opencv/cv3-release)
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
-
-roslaunch_add_file_check(launch)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -108,8 +111,8 @@ roslaunch_add_file_check(launch)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES observer
-#  CATKIN_DEPENDS cv_bridge image_transport roscpp std_msgs
+#  LIBRARIES actor
+#  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
 
@@ -119,48 +122,44 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
 include_directories(
-  include
-  ${ATLANTE_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
-  ${OpenCV_INCLUDE_DIRS}
+	include
+	${Boost_INCLUDE_DIRS}
+	${catkin_INCLUDE_DIRS}
+	
+)
+	
+	
+add_library(pid-controller SHARED IMPORTED
+  /usr/local/lib/libpid-controller.so
+)
+set_target_properties(pid-controller PROPERTIES
+    IMPORTED_LOCATION /usr/local/lib/libpid-controller.so
 )
 
+
 ## Declare a C++ library
-# add_library(observer
-#   src/${PROJECT_NAME}/observer.cpp
+# add_library(actor
+#   src/${PROJECT_NAME}/actor.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(observer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(actor ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(plate_tracker src/color_tracker.cpp src/LAB_Object.cpp src/plate_angler.cpp src/main.cpp src/cartographer.cpp)
-add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
+add_executable(pilot_node src/ai_pilot.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(observer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(actor_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(plate_tracker
-   ${catkin_LIBRARIES}
-   ${OpenCV_LIBRARIES}
- )
- target_link_libraries(color_calibrator 
-   ${catkin_LIBRARIES}
-   ${OpenCV_LIBRARIES}
- )
-
-add_executable(color_filter src/image_process.cpp)
-add_dependencies(color_filter motion_tracking_generate_messages_cpp)
-target_link_libraries(color_filter
-  ${catkin_LIBRARIES}
+target_link_libraries(pilot_node
+	${catkin_LIBRARIES}
+	pid-controller
 )
-
 
 #############
 ## Install ##
@@ -177,7 +176,7 @@ target_link_libraries(color_filter
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS observer observer_node
+# install(TARGETS actor actor_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -202,7 +201,7 @@ target_link_libraries(color_filter
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_observer.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_actor.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

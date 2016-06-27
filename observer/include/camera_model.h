@@ -9,7 +9,7 @@
 #include <geometry_msgs/Pose.h>
 #include <string.h>
 
-namespace Projection_space
+namespace projection_space
 {
 	class cameraModel
 	{
