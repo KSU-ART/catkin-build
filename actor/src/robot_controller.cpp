@@ -24,16 +24,16 @@
  * 
  **************************************************************************************************/
 
-#include "ai_pilot.h"
+#include "robot_controller.h"
 
-class ai_pilot 
+class robot_controller 
 {
 private:
 	ros::NodeHandle n,s;
 	ros::Publisher rc_pub;
-	ros::Subscriber setpoint_sub, loc_sub, mode_sub, retract_sub, man_override_sub, land_sub, pid_sub;
+	ros::Subscriber setpoint_sub, loc_sub, mode_sub, retract_sub, man_override_sub, land_sub, pid_sub, subRCIn;
 	
-	int throttle, roll, pitch, yaw, mode, retracts;
+	int throttle, roll, pitch, yaw, mode, retracts, MANN_ROLL, MANN_YAW, MANN_PITCH, MANN_THROT;
 	double target_x, current_x, target_y, current_y, target_z, current_z;
 	
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
@@ -47,7 +47,7 @@ private:
 	bool MANNUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH;
 	
 public:
-	ai_pilot()
+	robot_controller()
 	{
 		//pubs:
 		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
@@ -63,7 +63,10 @@ public:
 		yaw = MID_PWM;
 		mode = ALT_HOLD_MODE;
 		retracts = HIGH_PWM; 
-
+		MANN_ROLL =  MID_PWM;
+		MANN_YAW = MID_PWM;
+		MANN_PITCH = MID_PWM;
+		MANN_THROT = LOW_PWM;
 		target_x = 0;
 		current_x = 0;
 		target_y = 0;
@@ -81,15 +84,15 @@ public:
 		zPosCtrl->on();
 		
 		//subs:
-		ros::Subscriber subRCIn = s.subscribe("/mavros/rc/in", 1, &ai_pilot::RCIn_callback, this);
-		setpoint_sub = s.subscribe("setpoint", 1, &ai_pilot::setpoint_callback, this);
-		loc_sub = s.subscribe("curent_pose", 1, &ai_pilot::loc_callback, this);
-		man_override_sub = s.subscribe("manOverrideMsg", 1, &ai_pilot::mannual_override_callback, this);
-		land_sub = s.subscribe("EMERGENCY_LAND", 1, &ai_pilot::emer_land_callback, this);
-		mode_sub = s.subscribe("modeMsg", 1, &ai_pilot::mode_callback, this);
-		retract_sub = s.subscribe("retractMsg", 1, &ai_pilot::retract_callback, this);
-		pid_sub = s.subscribe("pid_XY", 1, &ai_pilot::pidXY_callback, this);
-		pid_sub = s.subscribe("pid_Z", 1, &ai_pilot::pidZ_callback, this);
+		subRCIn = s.subscribe("/mavros/rc/in", 1, &robot_controller::RCIn_callback, this);
+		setpoint_sub = s.subscribe("setpoint", 1, &robot_controller::setpoint_callback, this);
+		loc_sub = s.subscribe("curent_pose", 1, &robot_controller::loc_callback, this);
+		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::mannual_override_callback, this);
+		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
+		mode_sub = s.subscribe("modeMsg", 1, &robot_controller::mode_callback, this);
+		retract_sub = s.subscribe("retractMsg", 1, &robot_controller::retract_callback, this);
+		pid_sub = s.subscribe("pid_XY", 1, &robot_controller::pidXY_callback, this);
+		pid_sub = s.subscribe("pid_Z", 1, &robot_controller::pidZ_callback, this);
 		
 	}
 	
@@ -130,18 +133,18 @@ public:
 	
 	void release_msg_channels()
 	{
-		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
-		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
-		RC_MSG.channels[THROTTLE_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[ROLL_CHANNEL] = MANN_ROLL;
+		RC_MSG.channels[PITCH_CHANNEL] = MANN_PITCH;
+		RC_MSG.channels[THROTTLE_CHANNEL] = MANN_THROT;
 		RC_MSG.channels[MODE_CHANNEL] = STABILIZE_MODE;
-		RC_MSG.channels[YAW_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[YAW_CHANNEL] = MANN_YAW;
 		RC_MSG.channels[RETRACT_CHANNEL]=HIGH_PWM;
 	}
 	
 	void land_msg_channels()
 	{
-		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
-		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[ROLL_CHANNEL] = MANN_ROLL;
+		RC_MSG.channels[PITCH_CHANNEL] = MANN_PITCH;
 		RC_MSG.channels[THROTTLE_CHANNEL] = MID_PWM;
 		RC_MSG.channels[MODE_CHANNEL] = LAND_MODE;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
@@ -177,14 +180,14 @@ public:
 	
 	void mannual_override_callback(const std_msgs::Bool& msg)
 	{
-		MANNUAL_OVERRIDE = msg.data;
+		if (MAN_SWITCH == false)
+			MANNUAL_OVERRIDE = msg.data;
 	}
 	
 	
 	void emer_land_callback(const std_msgs::Bool& msg)
 	{
-		if (MAN_SWITCH == false)
-			EMERGENCY_LAND = msg.data;
+		EMERGENCY_LAND = msg.data;
 	}
 	
 	
@@ -230,16 +233,27 @@ public:
 		{
 			MANNUAL_OVERRIDE = true;
 			MAN_SWITCH = true;
+			MANN_ROLL =msg.channels[ROLL_CHANNEL];
+			MANN_YAW=msg.channels[YAW_CHANNEL];
+			MANN_PITCH=msg.channels[PITCH_CHANNEL];
+			MANN_THROT=msg.channels[THROTTLE_CHANNEL];
 		}
-		else
+		else 
+		{
+			if (EMERGENCY_LAND)
+			{
+				MANN_ROLL =msg.channels[ROLL_CHANNEL];
+				MANN_PITCH=msg.channels[PITCH_CHANNEL];
+			}
 			MAN_SWITCH = false;
+		}
 	}
 };
 
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "actor");
-	ai_pilot ai_1;
-	ai_1.start_nav();
+	robot_controller c_1;
+	c_1.start_nav();
 }
 	

@@ -149,7 +149,7 @@ set_target_properties(pid-controller PROPERTIES
 # add_dependencies(actor ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(pilot_node src/ai_pilot.cpp)
+add_executable(pilot_node src/robot_controller.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
