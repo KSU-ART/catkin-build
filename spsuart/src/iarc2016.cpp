@@ -55,8 +55,8 @@ void imagePointCallback(const ros_opencv::TrackingPoint::ConstPtr& msg) {
 		cout << "Current state: Random Traversal" << endl;
 	}
 	else if (currentState == InteractWithRobot){
-		roll = MID_PWM - xPosCtrl->calc(msg->pointX);
-		pitch = MID_PWM - yPosCtrl->calc(msg->pointY);
+		roll = MID_PWM - yPosCtrl->calc(msg->pointY);
+		pitch = MID_PWM - xPosCtrl->calc(msg->pointX);
 		
 		
 		
