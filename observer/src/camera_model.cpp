@@ -77,7 +77,7 @@ void cameraModel::saveModel(char camID, double pH, double pW, int h, int w, doub
 	double fy, double x0, double y0, double t1, double t2, double t3,
 	double qw, double qx, double qy, double qz){
 	using namespace std;
-	string s1 = "cameraModel"; s1+=camID; s1+=".dat";
+	string s1 = "../cam_data/camera_model_"; s1+=camID; s1+=".dat";
 	ofstream save;
 	save.open(s1.c_str(), ofstream::binary);
 	save.write( (char*)&pH , sizeof(double) );
@@ -103,7 +103,7 @@ void cameraModel::loadModel(char camID){
 	using namespace std;
 	int h, w;
 	double pH, pW, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz;
-	string s1 = "cameraModel"; s1+=camID; s1+=".dat";
+	string s1 = "../cam_data/camera_model_"; s1+=camID; s1+=".dat";
 	ifstream load;
 	load.open(s1.c_str(), ifstream::binary);
 	load.read( (char*)&pH , sizeof(double) );
@@ -159,7 +159,7 @@ Vector3 cameraModel::getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Poin
 					
 	RotMatrix3 rot = q1.getRotMatrix();
 	
-	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.position.y - roomba_height));
+	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.position.x, uavPose.position.y, uavPose.position.z - roomba_height));
 	HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 	HTMatrix4 worldFromCam = camFromWorld.inverse();
 	Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
@@ -254,7 +254,7 @@ std::vector< double > my_quaternion::change2euler()
 	double qw = q[0], qx = q[1], qy = q[2], qz = q[3],
 			qw2=qw*qw, qx2=qx*qx, qy2=qy*qy, qz2=qz*qz, 
 			bank, heading, attitude;
-	const double pi = 3.1415926535897;
+	const double pi = 3.1415926535898;
 	double unit = qw2 + qx2 + qy2 + qz2;
 	double test = qx*qy + qz*qw;
 	if (test > 0.499){
@@ -273,8 +273,8 @@ std::vector< double > my_quaternion::change2euler()
 		bank = atan2(2*qx*qw - 2*qy*qz , -qx2 + qy2 - qz2 + qw2);
 	}
 	std::vector< double > euler_angs;
-	euler_angs.push_back(heading*180/pi);//rotation about y
-	euler_angs.push_back(attitude*180/pi);//rotation about z
+	euler_angs.push_back(heading*180/pi);//rotation about z
+	euler_angs.push_back(attitude*180/pi);//rotation about y
 	euler_angs.push_back(bank*180/pi);//rotation about x
 	return euler_angs;
 }
