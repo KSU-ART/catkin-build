@@ -1,0 +1,8 @@
+alias ..='cd ..;'
+alias gits='git status;'
+alias cm='catkin_make -j4 -C ~/catkin_ws/'
+alias refresh='source ~/.bashrc'
+alias ssho='ssh -Y odroid@192.168.1.92'
+alias observer='geany -i ~/catkin_ws/src/catkin-build/observer/*.txt ~/catkin_ws/src/catkin-build/observer/launch/* ~/catkin_ws/src/catkin-build/observer/src/* ~/catkin_ws/src/catkin-build/observer/include/* &'
+alias controller='geany -i ~/catkin_ws/src/catkin-build/controller/*.txt ~/catkin_ws/src/catkin-build/controller/src/* ~/catkin_ws/src/catkin-build/controller/include/* &'
+alias localizer='geany -i ~/catkin_ws/src/catkin-build/localizer/*.txt ~/catkin_ws/src/catkin-build/localizer/launch/* ~/catkin_ws/src/catkin-build/localizer/src/* ~/catkin_ws/src/catkin-build/localizer/include/* &'
