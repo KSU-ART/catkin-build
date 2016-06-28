@@ -1,5 +1,0 @@
-<launch>
-	
-	<node name="TrackIRobot" pkg="ros_opencv" type="trackIRobot" />
-	
-</launch>
