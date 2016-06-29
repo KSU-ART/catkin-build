@@ -4,6 +4,7 @@ project(localizer)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+#find_package(Eigen REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
@@ -143,7 +144,7 @@ include_directories(
 
 
 add_executable(localizer_node src/main.cpp src/loc_object.cpp)
-target_link_libraries(localizer_node ${catkin_LIBRARIES})
+target_link_libraries(localizer_node ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 
 #############
 ## Install ##
