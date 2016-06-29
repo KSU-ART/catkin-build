@@ -1,6 +1,6 @@
 #include "plate_angler.h"
 #include "color_tracker.h"
-#include "camera_model.h"
+#include "cartographer.h"
 int main(int argc, char** argv)
 {	
 	waitKey(1000);
@@ -9,6 +9,7 @@ int main(int argc, char** argv)
 				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),
 				down_cam();
    angleFinder angler;
+   cartographer c1;
    ros::spin();
    return 0;
 }

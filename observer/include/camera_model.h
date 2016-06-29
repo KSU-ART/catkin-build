@@ -4,12 +4,12 @@
 #include <vector>
 #include <cv.h>
 #include <highgui.h>
-#include "atlante.h"
+#include <atlante.h>
 #include <fstream>
 #include <geometry_msgs/Pose.h>
 #include <string.h>
 
-namespace projection_space
+namespace projection_
 {
 	class cameraModel
 	{

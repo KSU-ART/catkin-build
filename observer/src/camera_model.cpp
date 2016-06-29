@@ -1,15 +1,6 @@
-#include <cmath>
-#include <iostream>
-#include <vector>
-#include <cv.h>
-#include <highgui.h>
-#include "atlante.h"
-#include <fstream>
-#include <geometry_msgs/Pose.h>
-#include <string.h>
 #include "camera_model.h"
 
-using namespace Projection_space
+using namespace projection_;
 
 /* Localization of Ground Robots onto world grid
  * 
@@ -30,9 +21,8 @@ cameraModel::cameraModel(char camID, double pH, double pW, int h, int w, double 
 {
 	saveModel(camID, pH, pW, h, w, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz);
 }
-cameraModel::cameraModel(){
-	makeNewCam();
-}
+cameraModel::cameraModel() { }
+
 void cameraModel::makeNewCam()
 {
 	using namespace std;
