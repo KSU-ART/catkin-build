@@ -20,14 +20,14 @@ cartographer::cartographer()
 	r4 = s_.subscribe("r_cam_points_4", 3, &cartographer::cam_4_callback, this);
 	r5 = s_.subscribe("r_cam_points_5", 3, &cartographer::cam_5_callback, this);
 	r6 = s_.subscribe("r_cam_points_6", 3, &cartographer::cam_6_callback, this);
-	r7 = s_.subscribe("r_cam_points_7", 3, &cartographer::cam_7_callback, this);
+	r7 = s_.subscribe("r_cam_points_0", 3, &cartographer::cam_7_callback, this);
 	g1 = s_.subscribe("g_cam_points_1", 3, &cartographer::cam_1_callback, this);
 	g2 = s_.subscribe("g_cam_points_2", 3, &cartographer::cam_2_callback, this);
 	g3 = s_.subscribe("g_cam_points_3", 3, &cartographer::cam_3_callback, this);
 	g4 = s_.subscribe("g_cam_points_4", 3, &cartographer::cam_4_callback, this);
 	g5 = s_.subscribe("g_cam_points_5", 3, &cartographer::cam_5_callback, this);
 	g6 = s_.subscribe("g_cam_points_6", 3, &cartographer::cam_6_callback, this);
-	g7 = s_.subscribe("g_cam_points_7", 3, &cartographer::cam_7_callback, this);
+	g7 = s_.subscribe("g_cam_points_0", 3, &cartographer::cam_7_callback, this);
 }
 cartographer::~cartographer()
 {
