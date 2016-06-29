@@ -142,7 +142,7 @@ include_directories(
 # )
 
 
-add_executable(localizer_node src/main.cpp src/loc_object.cpp)
+add_executable(localizer_node src/main.cpp src/loc_object.cpp src/grid_tracker.cpp)
 target_link_libraries(localizer_node ${catkin_LIBRARIES})
 
 #############

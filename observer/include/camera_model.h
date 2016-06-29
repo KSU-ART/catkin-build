@@ -44,7 +44,7 @@ namespace projection_space
 		Vector3 getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel);
 	};
 
-	///I realized that library has this...
+	///I realized that atlante has this...
 	class my_quaternion
 	{
 	private:

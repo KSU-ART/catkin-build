@@ -13,6 +13,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "LAB_Object.h"
 #include <string.h>
+#include <std_msgs/Int32MultiArray.h>
 
 class trackobjects{
 private:
