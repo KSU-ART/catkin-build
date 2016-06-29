@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(actor)
+project(controller)
 
 ############################################################
 ##Pkg to do list:
@@ -111,7 +111,7 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES actor
+#  LIBRARIES controller
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -139,24 +139,24 @@ set_target_properties(pid-controller PROPERTIES
 
 
 ## Declare a C++ library
-# add_library(actor
-#   src/${PROJECT_NAME}/actor.cpp
+# add_library(controller
+#   src/${PROJECT_NAME}/controller.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(actor ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(pilot_node src/robot_controller.cpp)
+add_executable(controller_node src/robot_controller.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(actor_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(pilot_node
+target_link_libraries(controller_node
 	${catkin_LIBRARIES}
 	pid-controller
 )
@@ -176,7 +176,7 @@ target_link_libraries(pilot_node
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS actor actor_node
+# install(TARGETS controller controller_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -201,7 +201,7 @@ target_link_libraries(pilot_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_actor.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_controller.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

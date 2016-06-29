@@ -4,12 +4,12 @@
 #include <vector>
 #include <cv.h>
 #include <highgui.h>
-#include "atlante.h"
+#include <atlante.h>
 #include <fstream>
 #include <geometry_msgs/Pose.h>
 #include <string.h>
 
-namespace projection_space
+namespace projection_
 {
 	class cameraModel
 	{
@@ -44,7 +44,7 @@ namespace projection_space
 		Vector3 getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel);
 	};
 
-	///I realized that library has this...
+	///I realized that atlante has this...
 	class my_quaternion
 	{
 	private:

@@ -138,9 +138,17 @@ include_directories(
 # add_dependencies(observer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(plate_tracker src/color_tracker.cpp src/LAB_Object.cpp src/plate_angler.cpp src/main.cpp src/cartographer.cpp)
+add_executable(plate_tracker	src/color_tracker.cpp 
+								src/LAB_Object.cpp 
+								src/plate_angler.cpp 
+								src/camera_model.cpp	
+								src/cartographer.cpp
+								src/main.cpp
+								)
+							
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
 
+add_executable(color_filter src/image_process.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(observer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -149,14 +157,13 @@ add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
  target_link_libraries(plate_tracker
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
+   ${ATLANTE_LIBRARIES}
  )
  target_link_libraries(color_calibrator 
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
  )
 
-add_executable(color_filter src/image_process.cpp)
-add_dependencies(color_filter motion_tracking_generate_messages_cpp)
 target_link_libraries(color_filter
   ${catkin_LIBRARIES}
 )

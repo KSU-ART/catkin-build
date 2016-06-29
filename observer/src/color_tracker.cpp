@@ -18,6 +18,8 @@ trackobjects::trackobjects()
 	image_sub_ = it_.subscribe("/usb_cam/image_raw", 1, &trackobjects::track, this);
     image_pub1_=it_.advertise("red_binary",1);
 	image_pub2_=it_.advertise("green_binary",1);
+	red_pub = a.advertise<std_msgs::Int32MultiArray>("r_cam_points_0", 1);
+	green_pub = a.advertise<std_msgs::Int32MultiArray>("g_cam_points_0", 1);
 }
 trackobjects::trackobjects(std::string camID)
 : it_(nh_)
@@ -27,6 +29,10 @@ trackobjects::trackobjects(std::string camID)
 	MAX_NUM_OBJECTS=10;
 	string topicName = "/usb_cam_" + camID + "/image_raw";
 	image_sub_ = it_.subscribe(topicName.c_str(), 1, &trackobjects::track, this);
+	topicName = "r_cam_points_" + camID;
+	red_pub = a.advertise<std_msgs::Int32MultiArray>(topicName.c_str(), 1);
+	topicName = "g_cam_points_" + camID;
+	green_pub = a.advertise<std_msgs::Int32MultiArray>(topicName.c_str(), 1);
 }
 
 trackobjects::~trackobjects() { }
@@ -71,7 +77,7 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	
 	morphOps(threshold);
 	trackFilteredObject(red,threshold);
-	//red_loc_arr.publish(redArr);
+	red_pub.publish(r_point_arr);
 	
 	//then greens
 	inRange(LAB,green.getLABmin(),green.getLABmax(),threshold);
@@ -84,7 +90,7 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	
 	morphOps(threshold);
 	trackFilteredObject(green,threshold);
-	//green_loc_arr.publish(greenArr);
+	green_pub.publish(g_point_arr);
 	
 	waitKey(100);
 }
@@ -99,16 +105,17 @@ void trackobjects::setLocArrs(vector<LAB_Object>& theObjects)
 	//(the arrays are global data)
 	for (int i = 0; i<theObjects.size(); i++)
 	{
-		Point p;
-		p.x = theObjects.at(i).getXPos();
-		p.y = theObjects.at(i).getYPos();
+		
+		theObjects.at(i).getYPos();
 		if (theObjects.at(i).getColor() == Scalar(0,255,0))//green objects
 		{
-			greenObjects.push_back(p);
+			g_point_arr.data.push_back( theObjects.at(i).getXPos() );
+			g_point_arr.data.push_back( theObjects.at(i).getYPos() );
 		}
 		else //~ if (theObjects.at(i).getColor() == Scalar(0,0,255))//red objects
 		{
-			redObjects.push_back(p);
+			r_point_arr.data.push_back( theObjects.at(i).getXPos() );
+			r_point_arr.data.push_back( theObjects.at(i).getYPos() );
 		}
 	}
 }

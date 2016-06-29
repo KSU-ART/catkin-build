@@ -138,23 +138,23 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 #add_executable(gps_interface_node src/gps_interface_node.cpp)
 #add_executable(offboard_mode src/offboard_mode.cpp)
 #add_executable(iarc2015 src/iarc2015.cpp)
-add_executable(iarc_random src/iarc2015_random.cpp)
-#add_executable(tracking_test src/tracking_test.cpp)
-add_executable(disable_overrides src/disable_rc_overrides.cpp)
-add_executable(of_loiter_guidance_test src/of_loiter_guidance_test.cpp)
-
-## Add cmake target dependencies of the executable/library
-## as an example, message headers may need to be generated before nodes
-#add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
-#add_dependencies(follow_irobot spsuart_generate_messages_cpp)
-#add_dependencies(of_loiter_px4flow_test spsuart_generate_messages_cpp)
-#add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
-#add_dependencies(offboard_mode spsuart_generate_messages_cpp)
-#add_dependencies(iarc2015 spsuart_generate_messages_cpp)
-add_dependencies(iarc_random spsuart_generate_messages_cpp)
-#add_dependencies(tracking_test spsuart_generate_messages_cpp)
-add_dependencies(disable_overrides spsuart_generate_messages_cpp)
-add_dependencies(of_loiter_guidance_test spsuart_generate_messages_cpp)
+#~ add_executable(iarc_random src/iarc2015_random.cpp)
+#~ #add_executable(tracking_test src/tracking_test.cpp)
+#~ add_executable(disable_overrides src/disable_rc_overrides.cpp)
+#~ add_executable(of_loiter_guidance_test src/of_loiter_guidance_test.cpp)
+#~ 
+#~ ## Add cmake target dependencies of the executable/library
+#~ ## as an example, message headers may need to be generated before nodes
+#~ #add_dependencies(mavros_flight_test spsuart_generate_messages_cpp)
+#~ #add_dependencies(follow_irobot spsuart_generate_messages_cpp)
+#~ #add_dependencies(of_loiter_px4flow_test spsuart_generate_messages_cpp)
+#~ #add_dependencies(gps_interface_node spsuart_generate_messages_cpp)
+#~ #add_dependencies(offboard_mode spsuart_generate_messages_cpp)
+#~ #add_dependencies(iarc2015 spsuart_generate_messages_cpp)
+#~ add_dependencies(iarc_random spsuart_generate_messages_cpp)
+#~ #add_dependencies(tracking_test spsuart_generate_messages_cpp)
+#~ add_dependencies(disable_overrides spsuart_generate_messages_cpp)
+#~ add_dependencies(of_loiter_guidance_test spsuart_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 
@@ -187,25 +187,25 @@ add_dependencies(of_loiter_guidance_test spsuart_generate_messages_cpp)
 #	pid-controller
 #)  
 
-target_link_libraries(iarc_random
-    ${catkin_LIBRARIES}
-	pid-controller
-)
+#~ target_link_libraries(iarc_random
+    #~ ${catkin_LIBRARIES}
+	#~ pid-controller
+#~ )
 
 #target_link_libraries(tracking_test
 #    ${catkin_LIBRARIES}
 #    pid-controller
 #)
 
-target_link_libraries(disable_overrides
-    ${catkin_LIBRARIES}
-)
-
-target_link_libraries(of_loiter_guidance_test
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES}
-    pid-controller
-)
+#~ target_link_libraries(disable_overrides
+    #~ ${catkin_LIBRARIES}
+#~ )
+#~ 
+#~ target_link_libraries(of_loiter_guidance_test
+    #~ ${catkin_LIBRARIES}
+    #~ ${Boost_LIBRARIES}
+    #~ pid-controller
+#~ )
 
 #############
 ## Install ##
