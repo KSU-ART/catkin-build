@@ -142,7 +142,7 @@ add_executable(plate_tracker	src/color_tracker.cpp
 								src/LAB_Object.cpp 
 								src/plate_angler.cpp 
 								src/camera_model.cpp	
-								src/cartographer.cpp
+								src/plate_localizer.cpp
 								src/main.cpp
 								)
 							

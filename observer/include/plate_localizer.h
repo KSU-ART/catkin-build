@@ -4,7 +4,7 @@
 #include "geometry_msgs/PoseArray.h"
 #include "std_msgs/Int32MultiArray.h"
 #include <vector>
-class cartographer
+class plate_localizer
 {
 private:
 	ros::NodeHandle s_;
@@ -17,8 +17,8 @@ private:
 	projection_::cameraModel c1, c2, c3, c4, c5, c6, c7;
 
 public:
-	cartographer();
-	~cartographer();
+	plate_localizer();
+	~plate_localizer();
 	void merge_positions_location(std::vector<geometry_msgs::Pose> po_v, char color);
 	void point_callback(const std_msgs::Int32MultiArray& msg, char camID, char color);
 	void update_pose(const geometry_msgs::PoseStamped& cur_loc);
