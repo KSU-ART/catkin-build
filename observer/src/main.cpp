@@ -10,6 +10,7 @@ int main(int argc, char** argv)
 				down_cam();
    angleFinder angler;
    cartographer c1;
-   ros::spin();
+   ros::MultiThreadedSpinner spinner(8); //use 8 threads
+   spinner.spin(); //will not return until node is shut down
    return 0;
 }

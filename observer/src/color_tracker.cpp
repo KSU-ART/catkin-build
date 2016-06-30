@@ -92,7 +92,7 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	trackFilteredObject(green,threshold);
 	green_pub.publish(g_point_arr);
 	
-	waitKey(100);
+	waitKey(15);
 }
 
 void broadcastAngles(bool angler){}

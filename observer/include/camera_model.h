@@ -7,6 +7,7 @@
 #include <atlante.h>
 #include <fstream>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <string.h>
 
 namespace projection_
@@ -39,9 +40,9 @@ namespace projection_
 		
 		Vector3 findLinePlaneIntersection(const Vector3 &lineVector, const Vector3 &planeNormal, const Vector3 &planeCenter);
 		
-		Vector3 getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel);
+		geometry_msgs::Pose getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 		
-		Vector3 getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel);
+		geometry_msgs::Pose getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 	};
 
 	///I realized that atlante has this...
