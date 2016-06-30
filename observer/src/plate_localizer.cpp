@@ -30,8 +30,8 @@ plate_localizer::plate_localizer()
 	g6 = s_.subscribe("g_cam_points_6", 3, &plate_localizer::cam_6g_callback, this);
 	g7 = s_.subscribe("g_cam_points_0", 3, &plate_localizer::cam_7g_callback, this);
 	
-	//~ rpp = s_.advertise(
-	//~ gpp = s_.advertise(
+	rpp = s_.advertise<geometry_msgs::PoseArray>("red_plate_poses", 1);
+	gpp = s_.advertise<geometry_msgs::PoseArray>("green_plate_poses", 1);
 }
 plate_localizer::~plate_localizer()
 {
