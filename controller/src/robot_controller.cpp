@@ -126,8 +126,8 @@ public:
 			
 			rc_pub.publish(RC_MSG);
 			
-			fcuCommRate.sleep();
 			ros::spinOnce();
+			fcuCommRate.sleep();
 		}
 	}
 	
