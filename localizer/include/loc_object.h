@@ -55,6 +55,9 @@ private:
 	
 	
 public:
+	///Final function merging most recent data and publishing
+	void merge_and_publish(ros::Time current_time);
+
 	/// Setup the ros handling
 	sensor_processor();
 	

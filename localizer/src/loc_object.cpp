@@ -31,6 +31,17 @@ void sensor_processor::start_sensor_sub()
 	
 }
 
+
+///merge and publish most recent data
+void sensor_processor::merge_and_publish(ros::Time current_time)
+{
+	pose_fused_msg.header.seq++;
+	pose_fused_msg.header.stamp = current_time;
+	pose_fused_msg.pose.position.z = fused_altitude;
+	pose_fused_msg.pose.orientation = orientation_fused_msg;
+	pose_pub.publish(pose_fused_msg);
+}
+
 /// Global referace
 /// Fusion with integrated IMUs
 /// integrate to position estimate
@@ -52,11 +63,7 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 		
 	pose_fused_msg.pose.position.x += (vel_x + guidance_vel_estimation.vector.x)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
 	pose_fused_msg.pose.position.y += (vel_y + guidance_vel_estimation.vector.y)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
-	pose_fused_msg.pose.position.z = fused_altitude;
-	pose_fused_msg.pose.orientation = orientation_fused_msg;
-	pose_fused_msg.header.seq++;
-	pose_fused_msg.header.stamp = current_time;
-	pose_pub.publish(pose_fused_msg);
+	
     
     //could add cout for debugging if needed:
    /*cout << "goal: " << nav_path.poses[current_goal] << endl;
@@ -64,6 +71,8 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
     cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;*/
     
     guidance_vel_estimation = *msg;
+    
+    sensor_processor::merge_and_publish(current_time);
 }
 
 /// Integrate acceleration
