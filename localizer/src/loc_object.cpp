@@ -5,9 +5,17 @@ sensor_processor::sensor_processor()
 {
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("localizer/pose", 1);
 	
+	//clear vital variables:
+	orientation_fused.v.x = 0;
+	orientation_fused.v.y = 0;
+	orientation_fused.v.z = 0;
+	orientation_fused.w = 0;
+	pos_reset = true;
+	
 	// integration prevalues
 	
 	vel_reset_zero = false;
+	pos_reset = true;
 	
 	//subs
 	sub_guidance_velocity = n.subscribe("/guidance/velocity", 1, &sensor_processor::guidance_vel_callback, this);
@@ -33,14 +41,24 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	//double vel_z = -(msg->vector.z); //could use this later
 
 	ros::Time current_time = msg->header.stamp;
-	
+	if (pos_reset)
+	{
+		pose_fused_msg.header.stamp = current_time;
+		pose_fused_msg.pose.position.x = 0;
+		pose_fused_msg.pose.position.y = 0;
+		pose_fused_msg.pose.position.z = 0;
+		pos_reset = false;
+	}
+		
 	pose_fused_msg.pose.position.x += (vel_x + guidance_vel_estimation.vector.x)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
 	pose_fused_msg.pose.position.y += (vel_y + guidance_vel_estimation.vector.y)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
+	pose_fused_msg.pose.position.z = fused_altitude;
 	pose_fused_msg.pose.orientation = orientation_fused_msg;
 	pose_fused_msg.header.seq++;
 	pose_fused_msg.header.stamp = current_time;
 	pose_pub.publish(pose_fused_msg);
     
+    //could add cout for debugging if needed:
    /*cout << "goal: " << nav_path.poses[current_goal] << endl;
     cout << "est: " << pos_est << endl;
     cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;*/

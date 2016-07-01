@@ -49,6 +49,7 @@ private:
 	double sonar_altitude;
 	double fused_altitude;
 	
+	bool pos_reset;
 	bool vel_reset_zero;
 	
 	
