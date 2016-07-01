@@ -36,6 +36,7 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	
 	pose_fused_msg.pose.position.x += (vel_x + guidance_vel_estimation.vector.x)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
 	pose_fused_msg.pose.position.y += (vel_y + guidance_vel_estimation.vector.y)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
+	pose_fused_msg.pose.orientation = orientation_fused_msg;
 	pose_fused_msg.header.seq++;
 	pose_fused_msg.header.stamp = current_time;
 	pose_pub.publish(pose_fused_msg);
