@@ -1,7 +1,7 @@
 #include <iostream>
 class grid_tracker
 {
-	public:
+public:
 	grid_tracker(){}
 	~grid_tracker(){}
 };

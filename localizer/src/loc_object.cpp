@@ -1,12 +1,9 @@
-
 #include "loc_object.h"
-
-bool amI;
 
 /// Setup the ros handling
 sensor_processor::sensor_processor()
 {
-	pos_pub = n.advertise<geometry_msgs::PoseStamped>("/iarc/localizer/pose", 1);
+	pose_pub = n.advertise<geometry_msgs::PoseStamped>("localizer/pose", 1);
 	
 	// integration prevalues
 	
@@ -31,7 +28,23 @@ void sensor_processor::start_sensor_sub()
 /// integrate to position estimate
 void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
 {
+	double vel_x = -(msg->vector.x); //guidance x is opposite hank x
+	double vel_y = msg->vector.y;
+	//double vel_z = -(msg->vector.z); //could use this later
+
+	ros::Time current_time = msg->header.stamp;
 	
+	pose_fused_msg.pose.position.x += (vel_x + guidance_vel_estimation.vector.x)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
+	pose_fused_msg.pose.position.y += (vel_y + guidance_vel_estimation.vector.y)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
+	pose_fused_msg.header.seq++;
+	pose_fused_msg.header.stamp = current_time;
+	pose_pub.publish(pose_fused_msg);
+    
+   /*cout << "goal: " << nav_path.poses[current_goal] << endl;
+    cout << "est: " << pos_est << endl;
+    cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;*/
+    
+    guidance_vel_estimation = *msg;
 }
 
 /// Integrate acceleration

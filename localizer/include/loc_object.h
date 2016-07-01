@@ -14,7 +14,6 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/Imu.h>
-
 #include "quaternion.h"
 #include "vector.h"
 
@@ -23,11 +22,11 @@ class sensor_processor
 {
 private:	
 	ros::NodeHandle n;
-	ros::Publisher pos_pub; // in global reference (meters)
+	ros::Publisher pose_pub; // in global reference (meters)
 	ros::Subscriber sub_guidance_velocity, sub_guidance_imu, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo;
 	
 	/// sensor fused data
-	geometry_msgs::Point pose_fused_msg;
+	geometry_msgs::PoseStamped pose_fused_msg;
 	geometry_msgs::Quaternion orientation_fused_msg;
 	//geometry_msgs::Point pose_fused;
 	Quaternion orientation_fused;
@@ -51,6 +50,8 @@ private:
 	double fused_altitude;
 	
 	bool vel_reset_zero;
+	
+	
 	
 public:
 	/// Setup the ros handling
