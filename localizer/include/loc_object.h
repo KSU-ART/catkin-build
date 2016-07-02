@@ -20,37 +20,40 @@
 
 class sensor_processor
 {
-private:	
+private:
+	/// Weight of the velocity guidance data (0-1)
+	static const float GUIDANCE_VEL_WEIGHT = 0.8;
+	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
 	ros::Subscriber sub_guidance_velocity, sub_guidance_imu, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo;
 	
-	/// sensor fused data
-	geometry_msgs::PoseStamped pose_fused_msg;
-	geometry_msgs::Quaternion orientation_fused_msg;
-	//Vector pose_fused;
+	/// sensor fused data, global values (world oriented)
+	// message for Position and Orientation
+	geometry_msgs::PoseStamped pos_fused_msg;
+	
+	Vector pos_fused;
+	geometry_msgs::Vector3Stamped pre_pos_fused;
+	
 	Quaternion orientation_fused;
 	
 	/// passed values through callbacks
-	geometry_msgs::Point vel_pixhawk_imu;
-	geometry_msgs::Point vel_guidance_imu;
-	geometry_msgs::Quaternion orient_pixhawk_imu;
+	Vector vel_pix_imu;
+	Vector vel_guid_imu;
+	Quaternion orient_pix_imu;
 	
 	/// Prevalues for integration;
-	geometry_msgs::Vector3 prev_guidance_imu_acc;
-	geometry_msgs::Vector3 prev_pixhawk_imu_acc;
+	geometry_msgs::Vector3Stamped pre_acc_guid;
+	geometry_msgs::Vector3Stamped pre_acc_pix;
 	
-	geometry_msgs::Vector3Stamped guidance_vel_estimation;
-	geometry_msgs::Vector3Stamped pixhawk_vel_estimation;
-	
-	geometry_msgs::Vector3Stamped global_guidance_vel_estimation;
-	geometry_msgs::Vector3Stamped global_pixhawk_vel_estimation;
+	Vector vel_pix_G;
+	Vector vel_guid_G;
 	
 	double sonar_altitude;
 	double fused_altitude;
 	
 	bool pos_reset;
-	bool vel_reset_zero;
+	bool vel_reset;
 	
 	
 	
@@ -60,9 +63,6 @@ public:
 
 	/// Setup the ros handling
 	sensor_processor();
-	
-	/// Main loop
-	void start_sensor_sub();
 	
 	/// Global referace
 	/// Fusion with integrated IMUs

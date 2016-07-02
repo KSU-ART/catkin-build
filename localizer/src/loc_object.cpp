@@ -12,9 +12,8 @@ sensor_processor::sensor_processor()
 	orientation_fused.w = 0;
 	pos_reset = true;
 	
-	// integration prevalues
-	
-	vel_reset_zero = false;
+	// resets
+	vel_reset = false;
 	pos_reset = true;
 	
 	//subs
@@ -25,21 +24,20 @@ sensor_processor::sensor_processor()
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
 }
 
-/// Main loop
-void sensor_processor::start_sensor_sub()
-{
-	
-}
-
 
 ///merge and publish most recent data
 void sensor_processor::merge_and_publish(ros::Time current_time)
 {
-	pose_fused_msg.header.seq++;
-	pose_fused_msg.header.stamp = current_time;
-	pose_fused_msg.pose.position.z = fused_altitude;
-	pose_fused_msg.pose.orientation = orientation_fused_msg;
-	pose_pub.publish(pose_fused_msg);
+	pos_fused_msg.header.seq++;
+	pos_fused_msg.header.stamp = current_time;
+	pos_fused_msg.pose.position.x = pos_fused.x;
+	pos_fused_msg.pose.position.y = pos_fused.y;
+	pos_fused_msg.pose.position.z = pos_fused.z;
+	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
+	pos_fused_msg.pose.orientation.y = orientation_fused.v.y;
+	pos_fused_msg.pose.orientation.z = orientation_fused.v.z;
+	pos_fused_msg.pose.orientation.w = orientation_fused.w;
+	pose_pub.publish(pos_fused_msg);
 }
 
 /// Global referace
@@ -49,30 +47,40 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 {
 	double vel_x = -(msg->vector.x); //guidance x is opposite hank x
 	double vel_y = msg->vector.y;
-	//double vel_z = -(msg->vector.z); //could use this later
-
+	double vel_z = -(msg->vector.z);
+	
+	// global velocity
+	Vector vel_G(vel_x, vel_y, vel_z);
+	vel_G = orientation_fused*vel_G;
+	
+	// sensor fuse velocity
+	vel_G = (vel_G*GUIDANCE_VEL_WEIGHT + vel_guid_G*(1-GUIDANCE_VEL_WEIGHT));
+	
+	// integrate velocity
 	ros::Time current_time = msg->header.stamp;
 	if (pos_reset)
 	{
-		pose_fused_msg.header.stamp = current_time;
-		pose_fused_msg.pose.position.x = 0;
-		pose_fused_msg.pose.position.y = 0;
-		pose_fused_msg.pose.position.z = 0;
+		pos_fused.x = 0;
+		pos_fused.y = 0;
+		pos_fused.z = 0;
 		pos_reset = false;
 	}
-		
-	pose_fused_msg.pose.position.x += (vel_x + guidance_vel_estimation.vector.x)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
-	pose_fused_msg.pose.position.y += (vel_y + guidance_vel_estimation.vector.y)/2*(current_time.toSec() - pose_fused_msg.header.stamp.toSec());
-	
+	else
+	{
+		double sec_diff = current_time.toSec() - pre_pos_fused.header.stamp.toSec();
+		pos_fused.x += (vel_G.x + pre_pos_fused.vector.x)/2*sec_diff;
+		pos_fused.y += (vel_G.y + pre_pos_fused.vector.y)/2*sec_diff;
+	}
+    
+	pre_pos_fused.header.stamp = current_time;
+	pre_pos_fused.vector = msg->vector;
     
     //could add cout for debugging if needed:
-   /*cout << "goal: " << nav_path.poses[current_goal] << endl;
+	/*cout << "goal: " << nav_path.poses[current_goal] << endl;
     cout << "est: " << pos_est << endl;
     cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;*/
     
-    guidance_vel_estimation = *msg;
-    
-    sensor_processor::merge_and_publish(current_time);
+    merge_and_publish(current_time);
 }
 
 /// Integrate acceleration
@@ -82,42 +90,46 @@ void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamp
 {
 	double acc_x = msg->transform.translation.x;
 	double acc_y = msg->transform.translation.y;
+	double acc_z = msg->transform.translation.z;
 	
 	ros::Time current_time = msg->header.stamp;
 	
-	if (vel_reset_zero)
+	if (vel_reset)
 	{
-		guidance_vel_estimation.vector.x = 0;
-		guidance_vel_estimation.vector.y = 0;
+		vel_guid_imu.x = 0;
+		vel_guid_imu.y = 0;
+		vel_guid_imu.z = 0;
+		vel_reset = false;
 	}
 	else
 	{
-		double sec_diff = current_time.toSec() - guidance_vel_estimation.header.stamp.toSec();
-		guidance_vel_estimation.vector.x += (acc_x + prev_guidance_imu_acc.x)/2*sec_diff;
-		guidance_vel_estimation.vector.y += (acc_y + prev_guidance_imu_acc.y)/2*sec_diff;
+		double sec_diff = current_time.toSec() - pre_acc_guid.header.stamp.toSec();
+		vel_guid_imu.x += (acc_x + pre_acc_guid.vector.x)/2*sec_diff;
+		vel_guid_imu.y += (acc_y + pre_acc_guid.vector.y)/2*sec_diff;
+		vel_guid_imu.z += (acc_z + pre_acc_guid.vector.z)/2*sec_diff;
 	}
 	
-	guidance_vel_estimation.header.stamp = current_time;
-	prev_guidance_imu_acc = msg->transform.translation;
+	pre_acc_guid.header.stamp = current_time;
+	pre_acc_guid.vector = msg->transform.translation;
 	
 	//orientation
-	orientation_fused.v.x = msg->transform.rotation.x; //without the sensor fusion of pixhawks IMUs
+	//*********    without the sensor fusion of pixhawks IMUs    **********
+	orientation_fused.v.x = -(msg->transform.rotation.x);
 	orientation_fused.v.y = msg->transform.rotation.y;
-	orientation_fused.v.z = msg->transform.rotation.z;
+	orientation_fused.v.z = -(msg->transform.rotation.z);
 	orientation_fused.w   = msg->transform.rotation.w;
 	
 	//global vel est
-	Vector vel_est(guidance_vel_estimation.vector.x, guidance_vel_estimation.vector.y, 0);
-	Vector global_vel_est = orientation_fused*vel_est;
-	//Vector global_vel_est = orientation_fused*vel_est;
-	global_guidance_vel_estimation.vector.x = global_vel_est.x;
-	global_guidance_vel_estimation.vector.y = global_vel_est.y;
+	vel_guid_G = orientation_fused*vel_guid_imu;
+	
+	// sensor fuse vel, simple average
+	vel_guid_G = (vel_pix_G+vel_guid_G)/2;
 }
 
 /// Pass altitude value to Hokuyo
 void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
-	
+	// Not sure how to get sonar Altitude yet
 }
 
 /// Integrate to velocity
@@ -127,29 +139,36 @@ void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& ms
 {
 	double acc_x = msg->linear_acceleration.x;
 	double acc_y = msg->linear_acceleration.y;
+	double acc_z = msg->linear_acceleration.z;
 	
 	ros::Time current_time = msg->header.stamp;
 	
-	if (vel_reset_zero)
+	if (vel_reset)
 	{
-		pixhawk_vel_estimation.vector.x = 0;
-		pixhawk_vel_estimation.vector.y = 0;
+		vel_pix_imu.x = 0;
+		vel_pix_imu.y = 0;
+		vel_pix_imu.z = 0;
+		vel_reset = false;
 	}
 	else
 	{
-		double sec_diff = current_time.toSec() - pixhawk_vel_estimation.header.stamp.toSec();
-		pixhawk_vel_estimation.vector.x += (acc_x + prev_pixhawk_imu_acc.x)/2*sec_diff;
-		pixhawk_vel_estimation.vector.y += (acc_y + prev_pixhawk_imu_acc.y)/2*sec_diff;
+		double sec_diff = current_time.toSec() - pre_acc_pix.header.stamp.toSec();
+		vel_pix_imu.x += (acc_x + pre_acc_pix.vector.x)/2*sec_diff;
+		vel_pix_imu.y += (acc_y + pre_acc_pix.vector.y)/2*sec_diff;
+		vel_pix_imu.z += (acc_z + pre_acc_pix.vector.z)/2*sec_diff;
 	}
 	
-	pixhawk_vel_estimation.header.stamp = current_time;
-	prev_pixhawk_imu_acc = msg->linear_acceleration;
+	pre_acc_pix.header.stamp = current_time;
+	pre_acc_pix.vector = msg->linear_acceleration;
 	
 	//orientation
-	//orient_pixhawk_imu = msg->orientation;
-	
+	orient_pix_imu.v.x = msg->orientation.x;
+	orient_pix_imu.v.y = msg->orientation.y;
+	orient_pix_imu.v.z = msg->orientation.z;
+	orient_pix_imu.w = msg->orientation.w;
 	
 	//global vel est
+	vel_pix_G = orientation_fused*vel_pix_imu;
 }
 
 /// fuse data with sonar
