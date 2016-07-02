@@ -8,7 +8,7 @@
  * "curent_pose"		geometry_msgs::PoseStamped	current location
  * "manOverrideMsg"		std_msgs::Bool				true = override, false = disabled
  * "EMERGENCY_LAND"		std_msgs::Bool				true = emergencyland, false = normal
- * "modeMsg"			std_msgs::Bool				true = altitude hold, false = stabilize;
+ * "modeMsg"			std_msgs::Int8				0 = altitude hold, 1 = stabilize, 2 = land;
  * "retractMsg"			std_msgs::Bool				true = retracts down, false = up;
  * "pid_XY"				std_msgs::Int32MultiArray	{p, i, d, min, max}
  * "pid_z"				std_msgs::Int32MultiArray	{p, i, d, min, max}
@@ -16,7 +16,7 @@
  * PRIORITY OF CONTROL:
  * physical override switch overrides software switch
  * mannual_override overrides emergency_land
- * emergency_land overrides ai_pilot
+ * emergency_land overrid	es ai_pilot
  * 
  * 
  * Mannual Override Switch: 
@@ -38,5 +38,6 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Int32MultiArray.h"
+#include "std_msgs/Int8.h"
 
 #endif

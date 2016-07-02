@@ -8,7 +8,7 @@
  * "curent_pose"		geometry_msgs::PoseStamped	current location
  * "manOverrideMsg"		std_msgs::Bool				true = override, false = disabled
  * "EMERGENCY_LAND"		std_msgs::Bool				true = emergencyland, false = normal
- * "modeMsg"			std_msgs::Bool				true = altitude hold, false = stabilize;
+ * "modeMsg"			std_msgs::Int8				0 = altitude hold, 1 = stabilize, 2 = land;
  * "retractMsg"			std_msgs::Bool				true = retracts down, false = up;
  * "pid_XY"				std_msgs::Int32MultiArray	{p, i, d, min, max}
  * "pid_z"				std_msgs::Int32MultiArray	{p, i, d, min, max}
@@ -191,12 +191,14 @@ public:
 	}
 	
 	
-	void mode_callback(const std_msgs::Bool& msg)
+	void mode_callback(const std_msgs::Int8& msg)
 	{
-		if (msg.data == true)
+		if (msg.data == 0)
 			mode = ALT_HOLD_MODE;
-		else
+		else if(msg.data == 1)
 			mode = STABILIZE_MODE;
+		else
+			mode = LAND_MODE;
 	}
 	
 	void retract_callback(const std_msgs::Bool& msg)

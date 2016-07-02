@@ -1,3 +1,6 @@
 #include "ai_nav.h"
 
-int main(){ }
+int main()
+{
+	ai_navigator n1;
+}
