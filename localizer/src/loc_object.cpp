@@ -175,11 +175,13 @@ void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& ms
 void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 	double avg = 0;
-    for(int i = 0; i < sizeof(msg->ranges)/4; i++) {
-        if(msg->ranges[i] < 4) {
-            avg += (double)(msg->ranges[i]/(sizeof(msg->ranges)/4));
+	std::size_t range_size = sizeof(msg->ranges)/4;
+    for(std::size_t i = 0; i < range_size; i++) {
+        if(msg->ranges[i] < 4) { // change from 4 to min, make case for max
+            avg += (double)(msg->ranges[i]/range_size);
         }
         else {
+			/// ************************** Test min/max ranges *****************************
             avg += (double)(4/(sizeof(4)));
         }
     }
