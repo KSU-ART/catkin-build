@@ -28,7 +28,7 @@ private:
 	/// sensor fused data
 	geometry_msgs::PoseStamped pose_fused_msg;
 	geometry_msgs::Quaternion orientation_fused_msg;
-	//geometry_msgs::Point pose_fused;
+	//Vector pose_fused;
 	Quaternion orientation_fused;
 	
 	/// passed values through callbacks

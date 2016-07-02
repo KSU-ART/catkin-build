@@ -108,8 +108,7 @@ void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamp
 	
 	//global vel est
 	Vector vel_est(guidance_vel_estimation.vector.x, guidance_vel_estimation.vector.y, 0);
-	Quaternion o;
-	Vector global_vel_est = vel_est;
+	Vector global_vel_est = orientation_fused*vel_est;
 	//Vector global_vel_est = orientation_fused*vel_est;
 	global_guidance_vel_estimation.vector.x = global_vel_est.x;
 	global_guidance_vel_estimation.vector.y = global_vel_est.y;
