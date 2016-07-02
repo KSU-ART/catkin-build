@@ -1,18 +1,46 @@
 #include <ros/ros.h>
+#include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int8.h>
+#include <std_msgs/Int32MultiArray.h>
+
 class ai_navigator
 {
 private:
+	enum state 
+	{
+		TakeOff, RandomTraversal, VerifyRobotRotation,
+		InteractWithRobot, AvoidObstacle, HoldPosition, Land
+	};
+	state cur_state;
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub, green_plate_poses_sub, obstacles_sub;
 	ros::Publisher retractMsg_pub, modeMsg_pub, setpoint_pub, EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
-	enum state 
-	{
-		TakeOff = 0, RandomTraversal = 1,
-		InteractWithRobot = 2, AvoidObstacle = 3, Land = 4
-	};
+
 	
 public:
+	///constructor
 	ai_navigator();
-		
+	
+	///main function loop
+	void init();
+	
+	///determine_state_function
+	state determine_state();
+	
+	///action functions:
+	void take_off();
+	void random_traversal();
+	void verify_robot_rotation();
+	void interact_with_robot();
+	void avoid_obstacle();
+	void land();
+	
+	///data callback functions:
+	void current_pose_cb(const geometry_msgs::PoseStamped msg);
+	void red_plate_poses_cb(const geometry_msgs::PoseArray msg);
+	void green_plate_poses_cb(const geometry_msgs::PoseArray msg);
+	void obstacles_cb(const geometry_msgs::PoseArray msg);
 
 };
