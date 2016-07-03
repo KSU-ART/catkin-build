@@ -3,6 +3,10 @@ ai_navigator::ai_navigator()
 {
 	start_time = ros::Time::now().toSec();
 	
+	//initialize vars:
+	cur_state = Land;
+	
+	
 	//info subs:
 	curent_pose_sub = n_.subscribe("curent_pose", 1, &ai_navigator::current_pose_cb, this);
 	red_plate_poses_sub = n_.subscribe("red_plate_poses", 1, &ai_navigator::red_plate_poses_cb, this);
@@ -50,7 +54,17 @@ void ai_navigator::init()
 ///Determine State:
 ai_navigator::state ai_navigator::determine_state()
 {
-	if ( ros::Time::now().toSec() <= (start_time + 10.00) )
+	if(	abs(current_pose.pose.position.x - setpoint.x) < 0.1 &&
+		abs(current_pose.pose.position.y - setpoint.y) < 0.1 &&
+		abs(current_pose.pose.position.z - setpoint.z) < 0.1)
+	{
+		at_setpoint = true;
+	}
+	else
+	{
+		at_setpoint = false;
+	}
+	if( (ros::Time::now().toSec() > (start_time + 5.00) ) && !at_setpoint )
 	{
 		if(cur_state != TakeOff)
 			new_state = true;
@@ -77,7 +91,10 @@ void ai_navigator::take_off()
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 	}
-	
+	setpoint.x = 0;
+	setpoint.y = 0;
+	setpoint.z = 1;
+	setpoint_pub.publish(setpoint);
 }
 
 void ai_navigator::random_traversal()

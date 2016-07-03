@@ -19,9 +19,12 @@ private:
 		TakeOff, RandomTraversal, VerifyRobotRotation,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
+	geometry_msgs::PoseStamped current_pose;
+	geometry_msgs::Point setpoint;
 	state cur_state;
 	double state_time, start_time; 
 	bool new_state;
+	bool at_setpoint;
 	
 public:
 	///constructor
