@@ -45,7 +45,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 		case 'g':
 		for (int i = 0; i < po_v.size(); i++)
 		{
-			if (po_v[i].position.x < 20 && po_v[i].position.y < 20) //out of bounds?
+			if (po_v[i].position.x < 17 && po_v[i].position.y < 17) //out of bounds?
 			{
 				for (int j = 0; j < green_groundbots_world_loc.poses.size(); j++)
 				{
@@ -74,7 +74,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 		case 'r':
 		for (int i = 0; i < po_v.size(); i++)
 		{
-			if (po_v[i].position.x < 20 && po_v[i].position.y < 20) //out of bounds?
+			if (po_v[i].position.x < 17 && po_v[i].position.y < 17) //out of bounds?
 			{
 				for (int j = 0; j < red_groundbots_world_loc.poses.size(); j++)
 				{
