@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Point.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int32MultiArray.h>
@@ -8,16 +9,19 @@
 class ai_navigator
 {
 private:
+	ros::NodeHandle n_;
+	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
+			green_plate_poses_sub, obstacles_sub;
+	ros::Publisher retractMsg_pub, modeMsg_pub, setpoint_pub, 
+			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
 	enum state 
 	{
 		TakeOff, RandomTraversal, VerifyRobotRotation,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
 	state cur_state;
-	ros::NodeHandle n_;
-	ros::Subscriber curent_pose_sub, red_plate_poses_sub, green_plate_poses_sub, obstacles_sub;
-	ros::Publisher retractMsg_pub, modeMsg_pub, setpoint_pub, EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
-
+	double state_time, start_time; 
+	bool new_state;
 	
 public:
 	///constructor
@@ -35,6 +39,7 @@ public:
 	void verify_robot_rotation();
 	void interact_with_robot();
 	void avoid_obstacle();
+	void hold_position();
 	void land();
 	
 	///data callback functions:
