@@ -24,6 +24,17 @@ sensor_processor::sensor_processor()
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
 }
 
+/// main loop
+void system_loop()
+{
+	ros::Rate loop_rate(120);
+	while (ros::ok())
+	{
+		
+		ros::spinOnce();
+		loop_rate.sleep();
+	}
+}
 
 ///merge and publish most recent data
 void sensor_processor::merge_and_publish(ros::Time current_time)

@@ -64,6 +64,9 @@ public:
 	/// Setup the ros handling
 	sensor_processor();
 	
+	/// main loop
+	void system_loop();
+	
 	/// Global referace
 	/// Fusion with integrated IMUs
 	/// integrate to position estimate
