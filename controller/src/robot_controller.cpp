@@ -176,6 +176,8 @@ public:
 		current_x = cur_loc.pose.position.x;
 		current_y = cur_loc.pose.position.y;
 		current_z = cur_loc.pose.position.z;
+		if (current_z > 9.0)
+			EMERGENCY_LAND = true;
 	}
 	
 	void mannual_override_callback(const std_msgs::Bool& msg)
