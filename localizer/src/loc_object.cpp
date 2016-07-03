@@ -25,7 +25,7 @@ sensor_processor::sensor_processor()
 }
 
 /// main loop
-void system_loop()
+void sensor_processor::system_loop()
 {
 	ros::Rate loop_rate(120);
 	while (ros::ok())
