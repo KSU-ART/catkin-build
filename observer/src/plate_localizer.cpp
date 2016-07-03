@@ -49,8 +49,8 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 			{
 				for (int j = 0; j < green_groundbots_world_loc.poses.size(); j++)
 				{
-					if (	abs((green_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 0.3 && 
-							abs((green_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 0.3 ) //near a groundbot already in the array? if so update position
+					if (	abs((green_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0 && 
+							abs((green_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 1.0 ) //near a groundbot already in the array? if so update position
 					{
 						green_groundbots_world_loc.poses[j].position.x = po_v[i].position.x;
 						green_groundbots_world_loc.poses[j].position.y = po_v[i].position.y;
@@ -78,8 +78,8 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 			{
 				for (int j = 0; j < red_groundbots_world_loc.poses.size(); j++)
 				{
-					if (	abs((red_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 0.3 && 
-							abs((red_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 0.3 ) //near a groundbot already in the array? if so update position
+					if (	abs((red_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0 && 
+							abs((red_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 1.0 ) //near a groundbot already in the array? if so update position
 					{
 						red_groundbots_world_loc.poses[j].position.x = po_v[i].position.x;
 						red_groundbots_world_loc.poses[j].position.y = po_v[i].position.y;
