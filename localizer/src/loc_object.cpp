@@ -177,10 +177,10 @@ void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& ms
 	pre_acc_pix.vector = msg->linear_acceleration;
 	
 	//orientation
-	orient_pix_imu.v.x = msg->orientation.x;
-	orient_pix_imu.v.y = msg->orientation.y;
-	orient_pix_imu.v.z = msg->orientation.z;
-	orient_pix_imu.w = msg->orientation.w;
+	orientation_fused.v.x = msg->orientation.x;
+	orientation_fused.v.y = msg->orientation.y;
+	orientation_fused.v.z = msg->orientation.z;
+	orientation_fused.w = msg->orientation.w;
 	
 	//global vel est
 	vel_pix_G = orientation_fused*vel_pix_imu;
