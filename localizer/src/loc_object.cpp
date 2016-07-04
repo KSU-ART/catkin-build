@@ -3,7 +3,7 @@
 /// Setup the ros handling
 sensor_processor::sensor_processor()
 {
-	pose_pub = n.advertise<geometry_msgs::PoseStamped>("curent_pose", 1);
+	pose_pub = n.advertise<geometry_msgs::PoseStamped>("current_pose", 1);
 	
 	//clear vital variables:
 	orientation_fused.v.x = 0;
