@@ -13,7 +13,7 @@ sensor_processor::sensor_processor()
 	pos_reset = true;
 	
 	// resets
-	vel_reset = false;
+	vel_reset = true;
 	pos_reset = true;
 	
 	//subs
@@ -141,6 +141,8 @@ void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamp
 void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 	// Not sure how to get sonar Altitude yet
+	/// min value 0.07
+	
 }
 
 /// Integrate to velocity
@@ -188,7 +190,7 @@ void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
 	double avg = 0;
 	std::size_t range_size = sizeof(msg->ranges)/4;
     for(std::size_t i = 0; i < range_size; i++) {
-        if(msg->ranges[i] < 4) { // change from 4 to min, make case for max
+        if(msg->ranges[i] < 4) { // change from 4 to max, make case for min
             avg += (double)(msg->ranges[i]/range_size);
         }
         else {
