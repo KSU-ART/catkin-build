@@ -65,7 +65,7 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	vel_G = orientation_fused*vel_G;
 	
 	// sensor fuse velocity
-	vel_G = (vel_G*GUIDANCE_VEL_WEIGHT + vel_guid_G*(1-GUIDANCE_VEL_WEIGHT));
+	vel_G = (vel_G*GUIDANCE_VEL_WEIGHT + vel_pix_G*(1-GUIDANCE_VEL_WEIGHT));
 	
 	// integrate velocity
 	ros::Time current_time = msg->header.stamp;
@@ -97,6 +97,7 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 /// Integrate acceleration
 /// passin fusion orientation
 /// calculate Global velocity
+/*
 void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamped::ConstPtr& msg)
 {
 	double acc_x = msg->transform.translation.x;
@@ -136,6 +137,7 @@ void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamp
 	// sensor fuse vel, simple average
 	vel_guid_G = (vel_pix_G+vel_guid_G)/2;
 }
+*/
 
 /// Pass altitude value to Hokuyo
 void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::ConstPtr& msg)

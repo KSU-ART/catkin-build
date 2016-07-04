@@ -26,7 +26,7 @@ private:
 	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
-	ros::Subscriber sub_guidance_velocity, sub_guidance_imu, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo;
+	ros::Subscriber sub_guidance_velocity, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo; //sub_guidance_imu
 	
 	/// sensor fused data, global values (world oriented)
 	// message for Position and Orientation
@@ -75,7 +75,7 @@ public:
 	/// Integrate acceleration
 	/// passin fusion orientation
 	/// calculate Global velocity
-	void guidance_imu_callback(const geometry_msgs::TransformStamped::ConstPtr& msg);
+	//void guidance_imu_callback(const geometry_msgs::TransformStamped::ConstPtr& msg);
 	
 	/// Pass altitude value to Hokuyo
 	void guidance_sonar_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
