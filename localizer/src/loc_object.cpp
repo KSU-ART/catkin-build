@@ -18,7 +18,7 @@ sensor_processor::sensor_processor()
 	
 	//subs
 	sub_guidance_velocity = n.subscribe("/guidance/velocity", 1, &sensor_processor::guidance_vel_callback, this);
-	sub_guidance_imu = n.subscribe("/guidance/imu", 1, &sensor_processor::guidance_imu_callback, this);
+	//sub_guidance_imu = n.subscribe("/guidance/imu", 1, &sensor_processor::guidance_imu_callback, this);
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
 	sub_pixhawk_imu = n.subscribe("/mavros/imu/data", 1, &sensor_processor::pixhawk_imu_callback, this);
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
