@@ -56,8 +56,8 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 /// integrate to position estimate
 void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
 {
-	double low_val_plus = 0.3;
-	double low_val_minus = -0.3;
+	double low_val_plus = 0.1;
+	double low_val_minus = -0.1;
 	double vel_x = -(msg->vector.x);//guidance x is opposite hank x
 	if (vel_x > low_val_plus)
 	{
