@@ -15,11 +15,11 @@ trackobjects::trackobjects()
 	angler = false;
 	MIN_OBJECT_AREA = 50*50;
 	MAX_NUM_OBJECTS=10;
-	image_sub_ = it_.subscribe("/usb_cam/image_raw", 1, &trackobjects::track, this);
-    image_pub1_=it_.advertise("red_binary",1);
-	image_pub2_=it_.advertise("green_binary",1);
-	red_pub = a.advertise<std_msgs::Int32MultiArray>("r_cam_points_0", 1);
-	green_pub = a.advertise<std_msgs::Int32MultiArray>("g_cam_points_0", 1);
+	image_sub_ = it_.subscribe("/usb_cam_0/image_rect_color", 1, &trackobjects::track, this);
+    image_pub1_=it_.advertise("/observer/red_binary",1);
+	image_pub2_=it_.advertise("/observer/green_binary",1);
+	red_pub = a.advertise<std_msgs::Int32MultiArray>("/observer/r_cam_points_0", 1);
+	green_pub = a.advertise<std_msgs::Int32MultiArray>("/observer/g_cam_points_0", 1);
 }
 trackobjects::trackobjects(std::string camID)
 : it_(nh_)
@@ -27,11 +27,11 @@ trackobjects::trackobjects(std::string camID)
 	angler = false;
 	MIN_OBJECT_AREA = 20*20;
 	MAX_NUM_OBJECTS=10;
-	string topicName = "/usb_cam_" + camID + "/image_raw";
+	string topicName = "/usb_cam_" + camID + "/image_rect_color";
 	image_sub_ = it_.subscribe(topicName.c_str(), 1, &trackobjects::track, this);
-	topicName = "r_cam_points_" + camID;
+	topicName = "/observer/r_cam_points_" + camID;
 	red_pub = a.advertise<std_msgs::Int32MultiArray>(topicName.c_str(), 1);
-	topicName = "g_cam_points_" + camID;
+	topicName = "/observer/g_cam_points_" + camID;
 	green_pub = a.advertise<std_msgs::Int32MultiArray>(topicName.c_str(), 1);
 }
 
@@ -53,7 +53,7 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	catch (cv_bridge::Exception& e)
 	{
 		//if there is an error during conversion, display it
-		ROS_ERROR("tutorialROSOpenCV::main.cpp::cv_bridge exception: %s", e.what());
+		ROS_ERROR("color_tracker.cpp::cv_bridge exception: %s", e.what());
 		return;
 	}
 	cameraFeed = cv_ptr->image;
@@ -193,5 +193,17 @@ void trackobjects::trackFilteredObject(LAB_Object& theObject, Mat threshold)
 		}
 	}
 }//void trackfilteredobjects
+
+int main(int argc, char** argv)
+{	
+	waitKey(2000);
+   ros::init(argc, argv, "/observer/color_tracker");
+   trackobjects top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
+				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),
+				down_cam();
+   ros::MultiThreadedSpinner spinner(8); //use 8 threads
+   spinner.spin(); //will not return until node is shut down
+}
+
  
 
