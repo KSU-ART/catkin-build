@@ -1,11 +1,11 @@
 <launch>
-	<node name="usb_cam_0" pkg="usb_cam" type="usb_cam_node" output="screen" >
+	<node name="usb_cam_1" pkg="usb_cam" type="usb_cam_node" output="screen" >
            <param name="camera_name" value="narrow_stereo" />
            <param name="video_device" value="/dev/video1" />
            <param name="pixel_format" value="yuyv" />
-           <param name="camera_frame_id" value="cam_0_frame" />
+           <param name="camera_frame_id" value="cam_1_frame" />
            <param name="io_method" value="mmap"/> 
-           <param name="camera_info_url" value="file:///home/dev/Desktop/calib.yml"/>
+           <param name="camera_info_url" value="file:///home/odroid/catkin_ws/sec/catkin-build/observer/cam_data/cam1.yml"/>
 		<param name="framerate" value="30"/>
 		<param name="contrast" value="32"/>
 		<param name="brightness" value="10"/>
