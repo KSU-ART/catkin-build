@@ -1,15 +1,6 @@
-#include <cmath>
-#include <iostream>
-#include <vector>
-#include <cv.h>
-#include <highgui.h>
-#include "atlante.h"
-#include <fstream>
-#include <geometry_msgs/Pose.h>
-#include <string.h>
 #include "camera_model.h"
 
-using namespace Projection_space
+using namespace projection_;
 
 /* Localization of Ground Robots onto world grid
  * 
@@ -30,9 +21,8 @@ cameraModel::cameraModel(char camID, double pH, double pW, int h, int w, double 
 {
 	saveModel(camID, pH, pW, h, w, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz);
 }
-cameraModel::cameraModel(){
-	makeNewCam();
-}
+cameraModel::cameraModel() { }
+
 void cameraModel::makeNewCam()
 {
 	using namespace std;
@@ -152,14 +142,14 @@ Vector3 cameraModel::findLinePlaneIntersection(const Vector3 &lineVector, const 
 		return lambda * lineVector;
 }
 
-Vector3 cameraModel::getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel)
+geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel)
 {
-	Quaternion q1(uavPose.orientation.x, uavPose.orientation.y, 
-					uavPose.orientation.z, uavPose.orientation.w);
+	Quaternion q1(uavPose.pose.orientation.x, uavPose.pose.orientation.y, 
+					uavPose.pose.orientation.z, uavPose.pose.orientation.w);
 					
 	RotMatrix3 rot = q1.getRotMatrix();
 	
-	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.position.x, uavPose.position.y, uavPose.position.z - roomba_height));
+	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.pose.position.x, uavPose.pose.position.y, uavPose.pose.position.z - roomba_height));
 	HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 	HTMatrix4 worldFromCam = camFromWorld.inverse();
 	Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
@@ -187,17 +177,25 @@ Vector3 cameraModel::getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Poin
 											pointOnFloorFromWorld4.y, 
 											pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
 	
-	return pointOnFloorFromWorld;						
+	geometry_msgs::Pose p1;
+	p1.position.x = pointOnFloorFromWorld.x;
+	p1.position.y = pointOnFloorFromWorld.y;
+	p1.position.z = pointOnFloorFromWorld.z;
+	p1.orientation.w = 1;
+	p1.orientation.x = 0;
+	p1.orientation.y = 0;
+	p1.orientation.z = 0;
+	return p1;						
 }
 
-Vector3 cameraModel::getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel)
+geometry_msgs::Pose cameraModel::getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel)
 {
-	Quaternion q1(uavPose.orientation.x, uavPose.orientation.y, 
-					uavPose.orientation.z, uavPose.orientation.w);
+	Quaternion q1(uavPose.pose.orientation.x, uavPose.pose.orientation.y, 
+					uavPose.pose.orientation.z, uavPose.pose.orientation.w);
 					
 	RotMatrix3 rot = q1.getRotMatrix();
 	
-	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.position.x, uavPose.position.y, uavPose.position.z));
+	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.pose.position.x, uavPose.pose.position.y, uavPose.pose.position.z));
 	HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 	HTMatrix4 worldFromCam = camFromWorld.inverse();
 	Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
@@ -225,7 +223,15 @@ Vector3 cameraModel::getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, 
 											pointOnFloorFromWorld4.y, 
 											pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
 	
-	return pointOnFloorFromWorld;
+	geometry_msgs::Pose p1;
+	p1.position.x = pointOnFloorFromWorld.x;
+	p1.position.y = pointOnFloorFromWorld.y;
+	p1.position.z = pointOnFloorFromWorld.z;
+	p1.orientation.w = 1;
+	p1.orientation.x = 0;
+	p1.orientation.y = 0;
+	p1.orientation.z = 0;
+	return p1;	
 }
 
 

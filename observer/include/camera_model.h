@@ -4,12 +4,13 @@
 #include <vector>
 #include <cv.h>
 #include <highgui.h>
-#include "atlante.h"
+#include <atlante.h>
 #include <fstream>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <string.h>
 
-namespace projection_space
+namespace projection_
 {
 	class cameraModel
 	{
@@ -39,12 +40,12 @@ namespace projection_space
 		
 		Vector3 findLinePlaneIntersection(const Vector3 &lineVector, const Vector3 &planeNormal, const Vector3 &planeCenter);
 		
-		Vector3 getPlateWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel);
+		geometry_msgs::Pose getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 		
-		Vector3 getGroundFeatureWorldLocation(geometry_msgs::Pose uavPose, cv::Point pixel);
+		geometry_msgs::Pose getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 	};
 
-	///I realized that library has this...
+	///I realized that atlante has this...
 	class my_quaternion
 	{
 	private:

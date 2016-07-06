@@ -4,14 +4,14 @@
  * 
  * MSG GUIDE:
  * Subscribed Topic:	Data Type					Usage
- * "setpoint"			geometry_msgs::Point		setpoint (desired location)
  * "curent_pose"		geometry_msgs::PoseStamped	current location
  * "manOverrideMsg"		std_msgs::Bool				true = override, false = disabled
  * "EMERGENCY_LAND"		std_msgs::Bool				true = emergencyland, false = normal
- * "modeMsg"			std_msgs::Bool				true = altitude hold, false = stabilize;
- * "retractMsg"			std_msgs::Bool				true = retracts down, false = up;
- * "pid_XY"				std_msgs::Int32MultiArray	{p, i, d, min, max}
- * "pid_z"				std_msgs::Int32MultiArray	{p, i, d, min, max}
+ * "/ai_nav/setpoint"	geometry_msgs::Point		setpoint (desired location)
+ * "/ai_nav/modeMsg"	std_msgs::Int8				0 = altitude hold, 1 = stabilize, 2 = land;
+ * "/ai_nav/retractMsg"	std_msgs::Bool				true = retracts down, false = up;
+ * "/ai_nav/pid_XY"		std_msgs::Int32MultiArray	{p, i, d, min, max}
+ * "/ai_nav/pid_z"		std_msgs::Int32MultiArray	{p, i, d, min, max}
  * 
  * PRIORITY OF CONTROL:
  * physical mannual-override switch overrides software switch
@@ -85,14 +85,14 @@ public:
 		
 		//subs:
 		subRCIn = s.subscribe("/mavros/rc/in", 1, &robot_controller::RCIn_callback, this);
-		setpoint_sub = s.subscribe("setpoint", 1, &robot_controller::setpoint_callback, this);
+		setpoint_sub = s.subscribe("/ai_nav/setpoint", 1, &robot_controller::setpoint_callback, this);
 		loc_sub = s.subscribe("curent_pose", 1, &robot_controller::loc_callback, this);
 		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::mannual_override_callback, this);
 		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
-		mode_sub = s.subscribe("modeMsg", 1, &robot_controller::mode_callback, this);
-		retract_sub = s.subscribe("retractMsg", 1, &robot_controller::retract_callback, this);
-		pid_sub = s.subscribe("pid_XY", 1, &robot_controller::pidXY_callback, this);
-		pid_sub = s.subscribe("pid_Z", 1, &robot_controller::pidZ_callback, this);
+		mode_sub = s.subscribe("/ai_nav/modeMsg", 1, &robot_controller::mode_callback, this);
+		retract_sub = s.subscribe("/ai_nav/retractMsg", 1, &robot_controller::retract_callback, this);
+		pid_sub = s.subscribe("/ai_nav/pid_XY", 1, &robot_controller::pidXY_callback, this);
+		pid_sub = s.subscribe("/ai_nav/pid_Z", 1, &robot_controller::pidZ_callback, this);
 		
 	}
 	
@@ -126,8 +126,8 @@ public:
 			
 			rc_pub.publish(RC_MSG);
 			
-			fcuCommRate.sleep();
 			ros::spinOnce();
+			fcuCommRate.sleep();
 		}
 	}
 	
@@ -176,6 +176,8 @@ public:
 		current_x = cur_loc.pose.position.x;
 		current_y = cur_loc.pose.position.y;
 		current_z = cur_loc.pose.position.z;
+		if (current_z > 9.0)
+			EMERGENCY_LAND = true;
 	}
 	
 	void mannual_override_callback(const std_msgs::Bool& msg)
@@ -191,12 +193,14 @@ public:
 	}
 	
 	
-	void mode_callback(const std_msgs::Bool& msg)
+	void mode_callback(const std_msgs::Int8& msg)
 	{
-		if (msg.data == true)
+		if (msg.data == 0)
 			mode = ALT_HOLD_MODE;
-		else
+		else if(msg.data == 1)
 			mode = STABILIZE_MODE;
+		else
+			mode = LAND_MODE;
 	}
 	
 	void retract_callback(const std_msgs::Bool& msg)

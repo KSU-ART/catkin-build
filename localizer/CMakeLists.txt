@@ -4,6 +4,7 @@ project(localizer)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+#find_package(Eigen REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   roscpp
@@ -115,8 +116,9 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-		include
-  ${catkin_INCLUDE_DIRS}
+	include
+	${catkin_INCLUDE_DIRS}
+	math
 )
 
 ## Declare a C++ library
@@ -142,7 +144,13 @@ include_directories(
 # )
 
 
-add_executable(localizer_node src/main.cpp src/loc_object.cpp)
+
+add_executable(localizer_node 
+					src/main.cpp 
+					src/loc_object.cpp 
+					src/grid_tracker.cpp
+					math/quaternion.cpp
+					math/vector.cpp)
 target_link_libraries(localizer_node ${catkin_LIBRARIES})
 
 

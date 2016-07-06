@@ -13,10 +13,12 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "LAB_Object.h"
 #include <string.h>
+#include <std_msgs/Int32MultiArray.h>
 
 class trackobjects{
 private:
-	ros::NodeHandle nh_;
+	ros::NodeHandle a, nh_;
+	ros::Publisher red_pub, green_pub;
     image_transport::ImageTransport it_;    
     image_transport::Subscriber image_sub_;
     image_transport::Publisher image_pub1_;
@@ -27,10 +29,7 @@ private:
 	vector <LAB_Object> objects;
 	vector <Point> greenObjects;
 	vector <Point> redObjects;
-	
-	//std_msgs::UInt32MultiArray greenArr;
-	//std_msgs::UInt32MultiArray redArr;
-	
+	std_msgs::Int32MultiArray r_point_arr, g_point_arr;	
 	
 public:
     trackobjects();
