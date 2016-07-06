@@ -17,6 +17,7 @@ sensor_processor::sensor_processor()
 	pos_reset = true;
 	
 	//subs
+	sub_zero_position = n.subscribe("/ground_station/zero_position", 1, &sensor_processor::zero_position_callback, this);
 	sub_guidance_velocity = n.subscribe("/guidance/velocity", 1, &sensor_processor::guidance_vel_callback, this);
 	//sub_guidance_imu = n.subscribe("/guidance/imu", 1, &sensor_processor::guidance_imu_callback, this);
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
@@ -229,4 +230,10 @@ void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
     fused_altitude = avg;
 }
 
-
+void sensor_processor::zero_position_callback(const std_msgs::Bool msg)
+{
+	if (msg.data == true)
+	{
+		pos_reset = true;
+	}
+}
