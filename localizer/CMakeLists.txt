@@ -145,6 +145,10 @@ include_directories(
 add_executable(localizer_node src/main.cpp src/loc_object.cpp)
 target_link_libraries(localizer_node ${catkin_LIBRARIES})
 
+
+add_executable(grid_detect_test src/grid_detect_test.cpp)
+target_link_libraries(grid_detect_test ${catkin_LIBRARIES})
+
 #############
 ## Install ##
 #############
