@@ -1,5 +1,6 @@
 ///plate_localizer
 #include "plate_localizer.h"
+//~ #include "camera_model.h"
 
 using namespace std;
 using namespace cv;
@@ -12,26 +13,26 @@ plate_localizer::plate_localizer()
 	c4.loadModel('4');
 	c5.loadModel('5');
 	c6.loadModel('6');
-	c7.loadModel('7');
+	c0.loadModel('0');
 	
 	curr_pose = s_.subscribe("curent_pose", 3, &plate_localizer::update_pose, this);
-	r1 = s_.subscribe("r_cam_points_1", 3, &plate_localizer::cam_1r_callback, this);
-	r2 = s_.subscribe("r_cam_points_2", 3, &plate_localizer::cam_2r_callback, this);
-	r3 = s_.subscribe("r_cam_points_3", 3, &plate_localizer::cam_3r_callback, this);
-	r4 = s_.subscribe("r_cam_points_4", 3, &plate_localizer::cam_4r_callback, this);
-	r5 = s_.subscribe("r_cam_points_5", 3, &plate_localizer::cam_5r_callback, this);
-	r6 = s_.subscribe("r_cam_points_6", 3, &plate_localizer::cam_6r_callback, this);
-	r7 = s_.subscribe("r_cam_points_0", 3, &plate_localizer::cam_7r_callback, this);
-	g1 = s_.subscribe("g_cam_points_1", 3, &plate_localizer::cam_1g_callback, this);
-	g2 = s_.subscribe("g_cam_points_2", 3, &plate_localizer::cam_2g_callback, this);
-	g3 = s_.subscribe("g_cam_points_3", 3, &plate_localizer::cam_3g_callback, this);
-	g4 = s_.subscribe("g_cam_points_4", 3, &plate_localizer::cam_4g_callback, this);
-	g5 = s_.subscribe("g_cam_points_5", 3, &plate_localizer::cam_5g_callback, this);
-	g6 = s_.subscribe("g_cam_points_6", 3, &plate_localizer::cam_6g_callback, this);
-	g7 = s_.subscribe("g_cam_points_0", 3, &plate_localizer::cam_7g_callback, this);
+	r1 = s_.subscribe("/observer/r_cam_points_1", 3, &plate_localizer::cam_1r_callback, this);
+	r2 = s_.subscribe("/observer/r_cam_points_2", 3, &plate_localizer::cam_2r_callback, this);
+	r3 = s_.subscribe("/observer/r_cam_points_3", 3, &plate_localizer::cam_3r_callback, this);
+	r4 = s_.subscribe("/observer/r_cam_points_4", 3, &plate_localizer::cam_4r_callback, this);
+	r5 = s_.subscribe("/observer/r_cam_points_5", 3, &plate_localizer::cam_5r_callback, this);
+	r6 = s_.subscribe("/observer/r_cam_points_6", 3, &plate_localizer::cam_6r_callback, this);
+	r0 = s_.subscribe("/observer/r_cam_points_0", 3, &plate_localizer::cam_0r_callback, this);
+	g1 = s_.subscribe("/observer/g_cam_points_1", 3, &plate_localizer::cam_1g_callback, this);
+	g2 = s_.subscribe("/observer/g_cam_points_2", 3, &plate_localizer::cam_2g_callback, this);
+	g3 = s_.subscribe("/observer/g_cam_points_3", 3, &plate_localizer::cam_3g_callback, this);
+	g4 = s_.subscribe("/observer/g_cam_points_4", 3, &plate_localizer::cam_4g_callback, this);
+	g5 = s_.subscribe("/observer/g_cam_points_5", 3, &plate_localizer::cam_5g_callback, this);
+	g6 = s_.subscribe("/observer/g_cam_points_6", 3, &plate_localizer::cam_6g_callback, this);
+	g0 = s_.subscribe("/observer/g_cam_points_0", 3, &plate_localizer::cam_0g_callback, this);
 	
-	rpp = s_.advertise<geometry_msgs::PoseArray>("red_plate_poses", 1);
-	gpp = s_.advertise<geometry_msgs::PoseArray>("green_plate_poses", 1);
+	rpp = s_.advertise<geometry_msgs::PoseArray>("/observer/red_plate_poses", 1);
+	gpp = s_.advertise<geometry_msgs::PoseArray>("/observer/green_plate_poses", 1);
 }
 plate_localizer::~plate_localizer()
 {
@@ -45,7 +46,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 		case 'g':
 		for (int i = 0; i < po_v.size(); i++)
 		{
-			if (po_v[i].position.x < 17 && po_v[i].position.y < 17) //out of bounds?
+			if (po_v[i].position.x < 10 && po_v[i].position.y < 10) //out of bounds?
 			{
 				for (int j = 0; j < green_groundbots_world_loc.poses.size(); j++)
 				{
@@ -74,7 +75,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 		case 'r':
 		for (int i = 0; i < po_v.size(); i++)
 		{
-			if (po_v[i].position.x < 17 && po_v[i].position.y < 17) //out of bounds?
+			if (po_v[i].position.x < 10 && po_v[i].position.y < 10) //out of bounds?
 			{
 				for (int j = 0; j < red_groundbots_world_loc.poses.size(); j++)
 				{
@@ -144,10 +145,10 @@ void plate_localizer::point_callback(const std_msgs::Int32MultiArray& msg, char 
 		{
 			po_v.push_back( c6.getPlateWorldLocation(uavPose_, pt_v[i]) );
 		}
-		case '7':
+		case '0':
 		for (int i = 0; i < pt_v.size(); i++)
 		{
-			po_v.push_back( c7.getPlateWorldLocation(uavPose_, pt_v[i]) );
+			po_v.push_back( c0.getPlateWorldLocation(uavPose_, pt_v[i]) );
 		}
 	}
 	plate_localizer::merge_positions_location(po_v, color);
@@ -182,9 +183,9 @@ void plate_localizer::cam_6r_callback(const std_msgs::Int32MultiArray& msg)
 {
 	plate_localizer::point_callback(msg, '6', 'r');
 }
-void plate_localizer::cam_7r_callback(const std_msgs::Int32MultiArray& msg)
+void plate_localizer::cam_0r_callback(const std_msgs::Int32MultiArray& msg)
 {
-	plate_localizer::point_callback(msg, '7', 'r');
+	plate_localizer::point_callback(msg, '0', 'r');
 }
 
 void plate_localizer::cam_1g_callback(const std_msgs::Int32MultiArray& msg)
@@ -211,10 +212,17 @@ void plate_localizer::cam_6g_callback(const std_msgs::Int32MultiArray& msg)
 {
 	plate_localizer::point_callback(msg, '6', 'g');
 }
-void plate_localizer::cam_7g_callback(const std_msgs::Int32MultiArray& msg)
+void plate_localizer::cam_0g_callback(const std_msgs::Int32MultiArray& msg)
 {
-	plate_localizer::point_callback(msg, '7', 'g');
+	plate_localizer::point_callback(msg, '0', 'g');
 }
 
+int main(int argc, char** argv)
+{	
+	waitKey(1000);
+   ros::init(argc, argv, "/observer/plate_localizer");
+   plate_localizer l1;
+   ros::spin(); //use 1 thread
+}
 
 		

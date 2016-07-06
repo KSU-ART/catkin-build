@@ -3,7 +3,7 @@
 /// Setup the ros handling
 sensor_processor::sensor_processor()
 {
-	pose_pub = n.advertise<geometry_msgs::PoseStamped>("curent_pose", 1);
+	pose_pub = n.advertise<geometry_msgs::PoseStamped>("current_pose", 1);
 	
 	//clear vital variables:
 	orientation_fused.v.x = 0;
@@ -17,6 +17,7 @@ sensor_processor::sensor_processor()
 	pos_reset = true;
 	
 	//subs
+	sub_zero_position = n.subscribe("/ground_station/zero_position", 1, &sensor_processor::zero_position_callback, this);
 	sub_guidance_velocity = n.subscribe("/guidance/velocity", 1, &sensor_processor::guidance_vel_callback, this);
 	//sub_guidance_imu = n.subscribe("/guidance/imu", 1, &sensor_processor::guidance_imu_callback, this);
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
@@ -56,10 +57,35 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 /// integrate to position estimate
 void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
 {
-	double vel_x = -(msg->vector.x); //guidance x is opposite hank x
+	double low_val_plus = 0.1;
+	double low_val_minus = -0.1;
+	double vel_x = -(msg->vector.x);//guidance x is opposite hank x
+	if (vel_x > low_val_plus)
+	{
+		vel_x = low_val_plus;
+	}
+	if (vel_x < low_val_minus)
+	{
+		vel_x = low_val_minus;
+	}
 	double vel_y = msg->vector.y;
+	if (vel_y > low_val_plus)
+	{
+		vel_y = low_val_plus;
+	}
+	if (vel_y < low_val_minus)
+	{
+		vel_y = low_val_minus;
+	}
 	double vel_z = -(msg->vector.z);
-	
+	if (vel_z > low_val_plus)
+	{
+		vel_z = low_val_plus;
+	}
+	if (vel_z < low_val_minus)
+	{
+		vel_z = low_val_minus;
+	}
 	// global velocity
 	Vector vel_G(vel_x, vel_y, vel_z);
 	vel_G = orientation_fused*vel_G;
@@ -204,4 +230,10 @@ void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
     fused_altitude = avg;
 }
 
-
+void sensor_processor::zero_position_callback(const std_msgs::Bool msg)
+{
+	if (msg.data == true)
+	{
+		pos_reset = true;
+	}
+}

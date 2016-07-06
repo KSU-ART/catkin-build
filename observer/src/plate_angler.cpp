@@ -17,10 +17,10 @@ using namespace cv;
     angleFinder::angleFinder()
 		:it_(n)
 	{
-		g_ang = n.advertise<std_msgs::Float32>("green_plate_angle", 100);
-		r_ang = n.advertise<std_msgs::Float32>("red_plate_angle", 100);
-		g_sub = it_.subscribe("green_binary", 1, &angleFinder::greenCb, this);
-		r_sub = it_.subscribe("red_binary", 1, &angleFinder::redCb, this);
+		g_ang = n.advertise<std_msgs::Float32>("/observer/green_plate_angle", 100);
+		r_ang = n.advertise<std_msgs::Float32>("/observer/red_plate_angle", 100);
+		g_sub = it_.subscribe("/observer/green_binary", 1, &angleFinder::greenCb, this);
+		r_sub = it_.subscribe("/observer/red_binary", 1, &angleFinder::redCb, this);
 	}
 	
 	angleFinder::~angleFinder(){ }
@@ -202,5 +202,14 @@ using namespace cv;
 			cv::waitKey(3);
 		}
 	}//getAngle
+
+int main(int argc, char** argv)
+{	
+	waitKey(1000);
+	ros::init(argc, argv, "/observer/plate_angler");
+	angleFinder angler;
+	ros::spin(); //use 1 thread
+	return 0;
+}
 
 

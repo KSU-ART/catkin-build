@@ -14,6 +14,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/Imu.h>
+#include <std_msgs/Bool.h>
 #include "quaternion.h"
 #include "vector.h"
 
@@ -26,7 +27,7 @@ private:
 	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
-	ros::Subscriber sub_guidance_velocity, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo; //sub_guidance_imu
+	ros::Subscriber sub_guidance_velocity, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo, sub_zero_position; //sub_guidance_imu
 	
 	/// sensor fused data, global values (world oriented)
 	// message for Position and Orientation
@@ -88,6 +89,8 @@ public:
 	/// fuse data with sonar
 	void hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg);
 	
+	///subscribe to reset topic and reset position if true	
+	void zero_position_callback(const std_msgs::Bool msg);
 };
 
 #endif

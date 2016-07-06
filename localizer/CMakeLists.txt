@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslaunch
   std_msgs
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -152,6 +153,10 @@ add_executable(localizer_node
 					math/quaternion.cpp
 					math/vector.cpp)
 target_link_libraries(localizer_node ${catkin_LIBRARIES})
+
+
+add_executable(grid_detect_test src/grid_detect_test.cpp)
+target_link_libraries(grid_detect_test ${catkin_LIBRARIES})
 
 #############
 ## Install ##
