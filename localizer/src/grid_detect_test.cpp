@@ -14,12 +14,13 @@ using namespace std;
 namespace enc = sensor_msgs::image_encodings;
 
 /// Global variables
-Mat src;
+Mat src, src_processed;
 int thresh = 140;
 int max_thresh = 255;
 int radius = 30;
 int max_radius = 100;
 int lowThreshold = 255;
+int highThreshold = 255;
 int const max_lowThreshold = 255;
 int ratio = 3;
 int kernel_size = 3;
@@ -38,6 +39,7 @@ void cornerHarris_demo( int, void* );
 
 void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+	/*
 	/// Load source image and convert it to gray
   cv_bridge::CvImagePtr cv_ptr;
     try
@@ -52,36 +54,42 @@ void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
   
   src = cv_ptr->image; 
   
+  
   imshow( source_window, src );
   cvtColor( src, src, CV_BGR2GRAY );
   cornerHarris_demo( 0, 0 );
-  
-  waitKey(10);
+  */
+  //waitKey(10);
 }
 
 /** @function main */
 int main( int argc, char** argv )
 {
-  
+  /*
   ros::init(argc, argv, "listener");
 
   ros::NodeHandle n;
 
   ros::Subscriber sub = n.subscribe("/usb_cam/image_raw", 1, chatterCallback);
+  */
   
+  src = imread( argv[1], 1 );
 
   /// Create a window and a trackbar
   namedWindow( source_window );
   namedWindow( corners_window );
   namedWindow( canny_window );
   createTrackbar( "Threshold: ", source_window, &thresh, max_thresh, cornerHarris_demo );
+  createTrackbar( "high Threshold: ", source_window, &highThreshold, max_thresh, cornerHarris_demo );
   createTrackbar( "Radius: ", source_window, &radius, max_radius, cornerHarris_demo );
   createTrackbar( "Min Threshold:", source_window, &lowThreshold, max_lowThreshold, cornerHarris_demo );
   createTrackbar( "K:", source_window, &k, 10, cornerHarris_demo );
  
+ /*
   ros::MultiThreadedSpinner spinner(6);
   spinner.spin();
-
+*/
+	waitKey(0);
   return(0);
 }
 
@@ -90,16 +98,19 @@ void cornerHarris_demo( int, void* )
 {
 	
 	Mat dst, dst_norm, dst_norm_scaled;
-	dst = Mat::zeros( src.size(), CV_32FC1 );
+	dst = Mat::zeros( src.size(), CV_32FC(6) ); // CV_32FC1
 
 	/// Detector parameters
 	int blockSize = 5;
 	int apertureSize = 5;
-
+	
+	cvtColor( src, src_processed, CV_BGR2GRAY );
+	
 	/// Detecting corners
-	Canny( src, src, lowThreshold, lowThreshold*ratio, kernel_size );
-	imshow( canny_window, src );
-	cornerHarris( src, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
+	Canny( src_processed, src_processed, lowThreshold, lowThreshold*ratio, kernel_size );
+	imshow( canny_window, src_processed );
+	cornerHarris( src_processed, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
+	//cornerEigenValsAndVecs( src_processed, dst, blockSize, apertureSize, BORDER_DEFAULT );
 
 	/// Normalizing
 	normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
@@ -161,7 +172,12 @@ void cornerHarris_demo( int, void* )
 	/// Showing the result
 
 	imshow( corners_window, dst_norm_scaled );
-	waitKey(10);
+	/*
+	src = Scalar(0,0,0);
+	dst = Scalar(0,0,0);
+	dst_norm = Scalar(0,0,0);
+	dst_norm_scaled = Scalar(0,0,0);
+	//waitKey(10);*/
 }
 
 

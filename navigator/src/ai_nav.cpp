@@ -1,3 +1,4 @@
+
 #include "ai_nav.h"
 ai_navigator::ai_navigator()
 {
