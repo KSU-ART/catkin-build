@@ -19,12 +19,19 @@ int thresh = 140;
 int max_thresh = 255;
 int radius = 30;
 int max_radius = 100;
+int lowThreshold = 255;
+int const max_lowThreshold = 255;
+int ratio = 3;
+int kernel_size = 3;
+
+int k = 4;
 
 vector<Point> corners;
 vector<Point> actual_corners;
 
 string source_window = "Source image";
 string corners_window = "Corners detected";
+string canny_window = "Canny detected";
 
 /// Function header
 void cornerHarris_demo( int, void* );
@@ -66,10 +73,14 @@ int main( int argc, char** argv )
   /// Create a window and a trackbar
   namedWindow( source_window );
   namedWindow( corners_window );
+  namedWindow( canny_window );
   createTrackbar( "Threshold: ", source_window, &thresh, max_thresh, cornerHarris_demo );
   createTrackbar( "Radius: ", source_window, &radius, max_radius, cornerHarris_demo );
+  createTrackbar( "Min Threshold:", source_window, &lowThreshold, max_lowThreshold, cornerHarris_demo );
+  createTrackbar( "K:", source_window, &k, 10, cornerHarris_demo );
  
-  ros::spin();
+  ros::MultiThreadedSpinner spinner(6);
+  spinner.spin();
 
   return(0);
 }
@@ -77,17 +88,18 @@ int main( int argc, char** argv )
 /** @function cornerHarris_demo */
 void cornerHarris_demo( int, void* )
 {
-
+	
 	Mat dst, dst_norm, dst_norm_scaled;
 	dst = Mat::zeros( src.size(), CV_32FC1 );
 
 	/// Detector parameters
-	int blockSize = 3;
-	int apertureSize = 3;
-	double k = 0.04;
+	int blockSize = 5;
+	int apertureSize = 5;
 
 	/// Detecting corners
-	cornerHarris( src, dst, blockSize, apertureSize, k, BORDER_DEFAULT );
+	Canny( src, src, lowThreshold, lowThreshold*ratio, kernel_size );
+	imshow( canny_window, src );
+	cornerHarris( src, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
 
 	/// Normalizing
 	normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
@@ -96,15 +108,25 @@ void cornerHarris_demo( int, void* )
 	/// Drawing a circle around corners
 	corners.clear();
 	actual_corners.clear();
+	int count_detected(0);
 	for( int j = 0; j < dst_norm.rows ; j++ )
 	{ 
 		for( int i = 0; i < dst_norm.cols; i++ )
 		{
 			if( (int) dst_norm.at<float>(j,i) > thresh )
 			{
-				//circle( dst_norm_scaled, Point( i, j ), 5,  Scalar(0), 2, 8, 0 );
-				Point c(i,j);
-				corners.push_back(c);
+				count_detected++;
+				if (count_detected <= 100)
+				{
+					//circle( dst_norm_scaled, Point( i, j ), 5,  Scalar(0), 2, 8, 0 );
+					Point c(i,j);
+					corners.push_back(c);
+				}
+				else
+				{
+					break;
+				}
+				
 			}
 		}
 	}
