@@ -16,6 +16,6 @@
 		<param name="autoexposure" value="false" />
 	</node>
    
-	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_0"/>
+	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_1"/>
 	
 </launch>
