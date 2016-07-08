@@ -45,6 +45,7 @@ private:
 	PIDController* zPosCtrl;
 
 	bool MANNUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH;
+	bool debug;
 	
 public:
 	robot_controller()
@@ -55,6 +56,7 @@ public:
 		//this part is important:
 		MANNUAL_OVERRIDE = true;
 		EMERGENCY_LAND = false;
+		debug = true;
 		
 		//initial values
 		throttle = LOW_PWM;
@@ -124,6 +126,15 @@ public:
 				ai_msg_channels();
 			}
 			
+			if (debug)
+			{
+				std::cout << "roll: "<< RC_MSG.channels[ROLL_CHANNEL] << std::endl
+					<< "pitch: "<< RC_MSG.channels[PITCH_CHANNEL] << std::endl
+					<< "throttle: " << RC_MSG.channels[THROTTLE_CHANNEL] << std::endl
+					<< "mode: " << RC_MSG.channels[MODE_CHANNEL] << std::endl
+					<< "yaw: " << RC_MSG.channels[YAW_CHANNEL] << std::endl
+					<< "retracts: " << RC_MSG.channels[RETRACT_CHANNEL] << std::endl;
+			}
 			rc_pub.publish(RC_MSG);
 			
 			ros::spinOnce();
@@ -233,15 +244,16 @@ public:
 	
 	void RCIn_callback(const mavros_msgs::RCIn& msg)
 	{
-		std::cout << "mannual_mode\n";
+		
 		if (msg.channels[MANUAL_CONTROL] >= MID_PWM)
 		{
+			std::cout << "mannual_mode\n";
 			MANNUAL_OVERRIDE = true;
 			MAN_SWITCH = true;
 			MANN_ROLL =msg.channels[ROLL_CHANNEL];
 			MANN_YAW=msg.channels[YAW_CHANNEL];
 			MANN_PITCH=msg.channels[PITCH_CHANNEL];
-			MANN_THROT= MID_PWM;/*msg.channels[THROTTLE_CHANNEL];*/
+			MANN_THROT= /*MID_PWM;*/msg.channels[THROTTLE_CHANNEL];
 		}
 		else 
 		{
@@ -251,6 +263,7 @@ public:
 				MANN_PITCH=msg.channels[PITCH_CHANNEL];
 			}
 			MAN_SWITCH = false;
+			MANNUAL_OVERRIDE = false;
 		}
 	}
 };
