@@ -88,9 +88,9 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 		vel_z = low_val_minus;
 	}
 	
-	std::cout << "Vel X: 0" << vel_x << std::endl;
-	std::cout << "Vel Y: 0" << vel_y << std::endl;
-	std::cout << "Vel Z: 0" << vel_z << std::endl;
+	std::cout << "Vel X: " << vel_x << std::endl;
+	std::cout << "Vel Y: " << vel_y << std::endl;
+	std::cout << "Vel Z: " << vel_z << std::endl;
 	
 	// global velocity
 	Vector vel_G(vel_x, vel_y, vel_z);
