@@ -233,6 +233,7 @@ public:
 	
 	void RCIn_callback(const mavros_msgs::RCIn& msg)
 	{
+		std::cout << "mannual_mode\n";
 		if (msg.channels[MANUAL_CONTROL] >= MID_PWM)
 		{
 			MANNUAL_OVERRIDE = true;
@@ -240,7 +241,7 @@ public:
 			MANN_ROLL =msg.channels[ROLL_CHANNEL];
 			MANN_YAW=msg.channels[YAW_CHANNEL];
 			MANN_PITCH=msg.channels[PITCH_CHANNEL];
-			MANN_THROT=msg.channels[THROTTLE_CHANNEL];
+			MANN_THROT= MID_PWM;/*msg.channels[THROTTLE_CHANNEL];*/
 		}
 		else 
 		{

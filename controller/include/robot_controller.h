@@ -27,7 +27,7 @@
 #define ROBOT_INCLUDES_H
  
 #include "flight_definitions.h"
-
+#include <iostream>
 #include "ros/ros.h"
 #include <PIDController.h>
 #include <math.h>
