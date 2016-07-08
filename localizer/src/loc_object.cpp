@@ -1,4 +1,5 @@
 #include "loc_object.h"
+#include <iostream>
 
 /// Setup the ros handling
 sensor_processor::sensor_processor()
@@ -86,6 +87,11 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	{
 		vel_z = low_val_minus;
 	}
+	
+	std::cout << "Vel X: 0" << vel_x << std::endl;
+	std::cout << "Vel Y: 0" << vel_y << std::endl;
+	std::cout << "Vel Z: 0" << vel_z << std::endl;
+	
 	// global velocity
 	Vector vel_G(vel_x, vel_y, vel_z);
 	vel_G = orientation_fused*vel_G;
@@ -107,6 +113,7 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 		double sec_diff = current_time.toSec() - pre_pos_fused.header.stamp.toSec();
 		pos_fused.x += (vel_G.x + pre_pos_fused.vector.x)/2*sec_diff;
 		pos_fused.y += (vel_G.y + pre_pos_fused.vector.y)/2*sec_diff;
+		pos_fused.z += (vel_G.z + pre_pos_fused.vector.z)/2*sec_diff;
 	}
     
 	pre_pos_fused.header.stamp = current_time;
