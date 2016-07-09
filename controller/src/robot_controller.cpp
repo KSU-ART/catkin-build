@@ -33,7 +33,7 @@ private:
 	ros::Publisher rc_pub;
 	ros::Subscriber setpoint_sub, loc_sub, mode_sub, retract_sub, man_override_sub, land_sub, pid_sub, subRCIn;
 	
-	int throttle, roll, pitch, yaw, mode, retracts, MANN_ROLL, MANN_YAW, MANN_PITCH, MANN_THROT;
+	short throttle, roll, pitch, yaw, mode, retracts, MANN_ROLL, MANN_YAW, MANN_PITCH, MANN_THROT;
 	double target_x, current_x, target_y, current_y, target_z, current_z;
 	
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
@@ -144,11 +144,11 @@ public:
 	
 	void release_msg_channels()
 	{
-		RC_MSG.channels[ROLL_CHANNEL] = MANN_ROLL;
-		RC_MSG.channels[PITCH_CHANNEL] = MANN_PITCH;
-		RC_MSG.channels[THROTTLE_CHANNEL] = MANN_THROT;
+		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[THROTTLE_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[MODE_CHANNEL] = STABILIZE_MODE;
-		RC_MSG.channels[YAW_CHANNEL] = MANN_YAW;
+		RC_MSG.channels[YAW_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[RETRACT_CHANNEL]=HIGH_PWM;
 	}
 	
