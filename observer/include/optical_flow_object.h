@@ -30,7 +30,7 @@ private:
 public:
 	optical_flow(std::string camID);
 	void image_cb(const sensor_msgs::ImageConstPtr& msg);
-	void find_grid_corners();
+	void find_features();
 	void calc_displacements();
 	void remove_outliers();
 	void orientation_cb(const geometry_msgs::Quaternion msg);

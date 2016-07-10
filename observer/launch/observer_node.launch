@@ -21,5 +21,6 @@
 	<node name="color_tracker" pkg="observer" type="color_tracker"/>
 	<node name="plate_angler" pkg="observer" type="plate_angler"/>
 	<node name="plate_localizer" pkg="observer" type="plate_localizer"/>
+	<node name="optical_flow" pkg="observer" type="optical_flow"/>
 	
 </launch>

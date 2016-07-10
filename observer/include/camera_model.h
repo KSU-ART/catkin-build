@@ -42,7 +42,7 @@ namespace projection_
 		
 		geometry_msgs::Pose getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 		
-		geometry_msgs::Pose getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
+		Vector3 getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 	};
 
 	///I realized that atlante has this...

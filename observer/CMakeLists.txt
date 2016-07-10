@@ -142,9 +142,7 @@ add_executable(color_tracker src/color_tracker.cpp src/LAB_Object.cpp )
 add_executable(plate_angler	src/plate_angler.cpp)
 add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
 add_executable(optical_flow src/optical_flow_object.cpp)
-
-
-							
+						
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
 
 add_executable(color_filter src/image_process.cpp)
