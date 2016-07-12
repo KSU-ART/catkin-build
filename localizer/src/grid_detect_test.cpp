@@ -15,27 +15,31 @@ namespace enc = sensor_msgs::image_encodings;
 
 /// Global variables
 Mat src;
-int thresh = 140;
-int max_thresh = 255;
-int radius = 30;
-int max_radius = 100;
-int lowThreshold = 255;
-int const max_lowThreshold = 255;
-int ratio = 3;
-int kernel_size = 3;
-
-int k = 4;
-
-vector<Point> corners;
-vector<Point> actual_corners;
-vector<Vec3f> circles;
+int thresh = 2;
+int max_thresh = 10;
 
 string source_window = "Source image";
 string corners_window = "Corners detected";
-string canny_window = "Canny detected";
 
 /// Function header
 void cornerHarris_demo( int, void* );
+
+void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
+{
+    if(line[1]!=0)
+    {
+        float m = -1/tan(line[1]);
+
+        float c = line[0]/sin(line[1]);
+
+        cv::line(img, Point(0, c), Point(img.size().width, m*img.size().width+c), rgb);
+    }
+    else
+    {
+        cv::line(img, Point(line[0], 0), Point(line[0], img.size().height), rgb);
+    }
+
+}
 
 void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 {
@@ -74,11 +78,7 @@ int main( int argc, char** argv )
 	/// Create a window and a trackbar
 	namedWindow( source_window );
 	namedWindow( corners_window );
-	namedWindow( canny_window );
 	createTrackbar( "Threshold: ", source_window, &thresh, max_thresh, cornerHarris_demo );
-	createTrackbar( "Radius: ", source_window, &radius, max_radius, cornerHarris_demo );
-	createTrackbar( "Min Threshold:", source_window, &lowThreshold, max_lowThreshold, cornerHarris_demo );
-	createTrackbar( "K:", source_window, &k, 10, cornerHarris_demo );
 
 	ros::MultiThreadedSpinner spinner(6);
 	spinner.spin();
@@ -89,83 +89,80 @@ int main( int argc, char** argv )
 /** @function cornerHarris_demo */
 void cornerHarris_demo( int, void* )
 {
-	
-	Mat dst, dst_norm, dst_norm_scaled;
+	/// cornerHarris_demo
+	Mat dst, dst2, dst3;
 	dst = Mat::zeros( src.size(), CV_32FC1 );
 
 	/// Detector parameters
-	int blockSize = 5;
+	int blockSize = thresh*2+3;
 	int apertureSize = 5;
 
 	/// Detecting corners
-	Canny( src, dst, lowThreshold, lowThreshold*ratio, kernel_size );
-	imshow( canny_window, dst );
-	cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
+	GaussianBlur(src, dst, Size(11,11), 0);
+	adaptiveThreshold(dst, dst, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, blockSize, 2);
+	bitwise_not(dst, dst);
+	Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
+    dilate(dst, dst2, kernel);
+    
+    int count=0;
+    int max=-1;
+
+    Point maxPt;
+
+    for(int y=0;y<dst2.size().height;y++)
+    {
+        uchar *row = dst2.ptr(y);
+        for(int x=0;x<dst2.size().width;x++)
+        {
+            if(row[x]>=128)
+            {
+
+                 int area = floodFill(dst2, Point(x,y), CV_RGB(16,16,64));
+
+                 if(area>max)
+                 {
+                     maxPt = Point(x,y);
+                     max = area;
+                 }
+            }
+        }
+    }
+    
+    floodFill(dst2, maxPt, CV_RGB(255,255,255));
+    
+    /*
+    for(int y=0;y<dst2.size().height;y++)
+    {
+        uchar *row = dst2.ptr(y);
+        for(int x=0;x<dst2.size().width;x++)
+        {
+            if(row[x]==64 && x!=maxPt.x && y!=maxPt.y)
+            {
+                int area = floodFill(dst2, Point(x,y), CV_RGB(0,0,0));
+            }
+        }
+	}
+    
+    vector<Vec2f> lines;
+    HoughLines(dst2, lines, 1, CV_PI/180, 200);
+    
+    for(int i=0;i<lines.size();i++)
+    {
+        drawLine(lines[i], dst2, CV_RGB(0,0,128));
+    }
+    //*/
+	//cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
 
 	/// Normalizing
-	normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
-	convertScaleAbs( dst_norm, dst_norm_scaled );
+	//normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
+	//convertScaleAbs( dst_norm, dst_norm_scaled );
 	
-	/// Drawing a circle around corners
-	corners.clear();
-	actual_corners.clear();
-	int count_detected(0);
+	///inrage thresholding
+	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
 	
-	//inrage thresholding
-	inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
-	
-	/*
-	for( int j = 0; j < dst_norm.rows ; j++ )
-	{ 
-		for( int i = 0; i < dst_norm.cols; i++ )
-		{
-			if( (int) dst_norm.at<float>(j,i) > thresh )
-			{
-				count_detected++;
-				if (count_detected <= 500)
-				{
-					//circle( dst_norm_scaled, Point( i, j ), 5,  Scalar(0), 2, 8, 0 );
-					Point c(i,j);
-					corners.push_back(c);
-				}
-				else
-				{
-					break;
-				}
-				
-			}
-		}
-	}
-	for (int i = corners.size(); i >= 0; i--)
-	{
-		int count_corners(0);
-		for (int j = corners.size(); j >= 0; j--)
-		{
-			if (j != i)
-			{
-				if (corners[j].x >= corners[i].x-radius && corners[j].x <= corners[i].x+radius)
-				{
-					if (corners[j].y >= corners[i].y-radius && corners[j].y <= corners[i].y+radius)
-					{
-						count_corners++;
-					}
-				}
-			}
-		}
-		if (count_corners == 3)
-		{
-			actual_corners.push_back(corners[i]);
-		}
-	}
-	
-	for (int i = 0; i < corners.size(); i++)
-	{
-		circle( dst_norm_scaled, corners[i], radius,  Scalar(0), 2, 8, 0 );
-	}
-	*/
 	/// Showing the result
 
-	imshow( corners_window, dst_norm_scaled );
+	imshow( corners_window, dst2 );
 	waitKey(10);
 }
 
