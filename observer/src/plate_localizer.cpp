@@ -5,8 +5,11 @@
 using namespace std;
 using namespace cv;
 using namespace projection_;
+
+///constructor (init vars, startup maintainence)
 plate_localizer::plate_localizer()
 {
+	//load cameramodels
 	c1.loadModel('1');
 	c2.loadModel('2');
 	c3.loadModel('3');
@@ -15,6 +18,7 @@ plate_localizer::plate_localizer()
 	c6.loadModel('6');
 	c0.loadModel('0');
 	
+	//initiate subscribers
 	curr_pose = s_.subscribe("curent_pose", 3, &plate_localizer::update_pose, this);
 	r1 = s_.subscribe("/observer/r_cam_points_1", 3, &plate_localizer::cam_1r_callback, this);
 	r2 = s_.subscribe("/observer/r_cam_points_2", 3, &plate_localizer::cam_2r_callback, this);
@@ -31,23 +35,50 @@ plate_localizer::plate_localizer()
 	g6 = s_.subscribe("/observer/g_cam_points_6", 3, &plate_localizer::cam_6g_callback, this);
 	g0 = s_.subscribe("/observer/g_cam_points_0", 3, &plate_localizer::cam_0g_callback, this);
 	
+	//initiate publishers
 	rpp = s_.advertise<geometry_msgs::PoseArray>("/observer/red_plate_poses", 1);
 	gpp = s_.advertise<geometry_msgs::PoseArray>("/observer/green_plate_poses", 1);
 }
+
+///destructor (unused, could be optimixed in future)
 plate_localizer::~plate_localizer()
 {
 	
 }
+
+void plate_localizer::checkTimes(char &color)
+{
+	for (int i = 0; i < gTimeStamps.size(); i++)
+		if ( (ros::Time::now().toSec() - gTimeStamps[i]) > 3) //3 secs old
+		{
+			//erase old element:
+			if (color == 'g')
+			{
+				green_groundbots_world_loc.poses.erase(green_groundbots_world_loc.poses.begin() + i);
+				gTimeStamps.erase(gTimeStamps.begin() + i);
+			}
+			else
+			{
+				red_groundbots_world_loc.poses.erase(red_groundbots_world_loc.poses.begin() + i);
+				rTimeStamps.erase(rTimeStamps.begin() + i);
+			}
+		}
+}
+
+///merge locations, discard out of bounds locations
 void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> po_v, char color)
 {
 	bool in_there = false;
-	switch (color)
+
+	if (color == 'g')
 	{
-		case 'g':
+		//step through pose vector
 		for (int i = 0; i < po_v.size(); i++)
 		{
-			if (po_v[i].position.x < 10 && po_v[i].position.y < 10) //out of bounds?
+			//less than 20m away from us
+			if (po_v[i].position.x < 20 && po_v[i].position.y < 20) 
 			{
+				//check if already in the pose vector
 				for (int j = 0; j < green_groundbots_world_loc.poses.size(); j++)
 				{
 					if (	abs((green_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0 && 
@@ -61,22 +92,27 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				}
 				if (in_there)
 				{
-				in_there = false;
-				continue;
+					in_there = false;
+					continue;
 				}
 				else
 				{
 					green_groundbots_world_loc.poses.push_back(po_v[i]);
+					gTimeStamps.push_back(ros::Time::now().toSec());
 				}		
 			}
-		}
+		}//end already in pose vec
+		checkTimes(color);
 		gpp.publish(green_groundbots_world_loc);
 		
-		case 'r':
+	}//end ifGreen
+	else//if not green (if red)
+	{
 		for (int i = 0; i < po_v.size(); i++)
 		{
-			if (po_v[i].position.x < 10 && po_v[i].position.y < 10) //out of bounds?
+			if (po_v[i].position.x < 20 && po_v[i].position.y < 20) // < 20 m away
 			{
+				//already in pose vec?
 				for (int j = 0; j < red_groundbots_world_loc.poses.size(); j++)
 				{
 					if (	abs((red_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0 && 
@@ -96,9 +132,11 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				else
 				{
 					red_groundbots_world_loc.poses.push_back(po_v[i]);
+					rTimeStamps.push_back(ros::Time::now().toSec());
 				}
 			}
-		}
+		}//end make sure not in pose vec
+		checkTimes(color);
 		rpp.publish(red_groundbots_world_loc);
 	}
 }
@@ -219,7 +257,7 @@ void plate_localizer::cam_0g_callback(const std_msgs::Int32MultiArray& msg)
 
 int main(int argc, char** argv)
 {	
-	waitKey(1000);
+	waitKey(5000);
    ros::init(argc, argv, "/observer/plate_localizer");
    plate_localizer l1;
    ros::spin(); //use 1 thread

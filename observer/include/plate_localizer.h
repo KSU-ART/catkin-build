@@ -13,12 +13,14 @@ private:
 					g1, g2, g3, g4, g5, g6, g0;
 	ros::Publisher rpp, gpp; //red plate publisher, green plate publisher
 	geometry_msgs::PoseArray green_groundbots_world_loc, red_groundbots_world_loc;
+	std::vector<double> rTimeStamps, gTimeStamps;
 	geometry_msgs::PoseStamped uavPose_;
 	projection_::cameraModel c1, c2, c3, c4, c5, c6, c0;
 
 public:
 	plate_localizer();
 	~plate_localizer();
+	void checkTimes(char &color);
 	void merge_positions_location(std::vector<geometry_msgs::Pose> po_v, char color);
 	void point_callback(const std_msgs::Int32MultiArray& msg, char camID, char color);
 	void update_pose(const geometry_msgs::PoseStamped& cur_loc);
