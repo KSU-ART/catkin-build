@@ -29,7 +29,7 @@ using namespace cv;
 	{
 		std_msgs::Float32 pubVar;
 		pubVar.data = getPlateAngle(msg);
-		if (pubVar.data > 0.01 || pubVar.data < -0.01)
+		if (pubVar.data > 0.001 || pubVar.data < -0.001)
 			g_ang.publish(pubVar);
 	}
 	
@@ -37,7 +37,7 @@ using namespace cv;
 	{
 		std_msgs::Float32 pubVar;
 		pubVar.data = getPlateAngle(msg);
-		if (pubVar.data > 0.01 || pubVar.data < -0.01)
+		if (pubVar.data > 0.001 || pubVar.data < -0.001)
 			r_ang.publish(pubVar);
 	}
 	
@@ -59,7 +59,7 @@ using namespace cv;
 	{
 		double dy = (pt1.y-pt2.y);//pt1.y-pt2.y fixes y component being inverted
 		double dx = (pt2.x-pt1.x + 1e-10);
-		return (atan2(dy,dx)*180/3.14159265);
+		return (atan2(dy,dx)/*180/3.14159265*/);//returns angle in radians
 	}
 
 	//this function returns the length between two cv::Point's in pixels.
