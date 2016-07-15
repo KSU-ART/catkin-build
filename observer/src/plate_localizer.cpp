@@ -82,7 +82,7 @@ void plate_localizer::checkTimes(char &color)
 }
 
 ///merge locations, discard out of bounds locations
-void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> po_v, char color, bool downcam = false)
+void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> po_v, char color, bool downcam)
 {
 	bool in_there = false;
 	bool angleAdded = false;
