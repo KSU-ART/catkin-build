@@ -9,30 +9,38 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <highgui.h>
 #define max_displacement 20
-
+#define PYRAMID_LEVELS		4
+#define WINDOW_SIZE			7
 class optical_flow
 {
 private:
 	bool verbose;
+	
 	ros::NodeHandle n_h_;
 	ros::Subscriber cam, orientation;
 	ros::Publisher pose_pub;
+	
+	projection_::cameraModel c1;
+	
 	Quaternion cur_orientation;
-	Quaternion prev_orientation;
+	
 	double cur_time;
 	double prev_time;
-	std::vector<cv::Point> old_features_world;
-	std::vector<cv::Point> new_features_world;
-	std::vector<double> displacements;
-	double cur_velocity[2];
-	double net_displacement[2];
+	
+	cvg_int maxNumFeatures;
+	
+	cvg_bool firstRun;
+	
+	Vector3 globalDisplacement;
 	
 public:
 	optical_flow(std::string camID);
+	~optical_flow();
 	void image_cb(const sensor_msgs::ImageConstPtr& msg);
-	void find_features();
+	cvg_bool process(cv::Mat *image, cvg_int *prevFrameNumFeatures, cv::Point2f **prevFrameFeatures, char **foundFeaturesInCurrentFrame, cv::Point2f **currentFrameFeatures);	
 	void calc_displacements();
 	void remove_outliers();
+	void merge_and_publish();
 	void orientation_cb(const geometry_msgs::Quaternion msg);
 	
 }; //end gridflow
