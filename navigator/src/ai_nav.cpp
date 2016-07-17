@@ -7,9 +7,8 @@ ai_navigator::ai_navigator()
 	//initialize vars:
 	cur_state = Land;
 	
-	
 	//info subs:
-	curent_pose_sub = n_.subscribe("curent_pose", 1, &ai_navigator::current_pose_cb, this);
+	curent_pose_sub = n_.subscribe("/curent_pose", 1, &ai_navigator::current_pose_cb, this);
 	red_plate_poses_sub = n_.subscribe("/observer/red_plate_poses", 1, &ai_navigator::red_plate_poses_cb, this);
 	green_plate_poses_sub = n_.subscribe("/observer/green_plate_poses", 1, &ai_navigator::green_plate_poses_cb, this);
 	obstacles_sub = n_.subscribe("/observer/obstacles", 1, &ai_navigator::obstacles_cb, this);
@@ -17,7 +16,7 @@ ai_navigator::ai_navigator()
 	//control pubs:
 	setpoint_pub = n_.advertise<geometry_msgs::Point>("/ai_nav/setpoint", 1);
 	retractMsg_pub = n_.advertise<std_msgs::Bool>("/ai_nav/retractMsg", 1);//true = retracts down, false = up;
-	pid_XY_pub = n_.advertise<std_msgs::Int32MultiArray>("/ai_navpid_XY", 1); //{p, i, d, min, max}
+	pid_XY_pub = n_.advertise<std_msgs::Int32MultiArray>("/ai_nav/pid_XY", 1); //{p, i, d, min, max}
 	pid_z_pub = n_.advertise<std_msgs::Int32MultiArray>("/ai_nav/pid_z",1 );//{p, i, d, min, max}
 	modeMsg_pub = n_.advertise<std_msgs::Int8>("/ai_nav/modeMsg", 1);//0 = altitude hold, 1 = stabilize, 2 = land;
 

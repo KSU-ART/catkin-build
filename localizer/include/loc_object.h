@@ -56,7 +56,8 @@ private:
 	bool pos_reset;
 	bool vel_reset;
 	
-	
+	double* vel_calib;
+	bool first_calib;
 	
 public:
 	///Final function merging most recent data and publishing
@@ -64,6 +65,7 @@ public:
 
 	/// Setup the ros handling
 	sensor_processor();
+	~sensor_processor();
 	
 	/// main loop
 	void system_loop();

@@ -2,6 +2,11 @@
  * This is the class using the pid controller to 
  * generate output to the pixhawk.
  * 
+ * CLASS INVARIANCE:
+ * 		X+ => Forward
+ * 		Y+ => Left
+ * 		Z+ => Up
+ * 
  * MSG GUIDE:
  * Subscribed Topic:	Data Type					Usage
  * "curent_pose"		geometry_msgs::PoseStamped	current location
@@ -10,8 +15,12 @@
  * "/ai_nav/setpoint"	geometry_msgs::Point		setpoint (desired location)
  * "/ai_nav/modeMsg"	std_msgs::Int8				0 = altitude hold, 1 = stabilize, 2 = land;
  * "/ai_nav/retractMsg"	std_msgs::Bool				true = retracts down, false = up;
- * "/ai_nav/pid_XY"		std_msgs::Int32MultiArray	{p, i, d, min, max}
- * "/ai_nav/pid_z"		std_msgs::Int32MultiArray	{p, i, d, min, max}
+ * "/ai_nav/pid_XY"		std_msgs::Int32MultiArray	{p, i, d, min, max} Creates new pid variables
+ * "/ai_nav/pid_z"		std_msgs::Int32MultiArray	{p, i, d, min, max} Creates new pid variables
+ * 
+ * MSG CONSTANCES:
+ * MSG.CHAN_RELEASE = 0
+ * MSG.CHAN_NOCHANGE = 65535
  * 
  * PRIORITY OF CONTROL:
  * physical mannual-override switch overrides software switch
@@ -103,15 +112,19 @@ public:
 		//speed of dx9 controller:
 		ros::Rate fcuCommRate(45);
 		
+		xPosCtrl->targetSetpoint(target_x);
+		yPosCtrl->targetSetpoint(target_y);
+		zPosCtrl->targetSetpoint(target_z);
+		
 		while (ros::ok())
 		{
 			//This will only work if our coordinate system is consistant.
-			xPosCtrl->targetSetpoint(target_x);
-			roll = MID_PWM + xPosCtrl->calc(current_x);
-			yPosCtrl->targetSetpoint(target_y);
-			pitch = MID_PWM + yPosCtrl->calc(current_y);
-			zPosCtrl->targetSetpoint(target_z);
-			throttle = MID_PWM + zPosCtrl->calc(current_z);
+			//xPosCtrl->targetSetpoint(target_x);
+			pitch = MID_PWM - xPosCtrl->calc(current_x); // Pitch value for Forward is negative
+			//yPosCtrl->targetSetpoint(target_y);
+			roll = MID_PWM - yPosCtrl->calc(current_y); // Roll value for Left is negative
+			//zPosCtrl->targetSetpoint(target_z);
+			throttle = MID_PWM + zPosCtrl->calc(current_z); 
 						
 			if(MANNUAL_OVERRIDE)
 			{

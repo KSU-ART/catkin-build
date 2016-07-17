@@ -1,5 +1,6 @@
 #include "loc_object.h"
 #include <iostream>
+#include <algorithm>
 
 /// Setup the ros handling
 sensor_processor::sensor_processor()
@@ -12,6 +13,9 @@ sensor_processor::sensor_processor()
 	orientation_fused.v.z = 0;
 	orientation_fused.w = 0;
 	pos_reset = true;
+	vel_calib = new double[3];
+	std::fill_n(vel_calib, 3, 0);
+	first_calib = true;
 	
 	// resets
 	vel_reset = true;
@@ -24,6 +28,11 @@ sensor_processor::sensor_processor()
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
 	sub_pixhawk_imu = n.subscribe("/mavros/imu/data", 1, &sensor_processor::pixhawk_imu_callback, this);
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
+}
+
+sensor_processor::~sensor_processor()
+{
+	delete vel_calib;
 }
 
 /// main loop
@@ -60,7 +69,20 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 {
 	double low_val_plus = 0.1;
 	double low_val_minus = -0.1;
-	double vel_x = -(msg->vector.x);//guidance x is opposite hank x
+	
+	double vel_x = -vel_calib[0] - (msg->vector.x);//guidance x is opposite hank x
+	double vel_y = -vel_calib[1] + msg->vector.y;
+	double vel_z = -vel_calib[2] - (msg->vector.z);//guidance z is opposite hank z
+	
+	//First iteration Calibration (zero out the values at the beginning)
+	if (first_calib)
+	{
+		first_calib = false;
+		vel_calib[0] = vel_x;
+		vel_calib[1] = vel_y;
+		vel_calib[2] = vel_z;
+	}
+	
 	if (vel_x > low_val_plus)
 	{
 		vel_x = low_val_plus;
@@ -69,7 +91,6 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	{
 		vel_x = low_val_minus;
 	}
-	double vel_y = msg->vector.y;
 	if (vel_y > low_val_plus)
 	{
 		vel_y = low_val_plus;
@@ -78,7 +99,6 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	{
 		vel_y = low_val_minus;
 	}
-	double vel_z = -(msg->vector.z);
 	if (vel_z > low_val_plus)
 	{
 		vel_z = low_val_plus;
