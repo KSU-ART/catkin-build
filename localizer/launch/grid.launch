@@ -1,5 +1,5 @@
 <launch>
-  <!--<node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
            
         <param name="camera_name" value="narrow_stereo" />
 		<param name="video_device" value="/dev/video1" />
@@ -18,7 +18,7 @@
 		<param name="autoexposure" value="false" />
 	</node>
 	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam"/>
-	-->
+	
 	<node name="grid" pkg="localizer" type="grid_detect_test" output="screen" />
   <!--
   <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">

@@ -41,6 +41,40 @@ void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
 
 }
 
+/// Pre: lines of theta and rho
+/// Post: returns a list of intersects on x,y points
+void findIntersectLines(vector<Vec2f> *lines, Mat &img, int angle, vector<Vec2f> *intersects)
+{
+	intersects->clear();
+	vector<Vec2f>::iterator current;
+    for(current=lines->begin();current!=lines->end();current++)
+    {
+		float p1 = (*current)[0];
+		float theta1 = (*current)[1];
+		vector<Vec2f>::iterator test_iter;
+		for(test_iter=current;test_iter!=lines->end();test_iter++)
+		{
+			float p2 = (*test_iter)[0];
+			float theta2 = (*test_iter)[1];
+			float denom = sin(theta1-theta2);
+			// skip parallel lines
+			if (denom == 0 || abs(theta1-theta2) < (90-angle)*CV_PI/180 || abs(theta1-theta2) > (90+angle)*CV_PI/180)
+			{
+				continue;
+			}
+			float x = (p2*sin(theta1)-p1*sin(theta2))/denom;
+			float y = (p1*cos(theta2)-p2*sin(theta1))/denom;
+			Vec2f cross(x,y);
+			intersects->push_back(cross);
+		}
+		
+	}
+	
+	
+}
+
+/// pre: lines of theta ond rho
+/// post: merges the parallel lines together
 void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
 {
 	vector<Vec2f>::iterator current;
@@ -97,8 +131,8 @@ void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
                     pt2.y=img.size().height;
                     pt2.x=-pt2.y/tan(theta) + p/cos(theta);
                 }
-                if( ((double)(pt1.x-pt1current.x)*(pt1.x-pt1current.x) + (pt1.y-pt1current.y)*(pt1.y-pt1current.y)<thresh*thresh) &&
-					((double)(pt2.x-pt2current.x)*(pt2.x-pt2current.x) + (pt2.y-pt2current.y)*(pt2.y-pt2current.y)<thresh*thresh) )
+                if( ((double)(pt1.x-pt1current.x)*(pt1.x-pt1current.x) + (pt1.y-pt1current.y)*(pt1.y-pt1current.y)<64*64) &&
+					((double)(pt2.x-pt2current.x)*(pt2.x-pt2current.x) + (pt2.y-pt2current.y)*(pt2.y-pt2current.y)<64*64) )
                 {
                     // Merge the two
                     (*current)[0] = ((*current)[0]+(*pos)[0])/2;
@@ -168,6 +202,8 @@ void cornerHarris_demo( int, void* )
 	/// cornerHarris_demo
 	Mat dst, dst2, dst3;
 	dst = Mat::zeros( src.size(), CV_32FC1 );
+	// +- angle from 90 deg to count as a corner
+	int intersectAngle = 15;
 
 	/// Detector parameters
 	int blockSize = 21;
@@ -223,13 +259,21 @@ void cornerHarris_demo( int, void* )
     HoughLines(dst2, lines, 1, CV_PI/180, 200);
 	mergeRelatedLines(&lines, dst2);
 	
+	// count intersections
+	vector<Vec2f> intersections;
+	findIntersectLines(&lines, dst2, intersectAngle, &intersections);
+	
+	
     for(int i=0;i<lines.size();i++)
     {
         drawLine(lines[i], dst2, CV_RGB(0,0,128));
-    }
+    }//*/
     
+    for (int i = 0; i < intersections.size(); i++)
+	{
+		circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(128, 128, 128));
+	}
     
-    //*/
 	//cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
 
 	/// Normalizing
