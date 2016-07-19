@@ -65,6 +65,9 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 				count_++;
 				velocity[0] += (*current)[0] - (*previous)[0];
 				velocity[1] += (*current)[1] - (*previous)[1];
+				
+				//cv::line(src, Point((*current)[0], (*current)[1]), Point((*previous)[0], (*previous)[1]), CV_RGB(200,255,200));
+				cout << "got something: "<< count_ << endl;
 				break;
 			}
 		}
@@ -72,11 +75,10 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 	
 	if (count_ > 0)
 	{
-		velocity[0] /= count_;
-		velocity[1] /= count_;
-		
-		velocity[0] *= deltaTime.toSec();
-		velocity[1] *= deltaTime.toSec();
+		//~ velocity[0] *= deltaTime.toSec();
+		//~ velocity[1] *= deltaTime.toSec();
+		//~ velocity[0] /= count_;
+		//~ velocity[1] /= count_;
 	}
 	else
 	{
@@ -290,7 +292,7 @@ int main( int argc, char** argv )
 
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("/usb_cam_1/image_color", 1, chatterCallback);
+	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, chatterCallback);
 	
 	velocity[0] = 0;
 	velocity[1] = 0;
@@ -410,9 +412,16 @@ void cornerHarris_demo( int, void* )
 	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
 	
 	/// Post Operations
-	vector<Vec2f> tmp_vect = new vector<Vec2f>;
-	preIntersects = curIntersects;
-	
+	//delete preIntersects;
+	preIntersects->clear();
+	//delete preIntersects;
+	preIntersects = new vector<Vec2f>();
+	vector<Vec2f> tmp_vect;
+	tmp_vect = *curIntersects;
+	preIntersects = &tmp_vect;
+	curIntersects->clear();
+	delete curIntersects;
+	curIntersects = new vector<Vec2f>();
 	/// Showing the result
 	
 	imshow( source_window, src );
