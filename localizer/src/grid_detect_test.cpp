@@ -50,6 +50,8 @@ void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
 /// Post: return a single velocity vector in the average distance traveled by all intersects
 void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersects, ros::Time deltaTime)
 {
+	velocity[0] = 0;
+	velocity[1] = 0;
 	int count_ = 0;
 	vector<Vec2f>::iterator previous;
 	for(previous=pre_intersects->begin();previous!=pre_intersects->end();previous++)
@@ -57,8 +59,8 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 		vector<Vec2f>::iterator current;
 		for(current=cur_intersects->begin();current!=cur_intersects->end();current++)
 		{
-			if (abs((*current)[0] - (*previous)[0]) < thresh*2 &&
-				abs((*current)[1] - (*previous)[1]) < thresh*2)
+			if (abs((*current)[0] - (*previous)[0]) < 100 &&
+				abs((*current)[1] - (*previous)[1]) < 100)
 			{
 				count_++;
 				velocity[0] += (*current)[0] - (*previous)[0];
@@ -76,7 +78,11 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 		//velocity[0] *= deltaTime.toSec();
 		//velocity[1] *= deltaTime.toSec();
 	}
-	//***** else for case where no new velocity was found ******
+	else
+	{
+		velocity[0] = 0;
+		velocity[1] = 0;
+	}//***** else for case where no new velocity was found ******
 	// default to previous velocity
 }
 
@@ -284,7 +290,7 @@ int main( int argc, char** argv )
 
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, chatterCallback);
+	ros::Subscriber sub = n.subscribe("/usb_cam_1/image_color", 1, chatterCallback);
 	
 	velocity[0] = 0;
 	velocity[1] = 0;
