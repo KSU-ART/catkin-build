@@ -18,7 +18,9 @@ Mat src;
 int thresh = 64;
 int max_thresh = 255;
 ros::Time current_time;
+ros::Time prev_time;
 Vec2f velocity;
+Vec2f pos;
 vector<Vec2f> *preIntersects;
 vector<Vec2f> *curIntersects;
 
@@ -45,10 +47,16 @@ void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
 
 }
 
+void integrateVel()
+{
+	pos[0] += velocity[0];
+	pos[1] += velocity[1];
+}
+
 /// Pre: previous vector of intersects,
 ///		 the delta time taken from previous intersects
-/// Post: return a single velocity vector in the average distance traveled by all intersects
-void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersects, ros::Time deltaTime)
+/// Post: return a single velocity vector in the average distance traveled by all intersects 
+void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersects, double deltaTime)
 {
 	velocity[0] = 0;
 	velocity[1] = 0;
@@ -67,7 +75,7 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 				velocity[1] += (*current)[1] - (*previous)[1];
 				
 				//cv::line(src, Point((*current)[0], (*current)[1]), Point((*previous)[0], (*previous)[1]), CV_RGB(200,255,200));
-				cout << "got something: "<< count_ << endl;
+				//cout << "got something: "<< count_ << endl;
 				break;
 			}
 		}
@@ -75,10 +83,8 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 	
 	if (count_ > 0)
 	{
-		//~ velocity[0] *= deltaTime.toSec();
-		//~ velocity[1] *= deltaTime.toSec();
-		//~ velocity[0] /= count_;
-		//~ velocity[1] /= count_;
+		velocity[0] *= (float)deltaTime/(float)count_;
+		velocity[1] *= (float)deltaTime/(float)count_;
 	}
 	else
 	{
@@ -86,6 +92,7 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 		velocity[1] = 0;
 	}//***** else for case where no new velocity was found ******
 	// default to previous velocity
+	integrateVel();
 }
 
 /// Post: Find if a point x,y exist in a group. If yes, return group i
@@ -259,6 +266,7 @@ void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
 
 void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+	prev_time = current_time;
 	current_time = msg->header.stamp;
 	/// Load source image and convert it to gray
 	cv_bridge::CvImagePtr cv_ptr;
@@ -296,6 +304,8 @@ int main( int argc, char** argv )
 	
 	velocity[0] = 0;
 	velocity[1] = 0;
+	pos[0] = 0;
+	pos[1] = 0;
 	preIntersects = new vector<Vec2f>();
 	curIntersects = new vector<Vec2f>();
 
@@ -381,8 +391,8 @@ void cornerHarris_demo( int, void* )
 	curIntersects->clear();
 	avaragePoint(&intersections, thresh, 0, curIntersects);
 	
-	distanceTraveled(preIntersects, curIntersects, current_time);
-	cout << "Velocity in pixels/sec:\nX:" << velocity[0] << "\nY:" << velocity[1] << endl; 
+	distanceTraveled(preIntersects, curIntersects, current_time.toSec()-prev_time.toSec());
+	cout << "pos in pixels/sec:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
 	
     for(int i=0;i<lines.size();i++)
     {
