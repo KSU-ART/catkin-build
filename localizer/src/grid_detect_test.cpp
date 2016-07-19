@@ -17,6 +17,10 @@ namespace enc = sensor_msgs::image_encodings;
 Mat src;
 int thresh = 64;
 int max_thresh = 255;
+ros::Time current_time;
+Vec2f velocity;
+vector<Vec2f> *preIntersects;
+vector<Vec2f> *curIntersects;
 
 string source_window = "Source image";
 string corners_window = "Corners detected";
@@ -39,6 +43,41 @@ void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
         cv::line(img, Point(line[0], 0), Point(line[0], img.size().height), rgb);
     }
 
+}
+
+/// Pre: previous vector of intersects,
+///		 the delta time taken from previous intersects
+/// Post: return a single velocity vector in the average distance traveled by all intersects
+void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersects, ros::Time deltaTime)
+{
+	int count_ = 0;
+	vector<Vec2f>::iterator previous;
+	for(previous=pre_intersects->begin();previous!=pre_intersects->end();previous++)
+	{
+		vector<Vec2f>::iterator current;
+		for(current=cur_intersects->begin();current!=cur_intersects->end();current++)
+		{
+			if (abs((*current)[0] - (*previous)[0]) < thresh*2 &&
+				abs((*current)[1] - (*previous)[1]) < thresh*2)
+			{
+				count_++;
+				velocity[0] += (*current)[0] - (*previous)[0];
+				velocity[1] += (*current)[1] - (*previous)[1];
+				break;
+			}
+		}
+	}
+	
+	if (count_ > 0)
+	{
+		//velocity[0] /= count_;
+		//velocity[1] /= count_;
+		
+		//velocity[0] *= deltaTime.toSec();
+		//velocity[1] *= deltaTime.toSec();
+	}
+	//***** else for case where no new velocity was found ******
+	// default to previous velocity
 }
 
 /// Post: Find if a point x,y exist in a group. If yes, return group i
@@ -212,6 +251,7 @@ void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
 
 void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+	current_time = msg->header.stamp;
 	/// Load source image and convert it to gray
 	cv_bridge::CvImagePtr cv_ptr;
 	try
@@ -245,7 +285,11 @@ int main( int argc, char** argv )
 	ros::NodeHandle n;
 
 	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, chatterCallback);
-
+	
+	velocity[0] = 0;
+	velocity[1] = 0;
+	preIntersects = new vector<Vec2f>();
+	curIntersects = new vector<Vec2f>();
 
 	/// Create a window and a trackbar
 	namedWindow( source_window );
@@ -266,7 +310,7 @@ void cornerHarris_demo( int, void* )
 	Mat dst, dst2, dst3;
 	dst = Mat::zeros( src.size(), CV_32FC1 );
 	// +- angle from 90 deg to count as a corner
-	int intersectAngle = 15;
+	int intersectAngle = 20;
 
 	/// Detector parameters
 	int blockSize = 21;
@@ -326,9 +370,11 @@ void cornerHarris_demo( int, void* )
 	vector<Vec2f> intersections;
 	findIntersectLines(&lines, intersectAngle, &intersections);
 	
-	vector<Vec2f> average_intersects;
-	avaragePoint(&intersections, thresh, 0, &average_intersects);
+	curIntersects->clear();
+	avaragePoint(&intersections, thresh, 0, curIntersects);
 	
+	distanceTraveled(preIntersects, curIntersects, current_time);
+	cout << "Velocity in pixels/sec:\nX:" << velocity[0] << "\nY:" << velocity[1] << endl; 
 	
     for(int i=0;i<lines.size();i++)
     {
@@ -341,10 +387,10 @@ void cornerHarris_demo( int, void* )
 		circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(alpha, alpha, alpha));
 	}
 	
-    for (int i = 0; i < average_intersects.size(); i++)
+    for (int i = 0; i < curIntersects->size(); i++)
 	{
 		int alpha = 0;
-		circle(src, Point(average_intersects[i][0],average_intersects[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
+		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
 	}
     
 	//cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
@@ -355,6 +401,9 @@ void cornerHarris_demo( int, void* )
 	
 	///inrage thresholding
 	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
+	
+	/// Post Operations
+	preIntersects = curIntersects;
 	
 	/// Showing the result
 	
