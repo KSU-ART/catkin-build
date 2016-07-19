@@ -41,9 +41,75 @@ void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
 
 }
 
+/// Post: Find if a point x,y exist in a group. If yes, return group i
+bool inGroup(vector<vector<Vec2f*> > groups, const float x, const float y, int& i)
+{
+    for (i = 0; i < groups.size(); i++)
+	{
+		for (int j = 0; j < groups[i].size(); j++)
+		{
+			if (abs((*groups[i][j])[0] - x) < 0.0002f &&
+				abs((*groups[i][j])[1] - y) < 0.0002f)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/// Pre: takes in list of intersection points
+/// Post: returns the average points, where the the groups are within a threshold
+///			ignors the points near the edge of the screen
+void avaragePoint(vector<Vec2f> *intersects, int groupThresh, int boundryThresh, vector<Vec2f> *averaged)
+{
+	averaged->clear();
+	vector<vector<Vec2f*> > groups;
+	
+	vector<Vec2f>::iterator current;
+    for(current=intersects->begin();current!=intersects->end();current++)
+    {
+		float x1 = (*current)[0];
+		float y1 = (*current)[1];
+		int i;
+		if (!inGroup(groups,x1,y1,i))
+		{
+			vector<Vec2f*> new_group;
+			new_group.push_back(&(*current));
+			groups.push_back(new_group);
+			i = groups.size()-1;
+		}
+		
+		vector<Vec2f>::iterator test_iter;
+		for(test_iter=current;test_iter!=intersects->end();test_iter++)
+		{
+			float x2 = (*test_iter)[0];
+			float y2 = (*test_iter)[1];
+			if (abs(x2-x1) < groupThresh &&
+				abs(y2-y1) < groupThresh)
+			{
+				groups[i].push_back(&(*test_iter));
+			}
+		}
+	}
+	
+	for (int i = 0; i < groups.size(); i++)
+	{
+		Vec2f avarage_point;
+		for (int j = 0; j < groups[i].size(); j++)
+		{
+			avarage_point[0] += (*groups[i][j])[0];
+			avarage_point[1] += (*groups[i][j])[1];
+		}
+		avarage_point[0] /= groups[i].size();
+		avarage_point[1] /= groups[i].size();
+		averaged->push_back(avarage_point);
+	}	
+}
+
 /// Pre: lines of theta and rho
 /// Post: returns a list of intersects on x,y points
-void findIntersectLines(vector<Vec2f> *lines, Mat &img, int angle, vector<Vec2f> *intersects)
+void findIntersectLines(vector<Vec2f> *lines, int angle, vector<Vec2f> *intersects)
 {
 	intersects->clear();
 	vector<Vec2f>::iterator current;
@@ -63,14 +129,11 @@ void findIntersectLines(vector<Vec2f> *lines, Mat &img, int angle, vector<Vec2f>
 				continue;
 			}
 			float x = (p2*sin(theta1)-p1*sin(theta2))/denom;
-			float y = (p1*cos(theta2)-p2*sin(theta1))/denom;
+			float y = (p1*cos(theta2)-p2*cos(theta1))/denom;
 			Vec2f cross(x,y);
 			intersects->push_back(cross);
 		}
-		
 	}
-	
-	
 }
 
 /// pre: lines of theta ond rho
@@ -166,7 +229,7 @@ void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 	Rect croping(18, 36, src.size().width- 58, src.size().height- 85);
 	src = src(croping);
 	
-	imshow( source_window, src );
+	//imshow( source_window, src );
 	cvtColor( src, src, CV_BGR2GRAY );
 	cornerHarris_demo( 0, 0 );
 
@@ -261,17 +324,27 @@ void cornerHarris_demo( int, void* )
 	
 	// count intersections
 	vector<Vec2f> intersections;
-	findIntersectLines(&lines, dst2, intersectAngle, &intersections);
+	findIntersectLines(&lines, intersectAngle, &intersections);
+	
+	vector<Vec2f> average_intersects;
+	avaragePoint(&intersections, thresh, 0, &average_intersects);
 	
 	
     for(int i=0;i<lines.size();i++)
     {
         drawLine(lines[i], dst2, CV_RGB(0,0,128));
-    }//*/
+    }
     
     for (int i = 0; i < intersections.size(); i++)
 	{
-		circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(128, 128, 128));
+		int alpha = 128;
+		circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(alpha, alpha, alpha));
+	}
+	
+    for (int i = 0; i < average_intersects.size(); i++)
+	{
+		int alpha = 0;
+		circle(src, Point(average_intersects[i][0],average_intersects[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
 	}
     
 	//cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
@@ -284,7 +357,8 @@ void cornerHarris_demo( int, void* )
 	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
 	
 	/// Showing the result
-
+	
+	imshow( source_window, src );
 	imshow( corners_window, dst2 );
 	waitKey(10);
 }
