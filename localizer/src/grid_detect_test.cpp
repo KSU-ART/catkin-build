@@ -57,8 +57,8 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 		vector<Vec2f>::iterator current;
 		for(current=cur_intersects->begin();current!=cur_intersects->end();current++)
 		{
-			if (abs((*current)[0] - (*previous)[0]) < thresh*2 &&
-				abs((*current)[1] - (*previous)[1]) < thresh*2)
+			if (abs((*current)[0] - (*previous)[0]) < 100 &&
+				abs((*current)[1] - (*previous)[1]) < 100)
 			{
 				count_++;
 				velocity[0] += (*current)[0] - (*previous)[0];
@@ -70,8 +70,8 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 	
 	if (count_ > 0)
 	{
-		//velocity[0] /= count_;
-		//velocity[1] /= count_;
+		velocity[0] /= count_;
+		velocity[1] /= count_;
 		
 		//velocity[0] *= deltaTime.toSec();
 		//velocity[1] *= deltaTime.toSec();
@@ -391,6 +391,7 @@ void cornerHarris_demo( int, void* )
 	{
 		int alpha = 0;
 		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
+		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 100, Scalar(alpha, alpha, alpha));
 	}
     
 	//cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
@@ -403,6 +404,7 @@ void cornerHarris_demo( int, void* )
 	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
 	
 	/// Post Operations
+	vector<Vec2f> tmp_vect = new vector<Vec2f>;
 	preIntersects = curIntersects;
 	
 	/// Showing the result
