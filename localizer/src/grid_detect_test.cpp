@@ -412,16 +412,11 @@ void cornerHarris_demo( int, void* )
 	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
 	
 	/// Post Operations
-	//delete preIntersects;
 	preIntersects->clear();
-	//delete preIntersects;
-	preIntersects = new vector<Vec2f>();
-	vector<Vec2f> tmp_vect;
-	tmp_vect = *curIntersects;
-	preIntersects = &tmp_vect;
-	curIntersects->clear();
-	delete curIntersects;
-	curIntersects = new vector<Vec2f>();
+	for (int i = 0; i < curIntersects->size(); i++)
+	{
+		preIntersects->push_back((*curIntersects)[i]);
+	}
 	/// Showing the result
 	
 	imshow( source_window, src );
