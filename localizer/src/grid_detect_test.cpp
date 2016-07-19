@@ -75,8 +75,8 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 		velocity[0] /= count_;
 		velocity[1] /= count_;
 		
-		//velocity[0] *= deltaTime.toSec();
-		//velocity[1] *= deltaTime.toSec();
+		velocity[0] *= deltaTime.toSec();
+		velocity[1] *= deltaTime.toSec();
 	}
 	else
 	{
