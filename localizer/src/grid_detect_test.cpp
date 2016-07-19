@@ -63,7 +63,7 @@ void findIntersectLines(vector<Vec2f> *lines, Mat &img, int angle, vector<Vec2f>
 				continue;
 			}
 			float x = (p2*sin(theta1)-p1*sin(theta2))/denom;
-			float y = (p1*cos(theta2)-p2*sin(theta1))/denom;
+			float y = (p1*cos(theta2)-p2*cos(theta1))/denom;
 			Vec2f cross(x,y);
 			intersects->push_back(cross);
 		}
