@@ -144,8 +144,8 @@ add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
 #~ add_executable(optical_flow src/optical_flow_object.cpp src/camera_model.cpp)
 						
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
-
 add_executable(color_filter src/image_process.cpp)
+add_executable(pole_detect src/pole_detect.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -181,7 +181,9 @@ target_link_libraries(color_filter
   ${catkin_LIBRARIES}
 )
 
-
+ target_link_libraries(pole_detect
+  ${catkin_LIBRARIES}
+ )
 #############
 ## Install ##
 #############
