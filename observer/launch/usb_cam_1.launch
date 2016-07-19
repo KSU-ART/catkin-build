@@ -5,7 +5,7 @@
 		<param name="pixel_format" value="yuyv" />
 		<param name="camera_frame_id" value="cam_1_frame" />
 		<param name="io_method" value="mmap"/> 
-		<param name="camera_info_url" value="file:///home/dev/catkin_ws/src/catkin-build/observer/cam_data/cam1.yml"/>
+		<param name="camera_info_url" value="file://$(find observer)/cam_data/cam1.yml"/>
 		
 		<param name="framerate" value="30"/>
 		<param name="contrast" value="32"/>
