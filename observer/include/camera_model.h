@@ -1,4 +1,6 @@
+#pragma once
 ///Header file for camera_model
+
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -9,6 +11,9 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <string.h>
+#include <stdio.h>
+
+
 
 namespace projection_
 {
@@ -42,7 +47,7 @@ namespace projection_
 		
 		geometry_msgs::Pose getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
 		
-		Vector3 getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel);
+		Vector3 getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point2f pixel);
 	};
 
 	///I realized that atlante has this...

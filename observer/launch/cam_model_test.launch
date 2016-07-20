@@ -1,0 +1,4 @@
+
+<launch>
+<node name="cam_test" pkg="observer" type="cam_model_test" cwd="node" output="screen"/>
+</launch>

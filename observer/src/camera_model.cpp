@@ -21,7 +21,10 @@ cameraModel::cameraModel(char camID, double pH, double pW, int h, int w, double 
 {
 	saveModel(camID, pH, pW, h, w, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz);
 }
-cameraModel::cameraModel() { }
+cameraModel::cameraModel() 
+{
+	
+}
 
 void cameraModel::makeNewCam()
 {
@@ -67,7 +70,8 @@ void cameraModel::saveModel(char camID, double pH, double pW, int h, int w, doub
 	double fy, double x0, double y0, double t1, double t2, double t3,
 	double qw, double qx, double qy, double qz){
 	using namespace std;
-	string s1 = "../cam_data/camera_model_"; s1+=camID; s1+=".dat";
+	string s1 = "camera_model_"; s1+=camID; s1+=".dat";
+	//std::cout << s1.c_str() << std::endl;
 	ofstream save;
 	save.open(s1.c_str(), ofstream::binary);
 	save.write( (char*)&pH , sizeof(double) );
@@ -93,7 +97,7 @@ void cameraModel::loadModel(char camID){
 	using namespace std;
 	int h, w;
 	double pH, pW, fx, fy, x0, y0, t1, t2, t3, qw, qx, qy, qz;
-	string s1 = "../cam_data/camera_model_"; s1+=camID; s1+=".dat";
+	string s1 = "camera_model_"; s1+=camID; s1+=".dat";
 	ifstream load;
 	load.open(s1.c_str(), ifstream::binary);
 	load.read( (char*)&pH , sizeof(double) );
@@ -119,8 +123,9 @@ void cameraModel::loadModel(char camID){
 	camera_pixel_width_meters = pW;
 	camera_pixel_height_meters = pH;
 	Quaternion cam_from_imu(qw, qx, qy, qz);
-	camera_transform_from_drone = HTMatrix4(cam_from_imu.getRotMatrix(), Vector3(t1, t2, t3));
-	
+	camera_transform_from_drone = HTMatrix4(/*cam_from_imu.getRotMatrix()*/RotMatrix3::identity(), Vector3(t1, t2, t3));
+	image_width = w;
+	image_height = h;
 }
 
 void cameraModel::printModel(){
@@ -188,7 +193,7 @@ geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStampe
 	return p1;						
 }
 
-Vector3 cameraModel::getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel)
+Vector3 cameraModel::getGroundFeatureWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point2f pixel)
 {
 	Quaternion q1(uavPose.pose.orientation.x, uavPose.pose.orientation.y, 
 					uavPose.pose.orientation.z, uavPose.pose.orientation.w);
