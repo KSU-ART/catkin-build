@@ -6,6 +6,7 @@
 #include <vector>
 #include <std_msgs/Float32.h>
 #include <math.h>
+
 class plate_localizer
 {
 private:

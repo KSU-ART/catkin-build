@@ -138,6 +138,7 @@ include_directories(
 # add_dependencies(observer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
+add_executable(cam_model_test src/cam_model_test.cpp src/camera_model.cpp )
 add_executable(color_tracker src/color_tracker.cpp src/LAB_Object.cpp )
 add_executable(plate_angler	src/plate_angler.cpp)
 add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
@@ -152,6 +153,10 @@ add_executable(pole_detect src/pole_detect.cpp)
 # add_dependencies(observer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
+ target_link_libraries(cam_model_test
+   ${catkin_LIBRARIES}
+   ${ATLANTE_LIBRARIES}
+ )
  target_link_libraries(color_tracker
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
