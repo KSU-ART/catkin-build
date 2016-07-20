@@ -245,15 +245,13 @@ void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
 	double avg = 0;
 	std::size_t range_size = sizeof(msg->ranges)/4;
     for(std::size_t i = 0; i < range_size; i++) {
-        if(msg->ranges[i] < 4) { // change from 4 to max, make case for min
+        if(msg->ranges[i] < 4) {
             avg += (double)(msg->ranges[i]/range_size);
         }
         else {
-			/// ************************** Test min/max ranges *****************************
             avg += (double)(4/(sizeof(4)));
         }
     }
-    // delay sensor fusion for altitude
     fused_altitude = avg;
 }
 
