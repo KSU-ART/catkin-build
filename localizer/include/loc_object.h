@@ -9,6 +9,7 @@
 #include "ros/ros.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -27,12 +28,12 @@ private:
 	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
-	ros::Subscriber sub_guidance_velocity, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo, sub_zero_position; //sub_guidance_imu
+	ros::Subscriber sub_guidance_velocity, sub_guidance_sonar, sub_pixhawk_imu, sub_hokuyo, sub_gridflow_position, sub_zero_position; //sub_guidance_imu
 	
 	/// sensor fused data, global values (world oriented)
 	// message for Position and Orientation
 	geometry_msgs::PoseStamped pos_fused_msg;
-	
+	geometry_msgs::Point grid_flow_point;
 	Vector pos_fused;
 	geometry_msgs::Vector3Stamped pre_pos_fused;
 	
@@ -93,6 +94,10 @@ public:
 	
 	///subscribe to reset topic and reset position if true	
 	void zero_position_callback(const std_msgs::Bool msg);
+	
+	
+	///subscribe to grid_flow position
+	void gridflow_cb(const geometry_msgs::Point& msg);
 };
 
 #endif

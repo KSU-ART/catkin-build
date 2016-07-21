@@ -12,6 +12,10 @@ sensor_processor::sensor_processor()
 	orientation_fused.v.y = 0;
 	orientation_fused.v.z = 0;
 	orientation_fused.w = 0;
+	grid_flow_point.x = 0;
+	grid_flow_point.y = 0;
+	grid_flow_point.z = 0;
+	
 	pos_reset = true;
 	vel_calib = new double[3];
 	std::fill_n(vel_calib, 3, 0);
@@ -24,7 +28,7 @@ sensor_processor::sensor_processor()
 	//subs
 	sub_zero_position = n.subscribe("/ground_station/zero_position", 1, &sensor_processor::zero_position_callback, this);
 	sub_guidance_velocity = n.subscribe("/guidance/velocity", 1, &sensor_processor::guidance_vel_callback, this);
-	//sub_guidance_imu = n.subscribe("/guidance/imu", 1, &sensor_processor::guidance_imu_callback, this);
+	sub_gridflow_position = n.subscribe("/observer/grid_pos", 1, &sensor_processor::gridflow_cb, this);
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
 	sub_pixhawk_imu = n.subscribe("/mavros/imu/data", 1, &sensor_processor::pixhawk_imu_callback, this);
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
@@ -52,14 +56,20 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 {
 	pos_fused_msg.header.seq++;
 	pos_fused_msg.header.stamp = current_time;
-	pos_fused_msg.pose.position.x = pos_fused.x;
-	pos_fused_msg.pose.position.y = pos_fused.y;
+	pos_fused_msg.pose.position.x = grid_flow_point.x /*pos_fused.x*/;
+	pos_fused_msg.pose.position.y = grid_flow_point.y /*pos_fused.y*/;
 	pos_fused_msg.pose.position.z = pos_fused.z;
 	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
 	pos_fused_msg.pose.orientation.y = orientation_fused.v.y;
 	pos_fused_msg.pose.orientation.z = orientation_fused.v.z;
 	pos_fused_msg.pose.orientation.w = orientation_fused.w;
 	pose_pub.publish(pos_fused_msg);
+}
+
+void sensor_processor::gridflow_cb(const geometry_msgs::Point& msg)
+{
+	grid_flow_point.x = msg.x;
+	grid_flow_point.y = msg.y;
 }
 
 /// Global referace
