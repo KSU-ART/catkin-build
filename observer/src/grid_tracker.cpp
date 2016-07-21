@@ -1,10 +1,15 @@
 
 #include "grid_tracker.h"
 
-
 namespace enc = sensor_msgs::image_encodings;
 
 grid_tracker gt;
+//cameraModel cm(0);
+projection_::cameraModel c0;
+geometry_msgs::PoseStamped pose;
+Vec2f crop_adjust;
+
+ros::Publisher pos_pub;
 image_transport::Publisher grid_intersects_pub;
 image_transport::Publisher grid_lines_pub;
 	
@@ -21,8 +26,8 @@ grid_tracker::grid_tracker()
 	velocity[0] = 0;
 	velocity[1] = 0;
 	
-	preIntersects = new vector<Vec2f>();
-	curIntersects = new vector<Vec2f>();
+	preIntersects = new vector<Vector3>();
+	curIntersects = new vector<Vector3>();
 }
 
 grid_tracker::~grid_tracker()
@@ -51,23 +56,23 @@ void grid_tracker::drawLine(Vec2f line, Mat &img, Scalar rgb)
 /// Pre: previous vector of intersects,
 ///		 the delta time taken from previous intersects
 /// Post: return a single velocity vector in the average distance traveled by all intersects 
-void grid_tracker::distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersects)
+void grid_tracker::distanceTraveled(vector<Vector3> *pre_intersects, vector<Vector3> *cur_intersects)
 {
 	velocity[0] = 0;
 	velocity[1] = 0;
 	int num_of_points = 0;
-	vector<Vec2f>::iterator previous;
+	vector<Vector3>::iterator previous;
 	for(previous=pre_intersects->begin();previous!=pre_intersects->end();previous++)
 	{
-		vector<Vec2f>::iterator current;
+		vector<Vector3>::iterator current;
 		for(current=cur_intersects->begin();current!=cur_intersects->end();current++)
 		{
-			if (abs((*current)[0] - (*previous)[0]) < 100 &&
-				abs((*current)[1] - (*previous)[1]) < 100)
+			if (abs((*current).x - (*previous).x) < 0.2 &&
+				abs((*current).y - (*previous).y) < 0.2)
 			{
 				num_of_points++;
-				velocity[0] += (*current)[0] - (*previous)[0];
-				velocity[1] += (*current)[1] - (*previous)[1];
+				velocity[0] += (*current).x - (*previous).x;
+				velocity[1] += (*current).y - (*previous).y;
 				break;
 			}
 		}
@@ -85,6 +90,11 @@ void grid_tracker::distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f>
 	}
 	pos[0] += velocity[0];
 	pos[1] += velocity[1];
+	if (debug)
+	{
+		cout << "vel in meters/frame:\nX:" << velocity[0] << "\nY:" << velocity[1] << endl;
+	}
+	
 }
 
 /// Post: Find if a point x,y exist in a group. If yes, return group i
@@ -107,8 +117,9 @@ bool grid_tracker::inGroup(vector<vector<Vec2f*> > groups, const float x, const 
 /// Pre: takes in list of intersection points
 /// Post: returns the average points, where the the groups are within a threshold
 ///			ignors the points near the edge of the screen
-void grid_tracker::avaragePoint(vector<Vec2f> *intersects, int groupThresh, int boundryThresh, vector<Vec2f> *averaged)
+vector<Vec2f> grid_tracker::avaragePoint(vector<Vec2f> *intersects, int groupThresh, int boundryThresh, vector<Vector3> *averaged)
 {
+	vector<Vec2f> points_in_pixel;
 	averaged->clear();
 	vector<vector<Vec2f*> > groups;
 	
@@ -149,8 +160,14 @@ void grid_tracker::avaragePoint(vector<Vec2f> *intersects, int groupThresh, int 
 		}
 		avarage_point[0] /= groups[i].size();
 		avarage_point[1] /= groups[i].size();
-		averaged->push_back(avarage_point);
-	}	
+		points_in_pixel.push_back(avarage_point);
+		
+		Point p(avarage_point[0],avarage_point[1]);
+		Vector3 point_meter = c0.getGroundFeatureWorldLocation(pose, p);
+		
+		averaged->push_back(point_meter);
+	}
+	return points_in_pixel;
 }
 
 /// Pre: lines of theta and rho
@@ -324,27 +341,49 @@ void grid_tracker::grid_algorithm()
 	findIntersectLines(&lines, intersectAngle, &intersections);
 	
 	curIntersects->clear();
-	avaragePoint(&intersections, 80, 0, curIntersects);
+	vector<Vec2f> point_pixels = avaragePoint(&intersections, 80, 0, curIntersects);
 	
 	distanceTraveled(preIntersects, curIntersects);
 	//cout << "pos in pixels:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
 	
-    for(int i=0;i<lines.size();i++)
-    {
-        drawLine(lines[i], dst2, CV_RGB(0,0,128));
-    }
-    
-    for (int i = 0; i < intersections.size(); i++)
-	{
-		int alpha = 128;
-		circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(alpha, alpha, alpha));
-	}
+	geometry_msgs::Point pos_point;
+	pos_point.x = pos[0];
+	pos_point.y = pos[1];
+	pos_pub.publish(pos_point);
 	
-    for (int i = 0; i < curIntersects->size(); i++)
+	/// Showing debug
+	if (debug)
 	{
-		int alpha = 0;
-		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
-		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 100, Scalar(alpha, alpha, alpha));
+		for(int i=0;i<lines.size();i++)
+		{
+			drawLine(lines[i], dst2, CV_RGB(0,0,128));
+		}
+		
+		for (int i = 0; i < intersections.size(); i++)
+		{
+			int alpha = 128;
+			circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(alpha, alpha, alpha));
+		}
+		
+		for (int i = 0; i < point_pixels.size(); i++)
+		{
+			int alpha = 0;
+			circle(src, Point(point_pixels[i][0],point_pixels[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
+			circle(src, Point(point_pixels[i][0],point_pixels[i][1]), 100, Scalar(alpha, alpha, alpha));
+		}
+		
+		for (int i = 0; i < curIntersects->size(); i++)
+		{
+			cout << "curIntersects\nX:" << (*curIntersects)[i].x << "\nY:" << (*curIntersects)[i].y << endl;
+		}
+		
+		
+		sensor_msgs::ImagePtr srcPtr, dstPtr;
+		srcPtr = cv_bridge::CvImage(std_msgs::Header(), "mono8", src).toImageMsg();
+		dstPtr = cv_bridge::CvImage(std_msgs::Header(), "mono8", dst2).toImageMsg();
+		grid_intersects_pub.publish(srcPtr);
+		grid_lines_pub.publish(dstPtr);
+		cout << "pos in pixels:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
 	}
 	
 	/// Post Operations
@@ -352,16 +391,6 @@ void grid_tracker::grid_algorithm()
 	for (int i = 0; i < curIntersects->size(); i++)
 	{
 		preIntersects->push_back((*curIntersects)[i]);
-	}
-	
-	/// Showing the result
-	if (debug)
-	{
-		sensor_msgs::ImagePtr srcPtr, dstPtr;
-		srcPtr = cv_bridge::CvImage(std_msgs::Header(), "mono8", src).toImageMsg();
-		dstPtr = cv_bridge::CvImage(std_msgs::Header(), "mono8", dst2).toImageMsg();
-		grid_intersects_pub.publish(srcPtr);
-		grid_lines_pub.publish(dstPtr);
 	}
 	
 	waitKey(10);
@@ -383,24 +412,43 @@ void downCamCB(const sensor_msgs::ImageConstPtr& msg)
 
 	gt.src = cv_ptr->image;
 	
-	Rect croping(18, 36, gt.src.size().width- 58, gt.src.size().height- 85);
+	Rect croping(crop_adjust[0], crop_adjust[1], gt.src.size().width- 100, gt.src.size().height- 115);
 	gt.src = gt.src(croping);
 	
 	cvtColor( gt.src, gt.src, CV_BGR2GRAY );
 	gt.grid_algorithm();
-
+	
+	
+	
 	waitKey(10);
 }
 
+void update_pose(const geometry_msgs::PoseStamped& cur_loc) 
+{
+	pose = cur_loc;
+}
 
 /** @function main */
 int main( int argc, char** argv )
 {
+	c0.saveModel('t',2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d, 282.671480d, 318.016079d, 229.129939d, 0.2d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d);
+	crop_adjust[0] = 60;
+	crop_adjust[1] = 60;
+	pose.pose.position.x = 0;
+	pose.pose.position.y = 0;
+	pose.pose.position.z = 1;
+	pose.pose.orientation.x = 0;
+	pose.pose.orientation.y = 0;
+	pose.pose.orientation.z = 0;
+	pose.pose.orientation.w = 1;
+	
 	ros::init(argc, argv, "grid_detect_node");
 
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, downCamCB);
+	ros::Subscriber sub = n.subscribe("/usb_cam_0/image_rect_color", 1, downCamCB);
+	ros::Subscriber curr_pose = n.subscribe("/localizer/curent_pose", 1, update_pose);
+	pos_pub = n.advertise<geometry_msgs::Point>("/observer/grid_pos", 1);
 	
 	ros::NodeHandle nh;
 	image_transport::ImageTransport it(nh);
