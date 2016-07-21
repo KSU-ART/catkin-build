@@ -135,7 +135,7 @@ include_directories(
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(observer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(grid_tracker ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 add_executable(cam_model_test src/cam_model_test.cpp src/camera_model.cpp )
@@ -147,6 +147,8 @@ add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
 add_executable(color_filter src/image_process.cpp)
 add_executable(pole_detect src/pole_detect.cpp)
+
+add_executable(grid_tracker src/grid_tracker.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -188,6 +190,13 @@ target_link_libraries(color_filter
 
  target_link_libraries(pole_detect
   ${catkin_LIBRARIES}
+ )
+ 
+ 
+ 
+ target_link_libraries(grid_tracker 
+   ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
  )
 #############
 ## Install ##

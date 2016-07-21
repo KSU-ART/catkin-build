@@ -83,14 +83,15 @@ void distanceTraveled(vector<Vec2f> *pre_intersects, vector<Vec2f> *cur_intersec
 	
 	if (count_ > 0)
 	{
-		velocity[0] *= (float)deltaTime/(float)count_;
-		velocity[1] *= (float)deltaTime/(float)count_;
+		velocity[0] *= /*(float)deltaTime/*/(float)count_;
+		velocity[1] *= /*(float)deltaTime/*/(float)count_;
 	}
 	else
 	{
 		velocity[0] = 0;
 		velocity[1] = 0;
-	}//***** else for case where no new velocity was found ******
+	}
+	//***** else for case where no new velocity was found ******
 	// default to previous velocity
 	integrateVel();
 }
