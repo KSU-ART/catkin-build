@@ -19,7 +19,7 @@ plate_localizer::plate_localizer()
 	c0.loadModel('0');
 	
 	//initiate subscribers
-	curr_pose = s_.subscribe("curent_pose", 3, &plate_localizer::update_pose, this);
+	curr_pose = s_.subscribe("/localizer/curent_pose", 3, &plate_localizer::update_pose, this);
 	r_plate_angle = s_.subscribe("/observer/red_plate_angle", 3, &plate_localizer::update_g_angle, this);
 	g_plate_angle = s_.subscribe("/observer/green_plate_angle", 3, &plate_localizer::update_r_angle, this);
 	r1 = s_.subscribe("/observer/r_cam_points_1", 3, &plate_localizer::cam_1r_callback, this);
