@@ -97,7 +97,7 @@ public:
 		//subs:
 		subRCIn = s.subscribe("/mavros/rc/in", 1, &robot_controller::RCIn_callback, this);
 		setpoint_sub = s.subscribe("/ai_nav/setpoint", 1, &robot_controller::setpoint_callback, this);
-		loc_sub = s.subscribe("curent_pose", 1, &robot_controller::loc_callback, this);
+		loc_sub = s.subscribe("/localizer/curent_pose", 1, &robot_controller::loc_callback, this);
 		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::mannual_override_callback, this);
 		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
 		mode_sub = s.subscribe("/ai_nav/modeMsg", 1, &robot_controller::mode_callback, this);
