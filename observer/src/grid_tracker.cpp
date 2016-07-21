@@ -71,8 +71,8 @@ void grid_tracker::distanceTraveled(vector<Vector3> *pre_intersects, vector<Vect
 				abs((*current).y - (*previous).y) < 0.2)
 			{
 				num_of_points++;
-				velocity[0] += (*current).x - (*previous).x;
-				velocity[1] += (*current).y - (*previous).y;
+				velocity[0] += ((*current).x - (*previous).x)/10;
+				velocity[1] += ((*current).y - (*previous).y)/10;
 				break;
 			}
 		}
@@ -162,7 +162,7 @@ vector<Vec2f> grid_tracker::avaragePoint(vector<Vec2f> *intersects, int groupThr
 		avarage_point[1] /= groups[i].size();
 		points_in_pixel.push_back(avarage_point);
 		
-		Point p(avarage_point[0],avarage_point[1]);
+		Point p(avarage_point[0] + crop_adjust[0],avarage_point[1] + crop_adjust[1]);
 		Vector3 point_meter = c0.getGroundFeatureWorldLocation(pose, p);
 		
 		averaged->push_back(point_meter);
@@ -411,7 +411,13 @@ void downCamCB(const sensor_msgs::ImageConstPtr& msg)
 	}
 
 	gt.src = cv_ptr->image;
+	//starting point (top left is origin):
+	//crop_adjust[0] = 60 x
+	//crop_adjust[1] = 60 y
 	
+	//rectangle size:
+	//width adjust is width-100 x
+	//height adjust is width-115 y
 	Rect croping(crop_adjust[0], crop_adjust[1], gt.src.size().width- 100, gt.src.size().height- 115);
 	gt.src = gt.src(croping);
 	
