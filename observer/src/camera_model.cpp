@@ -122,8 +122,11 @@ void cameraModel::loadModel(char camID){
 	camera_center_y_pixels = y0;
 	camera_pixel_width_meters = pW;
 	camera_pixel_height_meters = pH;
-	Quaternion cam_from_imu(qw, qx, qy, qz);
-	camera_transform_from_drone = HTMatrix4(/*cam_from_imu.getRotMatrix()*/RotMatrix3::identity(), Vector3(t1, t2, t3));
+	Quaternion cam_from_imu(qx, qy, qz, qw);
+	if (abs(cam_from_imu.norm() ) < 0.00001)
+		camera_transform_from_drone = HTMatrix4( RotMatrix3::identity(), Vector3(t1, t2, t3));
+	else
+		camera_transform_from_drone = HTMatrix4( cam_from_imu.getRotMatrix(), Vector3(t1, t2, t3));
 	image_width = w;
 	image_height = h;
 }

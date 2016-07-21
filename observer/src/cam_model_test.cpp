@@ -7,7 +7,8 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "test_cammodel");
 	ros::Time::init();
 	projection_::cameraModel c1;
-	c1.saveModel('t',2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d, 282.671480d, 318.016079d, 229.129939d, 0.2d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d);
+
+	c1.saveModel('t',2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d,0.0d,0.0d,0.0d,1.0d,0.0d,0.0d,0.0d);
 	c1.printModel();
 	double quat[]=  {0,0,0,0};
 	cv::Point2f p1;
