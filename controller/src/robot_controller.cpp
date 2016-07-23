@@ -53,7 +53,7 @@ private:
 	PIDController* yPosCtrl;
 	PIDController* zPosCtrl;
 
-	bool MANNUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH;
+	bool MANNUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH, NAV_CONNECT;
 	bool debug;
 	
 public:
@@ -81,6 +81,8 @@ public:
 		target_z = 0;
 		current_z = 0;
 		landChar = 'f';
+		NAV_CONNECT = false;
+		
 		//default PIDs
 		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
@@ -129,6 +131,11 @@ public:
 			roll = MID_PWM - yPosCtrl->calc(current_y); // Roll value for Left is negative
 			//zPosCtrl->targetSetpoint(target_z);
 			throttle = MID_PWM + zPosCtrl->calc(current_z); 
+			if (!NAV_CONNECT)
+			{
+				throttle = LOW_PWM + zPosCtrl->calc(current_z);
+			}
+			
 			if(EMERGENCY_LAND)
 			{
 				land_msg_channels();
@@ -213,6 +220,8 @@ public:
 	
 	void setpoint_callback(const geometry_msgs::Point& setpoint)
 	{
+		if (!NAV_CONNECT)
+			NAV_CONNECT = true;
 		target_x = setpoint.x;
 		target_y = setpoint.y;
 		if (setpoint.z > MAX_HEIGHT)
