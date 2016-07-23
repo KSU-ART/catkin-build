@@ -3,7 +3,8 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
-int GROUP_THRESH = 80;
+int GROUP_THRESH = 30;
+int MAX_LINES = 1000;
 
 grid_tracker gt;
 //cameraModel cm(0);
@@ -180,6 +181,11 @@ vector<Vec2f> grid_tracker::avaragePoint(vector<Vec2f> *intersects, int groupThr
 void grid_tracker::findIntersectLines(vector<Vec2f> *lines, int angle, vector<Vec2f> *intersects)
 {
 	intersects->clear();
+	if (lines->size() > MAX_LINES)
+	{
+		return;
+	}
+	
 	vector<Vec2f>::iterator current;
     for(current=lines->begin();current!=lines->end();current++)
     {
@@ -374,7 +380,7 @@ void grid_tracker::grid_algorithm()
 		{
 			int alpha = 0;
 			circle(src, Point(point_pixels[i][0],point_pixels[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
-			circle(src, Point(point_pixels[i][0],point_pixels[i][1]), 100, Scalar(alpha, alpha, alpha));
+			circle(src, Point(point_pixels[i][0],point_pixels[i][1]), GROUP_THRESH, Scalar(alpha, alpha, alpha));
 		}
 		
 		//~ for (int i = 0; i < curIntersects->size(); i++)

@@ -19,4 +19,6 @@
    
 	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_0"/>
 	
+	<node name="grid_track" pkg="observer" type="grid_tracker" />
+	
 </launch>
