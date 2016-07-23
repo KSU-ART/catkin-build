@@ -24,8 +24,7 @@ int main(int argc, char **argv)
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
-			msg.channels[GIMBAL_PITCH_CHANNEL]= msg.CHAN_RELEASE; //constrain(GIMBAL_TILT_MAX,GIMBAL_TILT_MIN,GIMBAL_TILT_MAX);
-			msg.channels[GIMBAL_YAW_CHANNEL]= msg.CHAN_RELEASE; //constrain(GIMBAL_ROLL_TRIM,GIMBAL_ROLL_MIN,GIMBAL_ROLL_MAX);
+			msg.channels[MANUAL_CONTROL]= msg.CHAN_RELEASE;
 			rc_pub.publish(msg);  
 			fcuCommRate.sleep();
 		}
