@@ -4,7 +4,7 @@ alias cls='clear; l -a;'
 alias vbrc='vim ~/.bashrc'
 alias vbra='vim ~/.bash_aliases'
 
-alias cm='catkin_make -j8 -C ~/catkin_ws/;'
+#alias cm='catkin_make -j8 -C ~/catkin_ws/;'
 
 alias gits='git status;'
 

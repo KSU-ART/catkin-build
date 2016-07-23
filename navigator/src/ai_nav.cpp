@@ -14,11 +14,11 @@ ai_navigator::ai_navigator()
 	obstacles_sub = n_.subscribe("/observer/obstacles", 1, &ai_navigator::obstacles_cb, this);
 	
 	//control pubs:
-	setpoint_pub = n_.advertise<geometry_msgs::Point>("/ai_nav/setpoint", 1);
-	retractMsg_pub = n_.advertise<std_msgs::Bool>("/ai_nav/retractMsg", 1);//true = retracts down, false = up;
-	pid_XY_pub = n_.advertise<std_msgs::Int32MultiArray>("/ai_nav/pid_XY", 1); //{p, i, d, min, max}
-	pid_z_pub = n_.advertise<std_msgs::Int32MultiArray>("/ai_nav/pid_z",1 );//{p, i, d, min, max}
-	modeMsg_pub = n_.advertise<std_msgs::Int8>("/ai_nav/modeMsg", 1);//0 = altitude hold, 1 = stabilize, 2 = land;
+	setpoint_pub = n_.advertise<geometry_msgs::Point>("/navigator/setpoint", 1);
+	retractMsg_pub = n_.advertise<std_msgs::Bool>("/navigator/retractMsg", 1);//true = retracts down, false = up;
+	pid_XY_pub = n_.advertise<std_msgs::Int32MultiArray>("/navigator/pid_XY", 1); //{p, i, d, min, max}
+	pid_z_pub = n_.advertise<std_msgs::Int32MultiArray>("/navigator/pid_z",1 );//{p, i, d, min, max}
+	modeMsg_pub = n_.advertise<std_msgs::Int8>("/ainavigator_nav/modeMsg", 1);//0 = altitude hold, 1 = stabilize, 2 = land;
 
 	
 }
@@ -64,20 +64,24 @@ ai_navigator::state ai_navigator::determine_state()
 	{
 		at_setpoint = false;
 	}
-	if( (ros::Time::now().toSec() > (start_time + 5.00) ) && !at_setpoint )
+	
+	//If it is the first five seconds the state should be takeoff
+	if( (ros::Time::now().toSec() <= (start_time + 5.00) ) )
 	{
 		if(cur_state != TakeOff)
 			new_state = true;
 		cur_state = TakeOff;
 		return cur_state;
 	}
-	else
+	//After the first five seconds the state should be position hold
+	else if( (ros::Time::now().toSec() > (start_time + 5.00) ) )
 	{
 		if(cur_state != HoldPosition)
 			new_state = true;
 		cur_state = HoldPosition;
 		return cur_state;
 	}
+
 }
 
 
@@ -93,7 +97,7 @@ void ai_navigator::take_off()
 	}
 	setpoint.x = 0;
 	setpoint.y = 0;
-	setpoint.z = 1.5;
+	setpoint.z = 1;
 	setpoint_pub.publish(setpoint);
 }
 
@@ -140,7 +144,10 @@ void ai_navigator::hold_position()
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 	}
-	
+	setpoint.x = 0;
+	setpoint.y = 0;
+	setpoint.z = 1;
+	setpoint_pub.publish(setpoint);
 }
 
 void ai_navigator::land()
