@@ -27,7 +27,7 @@ alias navigator='geany -i ~/catkin_ws/src/catkin-build/navigator/*.txt ~/catkin_
 
 alias iarc_observer='roslaunch observer observer_node.launch'
 alias iarc_localizer='roslaunch localizer localizer_node.launch'
-alias iarc_navigator='roalaunch navigator navigator_node.launch'
+alias iarc_navigator='roslaunch navigator navigator_node.launch'
 alias iarc_controller='roslaunch controller controller_node.launch'
 
 alias iarc_run='iarc_observer; iarc_localizer; iarc_navigator; iarc_controller; '
