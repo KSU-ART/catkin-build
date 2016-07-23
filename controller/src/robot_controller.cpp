@@ -42,9 +42,9 @@ private:
 	ros::Publisher rc_pub;
 	ros::Subscriber setpoint_sub, loc_sub, mode_sub, retract_sub, man_override_sub, land_sub, pid_sub, subRCIn;
 	
-	short throttle, roll, pitch, yaw, mode, retracts, MANN_ROLL, MANN_YAW, MANN_PITCH, MANN_THROT;
+	short throttle, roll, pitch, yaw, mode, retracts;
 	double target_x, current_x, target_y, current_y, target_z, current_z;
-	
+	char landChar;
 	//RC msg container that will be sent to the FC @ fcuCommRate hz
 	mavros_msgs::OverrideRCIn RC_MSG;
 
@@ -74,17 +74,13 @@ public:
 		yaw = MID_PWM;
 		mode = ALT_HOLD_MODE;
 		retracts = HIGH_PWM; 
-		MANN_ROLL =  MID_PWM;
-		MANN_YAW = MID_PWM;
-		MANN_PITCH = MID_PWM;
-		MANN_THROT = LOW_PWM;
 		target_x = 0;
 		current_x = 0;
 		target_y = 0;
 		current_y = 0;
 		target_z = 0;
 		current_z = 0;
-		
+		landChar = 'f';
 		//default PIDs
 		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
@@ -118,6 +114,14 @@ public:
 		
 		while (ros::ok())
 		{
+			landChar = getchNonBlocking();   // call non-blocking input function to get keyboard inputs
+
+			if (landChar == ' ' || EMERGENCY_LAND){
+				if (!EMERGENCY_LAND){
+					EMERGENCY_LAND = true;
+					std::cout << "EMERGENCY LAND ENGAGED" << std::endl;
+				}
+			}
 			//This will only work if our coordinate system is consistant.
 			//xPosCtrl->targetSetpoint(target_x);
 			pitch = MID_PWM - xPosCtrl->calc(current_x); // Pitch value for Forward is negative
@@ -155,6 +159,29 @@ public:
 		}
 	}
 	
+	int getchNonBlocking()
+	{
+		struct termios initial_settings, new_settings;
+		int n;
+
+		unsigned char key;
+
+		tcgetattr(0, &initial_settings);
+
+		new_settings = initial_settings;
+		new_settings.c_lflag &= ~ICANON;
+		new_settings.c_lflag &= ~ECHO;
+		new_settings.c_lflag &= ~ISIG;
+		new_settings.c_cc[VMIN] = 0;
+		new_settings.c_cc[VTIME] = 0;
+
+		tcsetattr(0, TCSANOW, &new_settings);
+		n = getchar();
+		key = n;
+		tcsetattr(0, TCSANOW, &initial_settings);
+
+		return key;
+	}
 	void release_msg_channels()
 	{
 		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
@@ -167,8 +194,8 @@ public:
 	
 	void land_msg_channels()
 	{
-		RC_MSG.channels[ROLL_CHANNEL] = MANN_ROLL;
-		RC_MSG.channels[PITCH_CHANNEL] = MANN_PITCH;
+		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[THROTTLE_CHANNEL] = MID_PWM;
 		RC_MSG.channels[MODE_CHANNEL] = LAND_MODE;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
@@ -206,7 +233,6 @@ public:
 	
 	void mannual_override_callback(const std_msgs::Bool& msg)
 	{
-		if (MAN_SWITCH == false)
 			MANNUAL_OVERRIDE = msg.data;
 	}
 	
@@ -257,24 +283,14 @@ public:
 	
 	void RCIn_callback(const mavros_msgs::RCIn& msg)
 	{
-		
 		if (msg.channels[MANUAL_CONTROL] >= MID_PWM)
 		{
 			std::cout << "mannual_mode\n";
 			MANNUAL_OVERRIDE = true;
 			MAN_SWITCH = true;
-			MANN_ROLL =msg.channels[ROLL_CHANNEL];
-			MANN_YAW=msg.channels[YAW_CHANNEL];
-			MANN_PITCH=msg.channels[PITCH_CHANNEL];
-			MANN_THROT= /*MID_PWM;*/msg.channels[THROTTLE_CHANNEL];
 		}
-		else 
+		else
 		{
-			if (EMERGENCY_LAND)
-			{
-				MANN_ROLL =msg.channels[ROLL_CHANNEL];
-				MANN_PITCH=msg.channels[PITCH_CHANNEL];
-			}
 			MAN_SWITCH = false;
 			MANNUAL_OVERRIDE = false;
 		}
@@ -283,7 +299,7 @@ public:
 
 int main(int argc, char **argv)
 {
-	ros::init(argc, argv, "actor");
+	ros::init(argc, argv, "controller");
 	robot_controller c_1;
 	c_1.start_nav();
 }

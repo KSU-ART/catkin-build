@@ -93,7 +93,7 @@ void ai_navigator::take_off()
 	}
 	setpoint.x = 0;
 	setpoint.y = 0;
-	setpoint.z = 1;
+	setpoint.z = 1.5;
 	setpoint_pub.publish(setpoint);
 }
 

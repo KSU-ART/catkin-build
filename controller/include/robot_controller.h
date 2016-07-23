@@ -25,7 +25,8 @@
  **************************************************************************************************/
 #ifndef ROBOT_INCLUDES_H
 #define ROBOT_INCLUDES_H
- 
+
+#include <termios.h>
 #include "flight_definitions.h"
 #include <iostream>
 #include "ros/ros.h"
