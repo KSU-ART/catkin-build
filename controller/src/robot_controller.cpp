@@ -94,14 +94,14 @@ public:
 		
 		//subs:
 		subRCIn = s.subscribe("/mavros/rc/in", 1, &robot_controller::RCIn_callback, this);
-		setpoint_sub = s.subscribe("/ai_nav/setpoint", 1, &robot_controller::setpoint_callback, this);
+		setpoint_sub = s.subscribe("/navigator/setpoint", 1, &robot_controller::setpoint_callback, this);
 		loc_sub = s.subscribe("/localizer/curent_pose", 1, &robot_controller::loc_callback, this);
 		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::mannual_override_callback, this);
 		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
-		mode_sub = s.subscribe("/ai_nav/modeMsg", 1, &robot_controller::mode_callback, this);
-		retract_sub = s.subscribe("/ai_nav/retractMsg", 1, &robot_controller::retract_callback, this);
-		pid_sub = s.subscribe("/ai_nav/pid_XY", 1, &robot_controller::pidXY_callback, this);
-		pid_sub = s.subscribe("/ai_nav/pid_Z", 1, &robot_controller::pidZ_callback, this);
+		mode_sub = s.subscribe("/navigator/modeMsg", 1, &robot_controller::mode_callback, this);
+		retract_sub = s.subscribe("/navigator/retractMsg", 1, &robot_controller::retract_callback, this);
+		pid_sub = s.subscribe("/navigator/pid_XY", 1, &robot_controller::pidXY_callback, this);
+		pid_sub = s.subscribe("/navigator/pid_Z", 1, &robot_controller::pidZ_callback, this);
 		
 	}
 	
@@ -125,12 +125,10 @@ public:
 				}
 			}
 			//This will only work if our coordinate system is consistant.
-			//xPosCtrl->targetSetpoint(target_x);
 			pitch = MID_PWM - xPosCtrl->calc(current_x); // Pitch value for Forward is negative
-			//yPosCtrl->targetSetpoint(target_y);
-			roll = MID_PWM - yPosCtrl->calc(current_y); // Roll value for Left is negative
-			//zPosCtrl->targetSetpoint(target_z);
+			roll = MID_PWM - yPosCtrl->calc(current_y); // Roll value for Left is negative			
 			throttle = MID_PWM + zPosCtrl->calc(current_z); 
+			
 			if (!NAV_CONNECT)
 			{
 				throttle = LOW_PWM + zPosCtrl->calc(current_z);
@@ -228,6 +226,11 @@ public:
 			target_z = MAX_HEIGHT;
 		else
 			target_z = setpoint.z;
+			
+	    //Update the setpoint on the controllers
+	    xPosCtrl->targetSetpoint(target_x);
+	    yPosCtrl->targetSetpoint(target_y);
+	    zPosCtrl->targetSetpoint(target_z);
 	}
 	
 	void loc_callback(const geometry_msgs::PoseStamped& cur_loc)

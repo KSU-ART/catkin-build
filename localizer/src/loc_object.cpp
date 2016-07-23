@@ -58,7 +58,7 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 	pos_fused_msg.header.stamp = current_time;
 	pos_fused_msg.pose.position.x = grid_flow_point.x /*pos_fused.x*/;
 	pos_fused_msg.pose.position.y = grid_flow_point.y /*pos_fused.y*/;
-	pos_fused_msg.pose.position.z = pos_fused.z;
+	pos_fused_msg.pose.position.z = fused_altitude;
 	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
 	pos_fused_msg.pose.orientation.y = orientation_fused.v.y;
 	pos_fused_msg.pose.orientation.z = orientation_fused.v.z;
@@ -247,6 +247,8 @@ void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& ms
 	
 	//global vel est
 	vel_pix_G = orientation_fused*vel_pix_imu;
+	
+	merge_and_publish(current_time);
 }
 
 /// fuse data with sonar
