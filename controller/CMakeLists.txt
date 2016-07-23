@@ -150,6 +150,7 @@ set_target_properties(pid-controller PROPERTIES
 
 ## Declare a C++ executable
 add_executable(controller_node src/robot_controller.cpp)
+add_executable(disable_overrides src/disable_rc_overrides.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -159,6 +160,9 @@ add_executable(controller_node src/robot_controller.cpp)
 target_link_libraries(controller_node
 	${catkin_LIBRARIES}
 	pid-controller
+)
+target_link_libraries(disable_overrides
+	${catkin_LIBRARIES}
 )
 
 #############

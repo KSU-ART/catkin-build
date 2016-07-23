@@ -3,6 +3,8 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
+int GROUP_THRESH = 80;
+
 grid_tracker gt;
 //cameraModel cm(0);
 projection_::cameraModel c0;
@@ -341,7 +343,7 @@ void grid_tracker::grid_algorithm()
 	findIntersectLines(&lines, intersectAngle, &intersections);
 	
 	curIntersects->clear();
-	vector<Vec2f> point_pixels = avaragePoint(&intersections, 80, 0, curIntersects);
+	vector<Vec2f> point_pixels = avaragePoint(&intersections, GROUP_THRESH, 0, curIntersects);
 	
 	distanceTraveled(preIntersects, curIntersects);
 	//cout << "pos in pixels:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
@@ -372,10 +374,10 @@ void grid_tracker::grid_algorithm()
 			circle(src, Point(point_pixels[i][0],point_pixels[i][1]), 100, Scalar(alpha, alpha, alpha));
 		}
 		
-		for (int i = 0; i < curIntersects->size(); i++)
-		{
-			cout << "curIntersects\nX:" << (*curIntersects)[i].x << "\nY:" << (*curIntersects)[i].y << endl;
-		}
+		//~ for (int i = 0; i < curIntersects->size(); i++)
+		//~ {
+			//~ cout << "curIntersects\nX:" << (*curIntersects)[i].x << "\nY:" << (*curIntersects)[i].y << endl;
+		//~ }
 		
 		
 		sensor_msgs::ImagePtr srcPtr, dstPtr;
@@ -442,7 +444,7 @@ int main( int argc, char** argv )
 	crop_adjust[1] = 60;
 	pose.pose.position.x = 0;
 	pose.pose.position.y = 0;
-	pose.pose.position.z = 1;
+	pose.pose.position.z = 0.8382;
 	pose.pose.orientation.x = 0;
 	pose.pose.orientation.y = 0;
 	pose.pose.orientation.z = 0;
