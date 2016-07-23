@@ -208,8 +208,8 @@ public:
 	
 	void ai_msg_channels()
 	{
-		RC_MSG.channels[ROLL_CHANNEL] = roll;
-		RC_MSG.channels[PITCH_CHANNEL] = pitch;
+		RC_MSG.channels[ROLL_CHANNEL] = roll + 118;
+		RC_MSG.channels[PITCH_CHANNEL] = pitch - 61;
 		RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
 		RC_MSG.channels[MODE_CHANNEL] = mode;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
