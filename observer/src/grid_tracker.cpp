@@ -154,20 +154,23 @@ vector<Vec2f> grid_tracker::avaragePoint(vector<Vec2f> *intersects, int groupThr
 	
 	for (int i = 0; i < groups.size(); i++)
 	{
-		Vec2f avarage_point;
-		for (int j = 0; j < groups[i].size(); j++)
+		if (i < 20)//max number grid intersections
 		{
-			avarage_point[0] += (*groups[i][j])[0];
-			avarage_point[1] += (*groups[i][j])[1];
+			Vec2f avarage_point;
+			for (int j = 0; j < groups[i].size(); j++)
+			{
+				avarage_point[0] += (*groups[i][j])[0];
+				avarage_point[1] += (*groups[i][j])[1];
+			}
+			avarage_point[0] /= groups[i].size();
+			avarage_point[1] /= groups[i].size();
+			points_in_pixel.push_back(avarage_point);
+			
+			Point p(avarage_point[0] + crop_adjust[0],avarage_point[1] + crop_adjust[1]);
+			Vector3 point_meter = c0.getGroundFeatureWorldLocation(pose, p);
+			
+			averaged->push_back(point_meter);
 		}
-		avarage_point[0] /= groups[i].size();
-		avarage_point[1] /= groups[i].size();
-		points_in_pixel.push_back(avarage_point);
-		
-		Point p(avarage_point[0] + crop_adjust[0],avarage_point[1] + crop_adjust[1]);
-		Vector3 point_meter = c0.getGroundFeatureWorldLocation(pose, p);
-		
-		averaged->push_back(point_meter);
 	}
 	return points_in_pixel;
 }
