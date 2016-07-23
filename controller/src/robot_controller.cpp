@@ -129,14 +129,13 @@ public:
 			roll = MID_PWM - yPosCtrl->calc(current_y); // Roll value for Left is negative
 			//zPosCtrl->targetSetpoint(target_z);
 			throttle = MID_PWM + zPosCtrl->calc(current_z); 
-						
-			if(MANNUAL_OVERRIDE)
-			{
-				release_msg_channels();
-			}
-			else if(EMERGENCY_LAND)
+			if(EMERGENCY_LAND)
 			{
 				land_msg_channels();
+			}			
+			else if(MANNUAL_OVERRIDE)
+			{
+				release_msg_channels();
 			}
 			else
 			{
@@ -227,7 +226,7 @@ public:
 		current_x = cur_loc.pose.position.x;
 		current_y = cur_loc.pose.position.y;
 		current_z = cur_loc.pose.position.z;
-		if (current_z > 9.0)
+		if (current_z > 5.0)
 			EMERGENCY_LAND = true;
 	}
 	
