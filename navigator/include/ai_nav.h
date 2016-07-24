@@ -5,10 +5,13 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int32MultiArray.h>
+#include <math.h>
 
 class ai_navigator
 {
 private:
+	ros::Duration SETPOINT_INTERVAL;
+	
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
 			green_plate_poses_sub, obstacles_sub;
@@ -16,7 +19,7 @@ private:
 			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
 	enum state 
 	{
-		TakeOff, RandomTraversal, VerifyRobotRotation,
+		TakeOff, RandomTraversal, TargetNewGR, VerifyRobotRotation,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
 	geometry_msgs::PoseStamped current_pose;
@@ -25,6 +28,13 @@ private:
 	double state_time, start_time; 
 	bool new_state;
 	bool at_setpoint;
+	
+	ros::Time setpoint_start_time;
+	
+	geometry_msgs::Pose min_loc_r;
+	geometry_msgs::Pose min_loc_g;
+	bool found_red;
+	bool found_green;
 	
 public:
 	///constructor
@@ -39,6 +49,7 @@ public:
 	///action functions:
 	void take_off();
 	void random_traversal();
+	void target_new_gr();
 	void verify_robot_rotation();
 	void interact_with_robot();
 	void avoid_obstacle();

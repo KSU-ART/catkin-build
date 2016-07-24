@@ -2,6 +2,9 @@
 #include "ai_nav.h"
 ai_navigator::ai_navigator()
 {
+	/// ********* Constants **********
+	SETPOINT_INTERVAL(3.0);
+	
 	start_time = ros::Time::now().toSec();
 	
 	//initialize vars:
@@ -31,19 +34,29 @@ void ai_navigator::init()
 		switch(determine_state())
 		{
 			case TakeOff:
-			take_off();
+				take_off();
+				break;
 			case RandomTraversal:
-			random_traversal();
+				random_traversal();
+				break;
+			case TargetNewGR:
+				target_new_gr();
+				break;
 			case VerifyRobotRotation:
-			verify_robot_rotation();
+				verify_robot_rotation();
+				break;
 			case InteractWithRobot:
-			interact_with_robot();
+				interact_with_robot();
+				break;
 			case AvoidObstacle:
-			avoid_obstacle();
+				avoid_obstacle();
+				break;
 			case HoldPosition:
-			hold_position();
+				hold_position();
+				break;
 			case Land:
-			land();
+				land();
+				break;
 		}
 		ros::spinOnce;
 		nav_rate.sleep();
@@ -110,6 +123,58 @@ void ai_navigator::random_traversal()
 	}
 }
 
+void ai_navigator::target_new_gr()
+{
+	if(new_state)
+	{
+		state_time = ros::Time::now().toSec();
+		new_state = false;
+		setpoint_start_time = state_time;
+	}
+	
+	/// Find a ground robot and set a setpoint, if not go to random_traversal
+	if (ros::Time::now().toSec() >= setpoint_start_time + SETPOINT_INTERVAL)
+	{
+		setpoint_start_time = ros::Time::now().toSec();
+		if (found_red || found_green)
+		{
+			/// finds the closest between red or green
+			double dist_r = 100000;
+			double dist_g = 100000;
+			if (found_red)
+			{
+				double x = min_loc_r.position.x - current_pose.pose.position.x;
+				double y = min_loc_r.position.y - current_pose.pose.position.y;
+				dist_r = x*x + y*y;
+			}
+			if (found_green)
+			{
+				double x = min_loc_g.position.x - current_pose.pose.position.x;
+				double y = min_loc_g.position.y - current_pose.pose.position.y;
+				dist_g = x*x + y*y;
+			}
+			
+			// if red is closer
+			if (dist_r < dist_g)
+			{
+				//set setpoint to red plate
+				setpoint = min_loc_r.position;
+				setpoint_pub.publish(setpoint);
+			}
+			else
+			{
+				//set setpoint to green plate
+				setpoint = min_loc_g.position;
+				setpoint_pub.publish(setpoint);
+			}
+		}
+		else
+		{
+			//go to random_traversal??
+		}
+	}
+}
+
 void ai_navigator::verify_robot_rotation()
 {
 	if(new_state)
@@ -143,6 +208,8 @@ void ai_navigator::hold_position()
 	{
 		state_time = ros::Time::now().toSec();
 		new_state = false;
+		
+		retractMsg_pub(false);
 	}
 	setpoint.x = 0;
 	setpoint.y = 0;
@@ -162,22 +229,66 @@ void ai_navigator::land()
 /*****************************************************************
  * Data callbacks:
  * ***************************************************************/
-void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped msg)
+void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 {
 	
 }
 
-void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray msg)
+void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
+	if (msg->poses.size() > 0)
+	{
+		found_red = true;
+		double x = msg->poses[0].x - current_pose.pose.position.x;
+		double y = msg->poses[0].y - current_pose.pose.position.y;
+		double min_dist = x*x + y*y;
+		for (int i = 1; i < msg->poses.size(); i++)
+		{
+			double x = msg->poses[i].x - current_pose.pose.position.x;
+			double y = msg->poses[i].y - current_pose.pose.position.y;
+			double dist = x*x + y*y;
+			if (dist < min_dist)
+			{
+				min_dist = dist;
+				min_loc_r = msg->poses[i];
+			}
+		}
+	}
+	else
+	{
+		found_red = false;
+	}
 	
 }
 
-void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray msg)
+void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
+	if (msg->poses.size() > 0)
+	{
+		found_green = true;
+		double x = msg->poses[0].x - current_pose.pose.position.x;
+		double y = msg->poses[0].y - current_pose.pose.position.y;
+		double min_dist = x*x + y*y;
+		for (int i = 1; i < msg->poses.size(); i++)
+		{
+			double x = msg->poses[i].x - current_pose.pose.position.x;
+			double y = msg->poses[i].y - current_pose.pose.position.y;
+			double dist = x*x + y*y;
+			if (dist < min_dist)
+			{
+				min_dist = dist;
+				min_loc_r = msg->poses[i];
+			}
+		}
+	}
+	else
+	{
+		found_green = false;
+	}
 	
 }
 
-void ai_navigator::obstacles_cb(const geometry_msgs::PoseArray msg)
+void ai_navigator::obstacles_cb(const geometry_msgs::PoseArray& msg)
 {
 	
 }
