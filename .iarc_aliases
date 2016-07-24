@@ -17,7 +17,7 @@ alias disarm='rosrun mavros mavsafety disarm'
 alias rbc='rosbag record /guidance/velocity /mavros/rc/out'
 
 function setPos() {
-    rostopic pub --once /fatcat/setpoint geometry_msgs/Point '(x:$1,y:$2,z:$3)'
+    rostopic pub --once /navigator/setpoint geometry_msgs/Point '(x:$1,y:$2,z:$3)'
 }
 
 alias observer='geany -i ~/catkin_ws/src/catkin-build/observer/*.txt ~/catkin_ws/src/catkin-build/observer/launch/* ~/catkin_ws/src/catkin-build/observer/src/* ~/catkin_ws/src/catkin-build/observer/include/* &'

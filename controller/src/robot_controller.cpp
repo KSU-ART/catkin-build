@@ -86,7 +86,7 @@ public:
 		//default PIDs
 		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
-		zPosCtrl = new PIDController(250, 0, 0, -500, 500);
+		zPosCtrl = new PIDController(200, 0, 0, -500, 500);
 		
 		xPosCtrl->on();
 		yPosCtrl->on();
@@ -238,6 +238,7 @@ public:
 		current_x = cur_loc.pose.position.x;
 		current_y = cur_loc.pose.position.y;
 		current_z = cur_loc.pose.position.z;
+		std::cout << "altitude: " << current_z << std::endl;
 		if (current_z > 5.0)
 			EMERGENCY_LAND = true;
 	}
