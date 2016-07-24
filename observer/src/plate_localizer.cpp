@@ -16,7 +16,7 @@ plate_localizer::plate_localizer()
 	c4.loadModel('4');
 	c5.loadModel('5');
 	c6.loadModel('6');
-	c0.loadModel('0');
+	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d,0.0d,0.0d,-0.1d,1.0d,0.0d,0.0d,0.0d);
 	
 	//initiate subscribers
 	curr_pose = s_.subscribe("/localizer/curent_pose", 3, &plate_localizer::update_pose, this);

@@ -448,7 +448,7 @@ void update_pose(const geometry_msgs::PoseStamped& cur_loc)
 /** @function main */
 int main( int argc, char** argv )
 {
-	c0.saveModel('t',2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d, 282.671480d, 318.016079d, 229.129939d, 0.2d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d);
+	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d, 282.671480d, 318.016079d, 229.129939d, 0.0d, 0.0d, -0.1d, 0.0d, 0.0d, 0.0d, 0.0d);
 	crop_adjust[0] = 60;
 	crop_adjust[1] = 60;
 	pose.pose.position.x = 0;

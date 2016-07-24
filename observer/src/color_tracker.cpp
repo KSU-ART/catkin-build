@@ -198,8 +198,8 @@ int main(int argc, char** argv)
 {	
 	waitKey(2000);
    ros::init(argc, argv, "/observer/color_tracker");
-   trackobjects top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
-				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),
+   trackobjects /*top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
+				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),*/
 				down_cam();
    ros::MultiThreadedSpinner spinner(8); //use 8 threads
    spinner.spin(); //will not return until node is shut down

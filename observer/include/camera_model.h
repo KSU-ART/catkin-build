@@ -41,6 +41,10 @@ namespace projection_
 		
 		void loadModel(char camID);
 		
+		void loadToMem(double pH, double pW, int h, int w, double fx, 
+				double fy, double x0, double y0, double t1, double t2, double t3, 
+				double qw, double qx, double qy, double qz);
+		
 		void printModel();
 		
 		Vector3 findLinePlaneIntersection(const Vector3 &lineVector, const Vector3 &planeNormal, const Vector3 &planeCenter);
