@@ -3,7 +3,8 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
-int GROUP_THRESH = 30;
+/// ***************** CONSTANTS *******************
+int GROUP_THRESH = 50;
 int MAX_LINES = 1000;
 
 grid_tracker gt;
@@ -22,6 +23,7 @@ string corners_window = "Corners detected";
 /// *********************** Class functions ********************
 grid_tracker::grid_tracker()
 {
+	/// ******** Debug Mode ********
 	debug = true;
 	
 	pos[0] = 0;
