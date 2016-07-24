@@ -8,7 +8,7 @@ ai_navigator::ai_navigator()
 	cur_state = Land;
 	
 	//info subs:
-	curent_pose_sub = n_.subscribe("/localizer/curent_pose", 1, &ai_navigator::current_pose_cb, this);
+	curent_pose_sub = n_.subscribe("/localizer/current_pose", 1, &ai_navigator::current_pose_cb, this);
 	red_plate_poses_sub = n_.subscribe("/observer/red_plate_poses", 1, &ai_navigator::red_plate_poses_cb, this);
 	green_plate_poses_sub = n_.subscribe("/observer/green_plate_poses", 1, &ai_navigator::green_plate_poses_cb, this);
 	obstacles_sub = n_.subscribe("/observer/obstacles", 1, &ai_navigator::obstacles_cb, this);

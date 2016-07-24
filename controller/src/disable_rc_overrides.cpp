@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
-			msg.channels[MANUAL_CONTROL]= msg.CHAN_RELEASE;
+			//msg.channels[MANUAL_CONTROL]= msg.CHAN_RELEASE;
 			rc_pub.publish(msg);  
 			fcuCommRate.sleep();
 		}

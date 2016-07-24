@@ -86,7 +86,7 @@ public:
 		//default PIDs
 		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
 		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
-		zPosCtrl = new PIDController(200, 0, 0, -500, 500);
+		zPosCtrl = new PIDController(200, 0, 0, -250, 250);
 		
 		xPosCtrl->on();
 		yPosCtrl->on();
@@ -95,7 +95,7 @@ public:
 		//subs:
 		subRCIn = s.subscribe("/mavros/rc/in", 1, &robot_controller::RCIn_callback, this);
 		setpoint_sub = s.subscribe("/navigator/setpoint", 1, &robot_controller::setpoint_callback, this);
-		loc_sub = s.subscribe("/localizer/curent_pose", 1, &robot_controller::loc_callback, this);
+		loc_sub = s.subscribe("/localizer/current_pose", 1, &robot_controller::loc_callback, this);
 		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::mannual_override_callback, this);
 		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
 		mode_sub = s.subscribe("/navigator/modeMsg", 1, &robot_controller::mode_callback, this);
