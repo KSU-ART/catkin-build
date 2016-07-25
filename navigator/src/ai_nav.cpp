@@ -4,6 +4,7 @@ ai_navigator::ai_navigator()
 {
 	/// ************** Constants *****************
 	SETPOINT_INTERVAL = 3.0;
+	LOCKON_RADIUS = 0.5;
 	
 	start_time = ros::Time::now().toSec();
 	
@@ -31,7 +32,8 @@ void ai_navigator::init()
 	ros::Rate nav_rate(20);
 	while (ros::ok())
 	{
-		switch(determine_state())
+		determine_state();
+		switch(cur_state)
 		{
 			case TakeOff:
 				take_off();
@@ -42,8 +44,8 @@ void ai_navigator::init()
 			case TargetNewGR:
 				target_new_gr();
 				break;
-			case VerifyRobotRotation:
-				verify_robot_rotation();
+			case FollowTarget:
+				follow_target();
 				break;
 			case InteractWithRobot:
 				interact_with_robot();
@@ -86,15 +88,6 @@ ai_navigator::state ai_navigator::determine_state()
 		cur_state = TakeOff;
 		return cur_state;
 	}
-	//After the first five seconds the state should be position hold
-	else if( (ros::Time::now().toSec() > (start_time + 5.00) ) )
-	{
-		if(cur_state != HoldPosition)
-			new_state = true;
-		cur_state = HoldPosition;
-		return cur_state;
-	}
-
 }
 
 
@@ -108,6 +101,14 @@ void ai_navigator::take_off()
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 	}
+	
+	if( (ros::Time::now().toSec() > (start_time + 5.00) ) )
+	{
+		new_state = true;
+		cur_state = TargetNewGR;
+		return;
+	}
+	
 	setpoint.x = 0;
 	setpoint.y = 0;
 	setpoint.z = 1;
@@ -129,6 +130,7 @@ void ai_navigator::target_new_gr()
 	{
 		state_time = ros::Time::now().toSec();
 		new_state = false;
+		
 		setpoint_start_time = state_time;
 	}
 	
@@ -160,28 +162,46 @@ void ai_navigator::target_new_gr()
 				//set setpoint to red plate
 				setpoint = min_loc_r.position;
 				setpoint_pub.publish(setpoint);
+				if (dist_r < LOCKON_RADIUS*LOCKON_RADIUS)
+				{
+					new_state = true;
+					cur_state = FollowTarget;
+					return;
+				}
 			}
 			else
 			{
 				//set setpoint to green plate
 				setpoint = min_loc_g.position;
 				setpoint_pub.publish(setpoint);
+				if (dist_g < LOCKON_RADIUS*LOCKON_RADIUS)
+				{
+					new_state = true;
+					cur_state = FollowTarget;
+					return;
+				}
 			}
 		}
 		else
 		{
-			//go to random_traversal??
+			//go to random_traversal
+			/// **************************** FOR TEST USING Hold position INSTEAD *************************************
+			new_state = true;
+			cur_state = HoldPosition;
+			return;
 		}
 	}
 }
 
-void ai_navigator::verify_robot_rotation()
+void ai_navigator::follow_target()
 {
 	if(new_state)
 	{
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 	}
+	
+	
 }
 
 void ai_navigator::interact_with_robot()

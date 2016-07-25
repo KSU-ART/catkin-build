@@ -11,6 +11,7 @@ class ai_navigator
 {
 private:
 	double SETPOINT_INTERVAL;
+	double LOCKON_RADIUS;
 	
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
@@ -19,11 +20,13 @@ private:
 			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
 	enum state 
 	{
-		TakeOff, RandomTraversal, TargetNewGR, VerifyRobotRotation,
+		TakeOff, RandomTraversal, TargetNewGR, FollowTarget,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
+	
 	geometry_msgs::PoseStamped current_pose;
 	geometry_msgs::Point setpoint;
+	
 	state cur_state;
 	double state_time, start_time; 
 	bool new_state;
@@ -50,7 +53,7 @@ public:
 	void take_off();
 	void random_traversal();
 	void target_new_gr();
-	void verify_robot_rotation();
+	void follow_target();
 	void interact_with_robot();
 	void avoid_obstacle();
 	void hold_position();

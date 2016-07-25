@@ -4,7 +4,7 @@
 namespace enc = sensor_msgs::image_encodings;
 
 /// ***************** CONSTANTS *******************
-int GROUP_THRESH = 50;
+int GROUP_THRESH = 60;
 int MAX_LINES = 1000;
 
 grid_tracker gt;
@@ -465,7 +465,7 @@ int main( int argc, char** argv )
 
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("/usb_cam_0/image_rect_color", 1, downCamCB);
+	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, downCamCB);
 	ros::Subscriber curr_pose = n.subscribe("/localizer/curent_pose", 1, update_pose);
 	pos_pub = n.advertise<geometry_msgs::Point>("/observer/grid_pos", 1);
 	
