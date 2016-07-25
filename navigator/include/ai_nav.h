@@ -10,7 +10,7 @@
 class ai_navigator
 {
 private:
-	ros::Duration SETPOINT_INTERVAL;
+	double SETPOINT_INTERVAL;
 	
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
@@ -29,7 +29,7 @@ private:
 	bool new_state;
 	bool at_setpoint;
 	
-	ros::Time setpoint_start_time;
+	double setpoint_start_time;
 	
 	geometry_msgs::Pose min_loc_r;
 	geometry_msgs::Pose min_loc_g;
@@ -57,9 +57,9 @@ public:
 	void land();
 	
 	///data callback functions:
-	void current_pose_cb(const geometry_msgs::PoseStamped msg);
-	void red_plate_poses_cb(const geometry_msgs::PoseArray msg);
-	void green_plate_poses_cb(const geometry_msgs::PoseArray msg);
-	void obstacles_cb(const geometry_msgs::PoseArray msg);
+	void current_pose_cb(const geometry_msgs::PoseStamped& msg);
+	void red_plate_poses_cb(const geometry_msgs::PoseArray& msg);
+	void green_plate_poses_cb(const geometry_msgs::PoseArray& msg);
+	void obstacles_cb(const geometry_msgs::PoseArray& msg);
 
 };

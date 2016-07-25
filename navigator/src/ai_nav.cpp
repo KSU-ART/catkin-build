@@ -2,8 +2,8 @@
 #include "ai_nav.h"
 ai_navigator::ai_navigator()
 {
-	/// ********* Constants **********
-	SETPOINT_INTERVAL(3.0);
+	/// ************** Constants *****************
+	SETPOINT_INTERVAL = 3.0;
 	
 	start_time = ros::Time::now().toSec();
 	
@@ -209,7 +209,9 @@ void ai_navigator::hold_position()
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 		
-		retractMsg_pub(false);
+		std_msgs::Bool retract;
+		retract.data = false;
+		retractMsg_pub.publish(retract);
 	}
 	setpoint.x = 0;
 	setpoint.y = 0;
@@ -236,21 +238,21 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 
 void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
-	if (msg->poses.size() > 0)
+	if (msg.poses.size() > 0)
 	{
 		found_red = true;
-		double x = msg->poses[0].x - current_pose.pose.position.x;
-		double y = msg->poses[0].y - current_pose.pose.position.y;
+		double x = msg.poses[0].position.x - current_pose.pose.position.x;
+		double y = msg.poses[0].position.y - current_pose.pose.position.y;
 		double min_dist = x*x + y*y;
-		for (int i = 1; i < msg->poses.size(); i++)
+		for (int i = 1; i < msg.poses.size(); i++)
 		{
-			double x = msg->poses[i].x - current_pose.pose.position.x;
-			double y = msg->poses[i].y - current_pose.pose.position.y;
+			double x = msg.poses[i].position.x - current_pose.pose.position.x;
+			double y = msg.poses[i].position.y - current_pose.pose.position.y;
 			double dist = x*x + y*y;
 			if (dist < min_dist)
 			{
 				min_dist = dist;
-				min_loc_r = msg->poses[i];
+				min_loc_r = msg.poses[i];
 			}
 		}
 	}
@@ -263,21 +265,21 @@ void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 
 void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
-	if (msg->poses.size() > 0)
+	if (msg.poses.size() > 0)
 	{
 		found_green = true;
-		double x = msg->poses[0].x - current_pose.pose.position.x;
-		double y = msg->poses[0].y - current_pose.pose.position.y;
+		double x = msg.poses[0].position.x - current_pose.pose.position.x;
+		double y = msg.poses[0].position.y - current_pose.pose.position.y;
 		double min_dist = x*x + y*y;
-		for (int i = 1; i < msg->poses.size(); i++)
+		for (int i = 1; i < msg.poses.size(); i++)
 		{
-			double x = msg->poses[i].x - current_pose.pose.position.x;
-			double y = msg->poses[i].y - current_pose.pose.position.y;
+			double x = msg.poses[i].position.x - current_pose.pose.position.x;
+			double y = msg.poses[i].position.y - current_pose.pose.position.y;
 			double dist = x*x + y*y;
 			if (dist < min_dist)
 			{
 				min_dist = dist;
-				min_loc_r = msg->poses[i];
+				min_loc_r = msg.poses[i];
 			}
 		}
 	}
