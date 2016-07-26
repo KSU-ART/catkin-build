@@ -6,12 +6,17 @@
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <math.h>
+#include <iostream>
+#include <string>
+#include <vector>
 
 class ai_navigator
 {
 private:
 	double SETPOINT_INTERVAL;
 	double LOCKON_RADIUS;
+	bool DEBUG;
+	double TARGET_ALTITUDE;
 	
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
@@ -33,6 +38,10 @@ private:
 	bool at_setpoint;
 	
 	double setpoint_start_time;
+	
+	std::vector<geometry_msgs::Pose> gr_poses_g;
+	std::vector<geometry_msgs::Pose> gr_poses_r;
+	geometry_msgs::Pose target_gr;
 	
 	geometry_msgs::Pose min_loc_r;
 	geometry_msgs::Pose min_loc_g;

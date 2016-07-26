@@ -5,6 +5,8 @@ ai_navigator::ai_navigator()
 	/// ************** Constants *****************
 	SETPOINT_INTERVAL = 3.0;
 	LOCKON_RADIUS = 0.5;
+	DEBUG = true;
+	TARGET_ALTITUDE = 1.0;
 	
 	start_time = ros::Time::now().toSec();
 	
@@ -60,6 +62,11 @@ void ai_navigator::init()
 				land();
 				break;
 		}
+		if (DEBUG)
+		{
+			std::cout << "Current State" << cur_state << std::endl;
+		}
+		
 		ros::spinOnce;
 		nav_rate.sleep();
 	}
@@ -111,7 +118,7 @@ void ai_navigator::take_off()
 	
 	setpoint.x = 0;
 	setpoint.y = 0;
-	setpoint.z = 1;
+	setpoint.z = TARGET_ALTITUDE;
 	setpoint_pub.publish(setpoint);
 }
 
@@ -195,18 +202,17 @@ void ai_navigator::target_new_gr()
 
 void ai_navigator::follow_target()
 {
-	if(new_state)
+	if (new_state)
 	{
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 	}
 	
-	
 }
 
 void ai_navigator::interact_with_robot()
 {
-	if(new_state)
+	if (new_state)
 	{
 		state_time = ros::Time::now().toSec();
 		new_state = false;
@@ -235,7 +241,7 @@ void ai_navigator::hold_position()
 	}
 	setpoint.x = 0;
 	setpoint.y = 0;
-	setpoint.z = 1;
+	setpoint.z = TARGET_ALTITUDE;
 	setpoint_pub.publish(setpoint);
 }
 
@@ -258,6 +264,7 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 
 void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
+	gr_poses_r.clear();
 	if (msg.poses.size() > 0)
 	{
 		found_red = true;
@@ -266,6 +273,7 @@ void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 		double min_dist = x*x + y*y;
 		for (int i = 1; i < msg.poses.size(); i++)
 		{
+			gr_poses_r.push_back(msg.poses[i]);
 			double x = msg.poses[i].position.x - current_pose.pose.position.x;
 			double y = msg.poses[i].position.y - current_pose.pose.position.y;
 			double dist = x*x + y*y;
@@ -285,6 +293,7 @@ void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 
 void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
+	gr_poses_g.clear();
 	if (msg.poses.size() > 0)
 	{
 		found_green = true;
@@ -293,6 +302,7 @@ void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 		double min_dist = x*x + y*y;
 		for (int i = 1; i < msg.poses.size(); i++)
 		{
+			gr_poses_g.push_back(msg.poses[i]);
 			double x = msg.poses[i].position.x - current_pose.pose.position.x;
 			double y = msg.poses[i].position.y - current_pose.pose.position.y;
 			double dist = x*x + y*y;

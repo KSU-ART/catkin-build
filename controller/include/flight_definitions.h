@@ -7,6 +7,7 @@
 #define THROTTLE_CHANNEL 2
 #define YAW_CHANNEL 3
 #define MODE_CHANNEL 4
+#define GRIP_CHANNEL 5
 #define RETRACT_CHANNEL 6
 #define MANUAL_CONTROL 8
 
