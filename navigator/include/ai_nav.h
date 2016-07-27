@@ -5,10 +5,18 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int32MultiArray.h>
+#include <math.h>
+#include <iostream>
+#include <string>
+#include <vector>
 
 class ai_navigator
 {
 private:
+	double SETPOINT_INTERVAL;
+	bool DEBUG;
+	double TARGET_ALTITUDE;
+	
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
 			green_plate_poses_sub, obstacles_sub;
@@ -16,15 +24,31 @@ private:
 			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
 	enum state 
 	{
-		TakeOff, RandomTraversal, VerifyRobotRotation,
+		TakeOff, RandomTraversal, TargetGR,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
+	
 	geometry_msgs::PoseStamped current_pose;
 	geometry_msgs::Point setpoint;
+	
 	state cur_state;
 	double state_time, start_time; 
 	bool new_state;
 	bool at_setpoint;
+	
+	double setpoint_start_time;
+	
+	std::vector<geometry_msgs::Pose> gr_poses_g;
+	std::vector<geometry_msgs::Pose> gr_poses_r;
+	
+	void find_target();
+	
+	geometry_msgs::Pose target_gr;
+	bool found_target;
+	geometry_msgs::Pose min_loc_r;
+	geometry_msgs::Pose min_loc_g;
+	bool found_red;
+	bool found_green;
 	
 public:
 	///constructor
@@ -39,16 +63,16 @@ public:
 	///action functions:
 	void take_off();
 	void random_traversal();
-	void verify_robot_rotation();
+	void target_ground_robot();
 	void interact_with_robot();
 	void avoid_obstacle();
 	void hold_position();
 	void land();
 	
 	///data callback functions:
-	void current_pose_cb(const geometry_msgs::PoseStamped msg);
-	void red_plate_poses_cb(const geometry_msgs::PoseArray msg);
-	void green_plate_poses_cb(const geometry_msgs::PoseArray msg);
-	void obstacles_cb(const geometry_msgs::PoseArray msg);
+	void current_pose_cb(const geometry_msgs::PoseStamped& msg);
+	void red_plate_poses_cb(const geometry_msgs::PoseArray& msg);
+	void green_plate_poses_cb(const geometry_msgs::PoseArray& msg);
+	void obstacles_cb(const geometry_msgs::PoseArray& msg);
 
 };

@@ -132,6 +132,26 @@ void cameraModel::loadModel(char camID){
 	image_height = h;
 }
 
+void cameraModel::loadToMem(double pH, double pW, int h, int w, double fx, 
+		double fy, double x0, double y0, double t1, double t2, double t3, 
+		double qw, double qx, double qy, double qz)
+{
+	camera_focal_distance_x = fx;
+	camera_focal_distance_y = fy;
+	camera_center_x_pixels = x0;
+	camera_center_y_pixels = y0;
+	camera_pixel_width_meters = pW;
+	camera_pixel_height_meters = pH;
+	Quaternion cam_from_imu(qx, qy, qz, qw);
+	//make sure does not divide by zero
+	if (abs(cam_from_imu.norm() ) < 0.00001) 
+		camera_transform_from_drone = HTMatrix4( RotMatrix3::identity(), Vector3(t1, t2, t3));
+	else
+		camera_transform_from_drone = HTMatrix4( cam_from_imu.getRotMatrix(), Vector3(t1, t2, t3));
+	image_width = w;
+	image_height = h;
+}
+
 void cameraModel::printModel(){
 	using namespace std;
 	cout << "Pixel width (m): " << camera_pixel_width_meters << endl;

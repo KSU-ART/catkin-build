@@ -3,7 +3,8 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
-int GROUP_THRESH = 30;
+/// ***************** CONSTANTS *******************
+int GROUP_THRESH = 60;
 int MAX_LINES = 1000;
 
 grid_tracker gt;
@@ -22,6 +23,7 @@ string corners_window = "Corners detected";
 /// *********************** Class functions ********************
 grid_tracker::grid_tracker()
 {
+	/// ******** Debug Mode ********
 	debug = true;
 	
 	pos[0] = 0;
@@ -448,7 +450,7 @@ void update_pose(const geometry_msgs::PoseStamped& cur_loc)
 /** @function main */
 int main( int argc, char** argv )
 {
-	c0.saveModel('t',2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d, 282.671480d, 318.016079d, 229.129939d, 0.2d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d);
+	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d, 282.671480d, 318.016079d, 229.129939d, 0.0d, 0.0d, -0.1d, 0.0d, 0.0d, 0.0d, 0.0d);
 	crop_adjust[0] = 60;
 	crop_adjust[1] = 60;
 	pose.pose.position.x = 0;
@@ -463,7 +465,7 @@ int main( int argc, char** argv )
 
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("/usb_cam_0/image_rect_color", 1, downCamCB);
+	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, downCamCB);
 	ros::Subscriber curr_pose = n.subscribe("/localizer/curent_pose", 1, update_pose);
 	pos_pub = n.advertise<geometry_msgs::Point>("/observer/grid_pos", 1);
 	
