@@ -110,7 +110,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				}
 				else
 				{
-					po_v[i].orientation.x = 0.0d;//always 0
+					po_v[i].orientation.x = 1.0d;//always 0
 					po_v[i].orientation.y = 0.0d; //always 0
 					po_v[i].orientation.z = 0.0d;//unknown
 					po_v[i].orientation.w = 0.0d;//unknown
@@ -190,7 +190,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				}
 				else
 				{
-					po_v[i].orientation.x = 0.0d;//always 0
+					po_v[i].orientation.x = 1.0d;//always 0, REPRESENTS ANGLE NOT FOUND
 					po_v[i].orientation.y = 0.0d; //always 0
 					po_v[i].orientation.z = 0.0d;//unknown
 					po_v[i].orientation.w = 0.0d;//unknown
