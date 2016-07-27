@@ -71,11 +71,13 @@ void plate_localizer::checkTimes(char &color)
 			{
 				green_groundbots_world_loc.poses.erase(green_groundbots_world_loc.poses.begin() + i);
 				gTimeStamps.erase(gTimeStamps.begin() + i);
+				gRotTimeStamps.erase(gRotTimeStamps.begin() + i);
 			}
 			else
 			{
 				red_groundbots_world_loc.poses.erase(red_groundbots_world_loc.poses.begin() + i);
 				rTimeStamps.erase(rTimeStamps.begin() + i);
+				rRotTimeStamps.erase(rRotTimeStamps.begin() + i);
 			}
 		}
 	}
@@ -97,12 +99,11 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 			{
 				//if directly below us, add angle
 				if ( downcam
-					&& (po_v[i].position.x < 1 && po_v[i].position.y < 0.5d)  // < 1 meter away
-					&& ( abs(ros::Time::now().toSec() - gAngleTime) < 0.5d ) ) // < 1 sec
+					&& (po_v[i].position.x < 0.5d && po_v[i].position.y < 0.5d)  // < 0.5 meter away
+					&& ( abs(ros::Time::now().toSec() - gAngleTime) < 1.0d ) ) // < 1 sec
 				{
 					angleAdded = true;
-					//qx is always 0, so storing data in it:
-					po_v[i].orientation.x = ros::Time::now().toSec(); 
+					po_v[i].orientation.x = 0.0d; 
 					po_v[i].orientation.y = 0.0d; //always 0
 					po_v[i].orientation.z = sin(gAngle/2.0f);
 					po_v[i].orientation.w = cos(gAngle/2.0f);
@@ -118,16 +119,17 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				for (int j = 0; j < green_groundbots_world_loc.poses.size(); j++)
 				{
 					//near a groundbot already in the array? if so update position
-					//if qx timestamp is under 10 secs old, orientation data is kept
+					//if timestamp is under 10 secs old, orientation data is kept
 					if (	abs((green_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0d
 							&& abs((green_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 1.0d
-							&& !(-0.0001d < green_groundbots_world_loc.poses[j].orientation.x < 0.0001d)
-							&& abs(green_groundbots_world_loc.poses[j].orientation.x - ros::Time::now().toSec()) < 10.0d)
+							&& !(-0.0001d < gRotTimeStamps[j] < 0.0001d)
+							&& abs(gRotTimeStamps[j] - ros::Time::now().toSec()) < 10.0d)
 					{
 						green_groundbots_world_loc.poses[j].position = po_v[i].position;
 						
 						if (angleAdded) //if orientation measurement taken, orientation updated
 						{
+							gRotTimeStamps[j] = ros::Time::now().toSec();
 							green_groundbots_world_loc.poses[j].orientation = po_v[i].orientation;
 							angleAdded = false;
 						}
@@ -138,6 +140,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 					else if(abs((green_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0d
 							&& abs((green_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 1.0d)
 					{
+						gRotTimeStamps[j] = 0.0d;
 						green_groundbots_world_loc.poses[j] = po_v[i];
 						in_there = true;
 					}
@@ -150,6 +153,14 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				}
 				else
 				{
+					if (angleAdded)
+					{
+						gRotTimeStamps.push_back(ros::Time::now().toSec());
+						angleAdded = false;
+					}
+					else
+						gRotTimeStamps.push_back(0.0d);
+						
 					green_groundbots_world_loc.poses.push_back(po_v[i]);
 					gTimeStamps.push_back(ros::Time::now().toSec());
 				}		
@@ -167,12 +178,12 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 			{
 				//if directly below us, add angle
 				if ( downcam
-					&& (po_v[i].position.x < 1 && po_v[i].position.y < 0.5d)  // < 1 meter away
-					&& ( (ros::Time::now().toSec() - rAngleTime) < 0.5d ) ) // < 1 sec
+					&& (po_v[i].position.x < 0.5d && po_v[i].position.y < 0.5d)  // < 0.5 meter away
+					&& ( (ros::Time::now().toSec() - rAngleTime) < 1.0d ) ) // < 1 sec
 				{
 					angleAdded = true;
 					//qx is always 0, so storing data in it:
-					po_v[i].orientation.x = ros::Time::now().toSec(); 
+					po_v[i].orientation.x = 0.0d; 
 					po_v[i].orientation.y = 0.0d; //always 0
 					po_v[i].orientation.z = sin(gAngle/2.0f);
 					po_v[i].orientation.w = cos(gAngle/2.0f);
@@ -196,6 +207,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 						
 						if (angleAdded)
 						{
+							rRotTimeStamps[j] = ros::Time::now().toSec();
 							red_groundbots_world_loc.poses[j].orientation = po_v[i].orientation;
 							angleAdded = false;
 						}
@@ -206,6 +218,7 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 					else if (	abs((red_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0d 
 								&& abs((red_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 1.0d ) //near a groundbot already in the array? if so update position
 					{
+						rRotTimeStamps[j] = 0.0d;
 						red_groundbots_world_loc.poses[j] = po_v[i];
 						in_there = true;
 					}
@@ -218,6 +231,14 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				}
 				else
 				{
+					if (angleAdded)
+					{
+						gRotTimeStamps.push_back(ros::Time::now().toSec());
+						angleAdded = false;
+					}
+					else
+						gRotTimeStamps.push_back(0.0d);
+						
 					red_groundbots_world_loc.poses.push_back(po_v[i]);
 					rTimeStamps.push_back(ros::Time::now().toSec());
 				}

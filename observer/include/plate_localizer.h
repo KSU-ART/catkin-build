@@ -17,6 +17,7 @@ private:
 	ros::Publisher rpp, gpp; //red plate publisher, green plate publisher
 	geometry_msgs::PoseArray green_groundbots_world_loc, red_groundbots_world_loc;
 	std::vector<double> rTimeStamps, gTimeStamps;
+	std::vector<double> rRotTimeStamps, gRotTimeStamps;
 	geometry_msgs::PoseStamped uavPose_;
 	projection_::cameraModel c1, c2, c3, c4, c5, c6, c0;
 	double gAngleTime, rAngleTime;
