@@ -4,7 +4,6 @@ ai_navigator::ai_navigator()
 {
 	/// ************** Constants *****************
 	SETPOINT_INTERVAL = 3.0;
-	LOCKON_RADIUS = 0.5;
 	DEBUG = true;
 	TARGET_ALTITUDE = 1.0;
 	
@@ -43,11 +42,8 @@ void ai_navigator::init()
 			case RandomTraversal:
 				random_traversal();
 				break;
-			case TargetNewGR:
-				target_new_gr();
-				break;
-			case FollowTarget:
-				follow_target();
+			case TargetGR:
+				target_ground_robot();
 				break;
 			case InteractWithRobot:
 				interact_with_robot();
@@ -97,6 +93,42 @@ ai_navigator::state ai_navigator::determine_state()
 	}
 }
 
+void ai_navigator::find_target()
+{
+	if (found_red || found_green)
+	{
+		found_target = true;
+		/// finds the closest between red or green
+		double dist_r = 100000;
+		double dist_g = 100000;
+		if (found_red)
+		{
+			double x = min_loc_r.position.x - current_pose.pose.position.x;
+			double y = min_loc_r.position.y - current_pose.pose.position.y;
+			dist_r = x*x + y*y;
+		}
+		if (found_green)
+		{
+			double x = min_loc_g.position.x - current_pose.pose.position.x;
+			double y = min_loc_g.position.y - current_pose.pose.position.y;
+			dist_g = x*x + y*y;
+		}
+		if (dist_r < dist_g )
+		{
+			target_gr = min_loc_r;
+		}
+		else
+		{
+			target_gr = min_loc_g;
+		}
+	}
+	else
+	{
+		found_target = false;
+	}
+	
+}
+
 
 /**************************************************************
  * Action Functions:
@@ -112,7 +144,7 @@ void ai_navigator::take_off()
 	if( (ros::Time::now().toSec() > (start_time + 5.00) ) )
 	{
 		new_state = true;
-		cur_state = TargetNewGR;
+		cur_state = TargetGR;
 		return;
 	}
 	
@@ -131,7 +163,7 @@ void ai_navigator::random_traversal()
 	}
 }
 
-void ai_navigator::target_new_gr()
+void ai_navigator::target_ground_robot()
 {
 	if(new_state)
 	{
@@ -145,49 +177,26 @@ void ai_navigator::target_new_gr()
 	if (ros::Time::now().toSec() >= setpoint_start_time + SETPOINT_INTERVAL)
 	{
 		setpoint_start_time = ros::Time::now().toSec();
-		if (found_red || found_green)
+		
+		if (found_target)
 		{
-			/// finds the closest between red or green
-			double dist_r = 100000;
-			double dist_g = 100000;
-			if (found_red)
+			setpoint = target_gr.position;
+			setpoint_pub.publish(setpoint);
+			// checks for orientation (x == 1 if not found any angle)
+			if (target_gr.orientation.x != 1) 
 			{
-				double x = min_loc_r.position.x - current_pose.pose.position.x;
-				double y = min_loc_r.position.y - current_pose.pose.position.y;
-				dist_r = x*x + y*y;
-			}
-			if (found_green)
-			{
-				double x = min_loc_g.position.x - current_pose.pose.position.x;
-				double y = min_loc_g.position.y - current_pose.pose.position.y;
-				dist_g = x*x + y*y;
+				// in radians
+				double gr_angle = 2*acos(target_gr.orientation.w); 
+				double cur_angle = 2*acos(current_pose.pose.orientation.w); 
+				double angle = gr_angle - cur_angle;
+				if (angle < 0)
+				{
+					// set within 2pi
+					angle += 6.28318530718;
+				}
+				
 			}
 			
-			// if red is closer
-			if (dist_r < dist_g)
-			{
-				//set setpoint to red plate
-				setpoint = min_loc_r.position;
-				setpoint_pub.publish(setpoint);
-				if (dist_r < LOCKON_RADIUS*LOCKON_RADIUS)
-				{
-					new_state = true;
-					cur_state = FollowTarget;
-					return;
-				}
-			}
-			else
-			{
-				//set setpoint to green plate
-				setpoint = min_loc_g.position;
-				setpoint_pub.publish(setpoint);
-				if (dist_g < LOCKON_RADIUS*LOCKON_RADIUS)
-				{
-					new_state = true;
-					cur_state = FollowTarget;
-					return;
-				}
-			}
 		}
 		else
 		{
@@ -198,16 +207,6 @@ void ai_navigator::target_new_gr()
 			return;
 		}
 	}
-}
-
-void ai_navigator::follow_target()
-{
-	if (new_state)
-	{
-		state_time = ros::Time::now().toSec();
-		new_state = false;
-	}
-	
 }
 
 void ai_navigator::interact_with_robot()
@@ -259,7 +258,7 @@ void ai_navigator::land()
  * ***************************************************************/
 void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 {
-	
+	current_pose = msg;
 }
 
 void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)

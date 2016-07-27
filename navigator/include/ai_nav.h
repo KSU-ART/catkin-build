@@ -14,7 +14,6 @@ class ai_navigator
 {
 private:
 	double SETPOINT_INTERVAL;
-	double LOCKON_RADIUS;
 	bool DEBUG;
 	double TARGET_ALTITUDE;
 	
@@ -25,7 +24,7 @@ private:
 			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
 	enum state 
 	{
-		TakeOff, RandomTraversal, TargetNewGR, FollowTarget,
+		TakeOff, RandomTraversal, TargetGR,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
 	
@@ -41,8 +40,11 @@ private:
 	
 	std::vector<geometry_msgs::Pose> gr_poses_g;
 	std::vector<geometry_msgs::Pose> gr_poses_r;
-	geometry_msgs::Pose target_gr;
 	
+	void find_target();
+	
+	geometry_msgs::Pose target_gr;
+	bool found_target;
 	geometry_msgs::Pose min_loc_r;
 	geometry_msgs::Pose min_loc_g;
 	bool found_red;
@@ -61,8 +63,7 @@ public:
 	///action functions:
 	void take_off();
 	void random_traversal();
-	void target_new_gr();
-	void follow_target();
+	void target_ground_robot();
 	void interact_with_robot();
 	void avoid_obstacle();
 	void hold_position();
