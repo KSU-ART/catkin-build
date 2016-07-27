@@ -105,8 +105,8 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 					angleAdded = true;
 					po_v[i].orientation.x = 0.0d; 
 					po_v[i].orientation.y = 0.0d; //always 0
-					po_v[i].orientation.z = sin(gAngle/2.0f);
-					po_v[i].orientation.w = cos(gAngle/2.0f);
+					po_v[i].orientation.z = sin((gAngle-1.5708)/2.0f);//-1.5708 because @ 90 (1.5708 RAD) deg (pointed forward) plate angle should be 0.
+					po_v[i].orientation.w = cos((gAngle-1.5708)/2.0f);//-1.5708 because @ 90 (1.5708 RAD) deg (pointed forward) plate angle should be 0.
 				}
 				else
 				{
@@ -185,8 +185,8 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 					//qx is always 0, so storing data in it:
 					po_v[i].orientation.x = 0.0d; 
 					po_v[i].orientation.y = 0.0d; //always 0
-					po_v[i].orientation.z = sin(gAngle/2.0f);
-					po_v[i].orientation.w = cos(gAngle/2.0f);
+					po_v[i].orientation.z = sin((rAngle-1.5708)/2.0f);//-1.5708 because @ 90 (1.5708 RAD) deg (pointed forward) plate angle should be 0.
+					po_v[i].orientation.w = cos((rAngle-1.5708)/2.0f);//-1.5708 because @ 90 (1.5708 RAD) deg (pointed forward) plate angle should be 0.
 				}
 				else
 				{
@@ -200,8 +200,8 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				{
 					if (	abs((red_groundbots_world_loc.poses[j].position.y - po_v[i].position.y)) < 1.0d 
 							&& abs((red_groundbots_world_loc.poses[j].position.x - po_v[i].position.x)) < 1.0d 
-							&& !(-0.0001d < red_groundbots_world_loc.poses[j].orientation.x < 0.0001d)
-							&& abs(red_groundbots_world_loc.poses[j].orientation.x - ros::Time::now().toSec()) < 10.0d )
+							&& !(-0.0001d < rRotTimeStamps[j] < 0.0001d)
+							&& abs(rRotTimeStamps[j] - ros::Time::now().toSec()) < 10.0d )
 					{
 						red_groundbots_world_loc.poses[j].position = po_v[i].position;
 						
@@ -233,11 +233,11 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 				{
 					if (angleAdded)
 					{
-						gRotTimeStamps.push_back(ros::Time::now().toSec());
+						rRotTimeStamps.push_back(ros::Time::now().toSec());
 						angleAdded = false;
 					}
 					else
-						gRotTimeStamps.push_back(0.0d);
+						rRotTimeStamps.push_back(0.0d);
 						
 					red_groundbots_world_loc.poses.push_back(po_v[i]);
 					rTimeStamps.push_back(ros::Time::now().toSec());
