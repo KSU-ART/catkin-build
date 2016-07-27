@@ -29,5 +29,6 @@
 	</include>
 -->	
 	<node name="settings.sh" pkg="spsuart" type="settings.sh" />
-	<node name="guidanceNode" pkg="guidance" type="guidanceNode"/>
+<!--	<node name="guidanceNode" pkg="guidance" type="guidanceNode"/>
+-->
 </launch>
