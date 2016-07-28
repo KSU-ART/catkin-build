@@ -6,6 +6,7 @@ ai_navigator::ai_navigator()
 	SETPOINT_INTERVAL = 3.0;
 	DEBUG = true;
 	TARGET_ALTITUDE = 1.0;
+	GOAL_ANGLE = PI/180 * 45;
 	
 	start_time = ros::Time::now().toSec();
 	
@@ -24,7 +25,6 @@ ai_navigator::ai_navigator()
 	pid_XY_pub = n_.advertise<std_msgs::Int32MultiArray>("/navigator/pid_XY", 1); //{p, i, d, min, max}
 	pid_z_pub = n_.advertise<std_msgs::Int32MultiArray>("/navigator/pid_z",1 );//{p, i, d, min, max}
 	modeMsg_pub = n_.advertise<std_msgs::Int8>("/ainavigator_nav/modeMsg", 1);//0 = altitude hold, 1 = stabilize, 2 = land;
-
 	
 }
 
@@ -93,11 +93,10 @@ ai_navigator::state ai_navigator::determine_state()
 	}
 }
 
-void ai_navigator::find_target()
+bool ai_navigator::find_target()
 {
 	if (found_red || found_green)
 	{
-		found_target = true;
 		/// finds the closest between red or green
 		double dist_r = 100000;
 		double dist_g = 100000;
@@ -121,12 +120,28 @@ void ai_navigator::find_target()
 		{
 			target_gr = min_loc_g;
 		}
+		return true;
 	}
-	else
+	return false;
+}
+
+void ai_navigator::crop_angle(double& angle)
+{
+	// set within 0 to 2pi
+	if (angle < 0)
 	{
-		found_target = false;
+		while (angle < 0)
+		{
+			angle += 2*PI;
+		}
 	}
-	
+	else if (angle >= 2*PI)
+	{
+		while (angle >= 2*PI)
+		{
+			angle -= 2*PI;
+		}
+	}
 }
 
 
@@ -156,7 +171,7 @@ void ai_navigator::take_off()
 
 void ai_navigator::random_traversal()
 {
-		if(new_state)
+	if(new_state)
 	{
 		state_time = ros::Time::now().toSec();
 		new_state = false;
@@ -178,7 +193,7 @@ void ai_navigator::target_ground_robot()
 	{
 		setpoint_start_time = ros::Time::now().toSec();
 		
-		if (found_target)
+		if (find_target())
 		{
 			setpoint = target_gr.position;
 			setpoint_pub.publish(setpoint);
@@ -188,15 +203,25 @@ void ai_navigator::target_ground_robot()
 				// in radians
 				double gr_angle = 2*acos(target_gr.orientation.w); 
 				double cur_angle = 2*acos(current_pose.pose.orientation.w); 
-				double angle = gr_angle - cur_angle;
-				if (angle < 0)
-				{
-					// set within 2pi
-					angle += 6.28318530718;
-				}
+				double angle = gr_angle + cur_angle;
 				
+				crop_angle(angle);
+				
+				int num_of_presses = 0;
+				while (angle < 180 - GOAL_ANGLE || angle > 180 + GOAL_ANGLE)
+				{
+					num_of_presses++;
+					angle -= 45;
+					crop_angle(angle);
+				}
+				if (num_of_presses > 0)
+				{
+					//go to interact ground robot
+					new_state = true;
+					cur_state = InteractWithRobot;
+					return;
+				}
 			}
-			
 		}
 		else
 		{
@@ -263,7 +288,6 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 
 void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
-	gr_poses_r.clear();
 	if (msg.poses.size() > 0)
 	{
 		found_red = true;
@@ -272,7 +296,6 @@ void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 		double min_dist = x*x + y*y;
 		for (int i = 1; i < msg.poses.size(); i++)
 		{
-			gr_poses_r.push_back(msg.poses[i]);
 			double x = msg.poses[i].position.x - current_pose.pose.position.x;
 			double y = msg.poses[i].position.y - current_pose.pose.position.y;
 			double dist = x*x + y*y;
@@ -287,12 +310,10 @@ void ai_navigator::red_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 	{
 		found_red = false;
 	}
-	
 }
 
 void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 {
-	gr_poses_g.clear();
 	if (msg.poses.size() > 0)
 	{
 		found_green = true;
@@ -301,7 +322,6 @@ void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 		double min_dist = x*x + y*y;
 		for (int i = 1; i < msg.poses.size(); i++)
 		{
-			gr_poses_g.push_back(msg.poses[i]);
 			double x = msg.poses[i].position.x - current_pose.pose.position.x;
 			double y = msg.poses[i].position.y - current_pose.pose.position.y;
 			double dist = x*x + y*y;
@@ -316,7 +336,6 @@ void ai_navigator::green_plate_poses_cb(const geometry_msgs::PoseArray& msg)
 	{
 		found_green = false;
 	}
-	
 }
 
 void ai_navigator::obstacles_cb(const geometry_msgs::PoseArray& msg)
