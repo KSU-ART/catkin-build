@@ -10,45 +10,54 @@
 #include <string>
 #include <vector>
 
+#define PI 3.14159265359
+
 class ai_navigator
 {
 private:
+	/// ******** CONSTANTS *********
 	double SETPOINT_INTERVAL;
 	bool DEBUG;
 	double TARGET_ALTITUDE;
+	/// the angle +- 180 to the interact with ground robot in radians
+	double GOAL_ANGLE;
 	
+	/// ros hadlers
 	ros::NodeHandle n_;
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
 			green_plate_poses_sub, obstacles_sub;
 	ros::Publisher retractMsg_pub, modeMsg_pub, setpoint_pub, 
-			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
+			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;4
+	/// State machine
 	enum state 
 	{
 		TakeOff, RandomTraversal, TargetGR,
 		InteractWithRobot, AvoidObstacle, HoldPosition, Land
 	};
-	
-	geometry_msgs::PoseStamped current_pose;
-	geometry_msgs::Point setpoint;
-	
 	state cur_state;
 	double state_time, start_time; 
 	bool new_state;
+	
+	/// current position and target position
+	geometry_msgs::PoseStamped current_pose;
+	geometry_msgs::Point setpoint;
 	bool at_setpoint;
 	
+	/// targeting new ground robot
 	double setpoint_start_time;
-	
-	std::vector<geometry_msgs::Pose> gr_poses_g;
-	std::vector<geometry_msgs::Pose> gr_poses_r;
+	geometry_msgs::Pose target_gr;
 	
 	void find_target();
+	void crop_angle(double& angle);
 	
-	geometry_msgs::Pose target_gr;
-	bool found_target;
+	/// plate callbacks
 	geometry_msgs::Pose min_loc_r;
 	geometry_msgs::Pose min_loc_g;
 	bool found_red;
 	bool found_green;
+	
+	/// interact ground robot
+	
 	
 public:
 	///constructor
