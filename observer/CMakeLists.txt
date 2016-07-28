@@ -149,6 +149,7 @@ add_executable(color_filter src/image_process.cpp)
 add_executable(pole_detect src/pole_detect.cpp)
 
 add_executable(grid_tracker src/grid_tracker.cpp src/camera_model.cpp )
+add_executable(peripherals src/cycle_image.cpp )
 #~ add_executable(calibrate src/calib.cpp)
 
 ## Add cmake target dependencies of the executable
@@ -184,6 +185,7 @@ add_executable(grid_tracker src/grid_tracker.cpp src/camera_model.cpp )
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
  )
+
  #~ target_link_libraries(calibrate 
    #~ ${catkin_LIBRARIES}
    #~ ${OpenCV_LIBRARIES}
@@ -203,6 +205,11 @@ target_link_libraries(color_filter
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
    ${ATLANTE_LIBRARIES}
+ )
+
+ target_link_libraries(peripherals 
+   ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
  )
 #############
 ## Install ##

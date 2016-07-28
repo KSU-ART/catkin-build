@@ -27,7 +27,7 @@ private:
 	ros::Subscriber curent_pose_sub, red_plate_poses_sub,
 			green_plate_poses_sub, obstacles_sub;
 	ros::Publisher retractMsg_pub, modeMsg_pub, setpoint_pub, 
-			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;4
+			EMERGENCY_LAND_pub, pid_XY_pub, pid_z_pub;
 	/// State machine
 	enum state 
 	{
@@ -47,7 +47,7 @@ private:
 	double setpoint_start_time;
 	geometry_msgs::Pose target_gr;
 	
-	void find_target();
+	bool find_target();
 	void crop_angle(double& angle);
 	
 	/// plate callbacks
