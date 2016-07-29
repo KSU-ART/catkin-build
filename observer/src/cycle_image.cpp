@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 		{
 			cap >> frame;
 			
-			cout << "CV_CAP_PROP_FORMAT: " << cap.get(CV_CAP_PROP_FORMAT) << endl;
+			//~ cout << "CV_CAP_PROP_FORMAT: " << cap.get(CV_CAP_PROP_FORMAT) << endl;
 			//~ cout << "CV_CAP_PROP_FOURCC: " << cap.get(CV_CAP_PROP_FOURCC) << endl;
 			//~ cout << "CV_CAP_PROP_FRAME_WIDTH: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << endl;
 			//~ cout << "CV_CAP_PROP_FRAME_HEIGHT: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 			
 			if (DEBUG)
 			{
-				if (!(frame.size().width >0 && frame.size().height >0))
+				if (frame.empty())
 				{
 					break;
 				}
