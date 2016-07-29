@@ -29,72 +29,95 @@ int main(int argc, char** argv)
 	
 	image_transport::ImageTransport it(n);
 	
-	image_pub1 = it.advertise("/usb_cam_1/image_raw", 1);
-	image_pub2 = it.advertise("/usb_cam_2/image_raw", 1);
-	image_pub3 = it.advertise("/usb_cam_3/image_raw", 1);
-	image_pub4 = it.advertise("/usb_cam_4/image_raw", 1);
-	image_pub5 = it.advertise("/usb_cam_5/image_raw", 1);
-	image_pub6 = it.advertise("/usb_cam_6/image_raw", 1);
+	image_pub1 = it.advertise("/uvc_cam_1/image_raw", 1);
+	image_pub2 = it.advertise("/uvc_cam_2/image_raw", 1);
+	image_pub3 = it.advertise("/uvc_cam_3/image_raw", 1);
+	image_pub4 = it.advertise("/uvc_cam_4/image_raw", 1);
+	image_pub5 = it.advertise("/uvc_cam_5/image_raw", 1);
+	image_pub6 = it.advertise("/uvc_cam_6/image_raw", 1);
 	
-    int camera = 1;
+	int camera = 1;
 	Mat frame;
 	int seq = 0;
 	
 	do
 	{
+		cout << "grab new cam: " << endl;
 		VideoCapture cap(camera);
-		
-		cap >> frame;
-		// timeout sequence for waiting for images
-		for (int timeout = 500; (!frame.empty() && timeout < 0); timeout--)
+		while(1)
 		{
+			cap >> frame;
+			
+			cout << "CV_CAP_PROP_FORMAT: " << cap.get(CV_CAP_PROP_FORMAT) << endl;
+			//~ cout << "CV_CAP_PROP_FOURCC: " << cap.get(CV_CAP_PROP_FOURCC) << endl;
+			//~ cout << "CV_CAP_PROP_FRAME_WIDTH: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << endl;
+			//~ cout << "CV_CAP_PROP_FRAME_HEIGHT: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
+			//~ cout << "CV_CAP_PROP_FPS: " << cap.get(CV_CAP_PROP_FPS) << endl;
+			//~ cout << "CV_CAP_PROP_MODE: " << cap.get(CV_CAP_PROP_MODE) << endl;
+			
+			// timeout sequence for waiting for images
+			//~ while (!cap.isOpened())
+			//~ {
+				//~ waitKey(10);
+			//~ }
+			
+			if (DEBUG)
+			{
+				if (!(frame.size().width >0 && frame.size().height >0))
+				{
+					break;
+				}
+				imshow("cycle images", frame);
+			}
+			
+			// publish here
+			cv_bridge::CvImage out_msg;
+			out_msg.header.seq = ++seq;
+			out_msg.header.stamp = ros::Time::now();
+			out_msg.header.frame_id = "peripheral_cams";
+			out_msg.encoding = enc::BGR8;
+			switch (camera)
+			{
+				case 1:
+					out_msg.image = frame;
+					image_pub1.publish(out_msg.toImageMsg());
+					break;
+				case 2:
+					out_msg.image = frame;
+					image_pub2.publish(out_msg.toImageMsg());
+					break;
+				case 3:
+					out_msg.image = frame;
+					image_pub3.publish(out_msg.toImageMsg());
+					break;
+				case 4:
+					out_msg.image = frame;
+					image_pub4.publish(out_msg.toImageMsg());
+					break;
+				case 5:
+					out_msg.image = frame;
+					image_pub5.publish(out_msg.toImageMsg());
+					break;
+				case 6:
+					out_msg.image = frame;
+					image_pub6.publish(out_msg.toImageMsg());
+					break;
+			}
+			
+			
+			if (waitKey(10) >= 27)
+			{
+				cap.release();
+				if(camera > 5)
+					camera = 1;
+				else
+					camera++;
+				
+				continue;
+			}
+			
 			waitKey(10);
 		}
-		if (DEBUG)
-		{
-			imshow("cycle images", frame);
-		}
-		
-		// publish here
-		cv_bridge::CvImage out_msg;
-		out_msg.header.seq = ++seq;
-		out_msg.header.stamp = ros::Time::now();
-		out_msg.header.frame_id = "peripheral_cams";
-		out_msg.encoding = enc::BGR8;
-		switch (camera)
-		{
-			case 1:
-				out_msg.image = frame;
-				image_pub1.publish(out_msg.toImageMsg());
-				break;
-			case 2:
-				out_msg.image = frame;
-				image_pub2.publish(out_msg.toImageMsg());
-				break;
-			case 3:
-				out_msg.image = frame;
-				image_pub3.publish(out_msg.toImageMsg());
-				break;
-			case 4:
-				out_msg.image = frame;
-				image_pub4.publish(out_msg.toImageMsg());
-				break;
-			case 5:
-				out_msg.image = frame;
-				image_pub5.publish(out_msg.toImageMsg());
-				break;
-			case 6:
-				out_msg.image = frame;
-				image_pub6.publish(out_msg.toImageMsg());
-				break;
-		}
-		
-		cap.release();
-		
-		if(camera > 5)
-			camera = 1;
-		else
-			camera++;
 	} while (ros::ok());
     // the camera will be closed automatically upon exit
     // cap.close();
