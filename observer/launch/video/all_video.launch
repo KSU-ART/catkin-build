@@ -1,21 +1,14 @@
 <launch>
-<!--
-	<include file="$(find observer)/launch/video/video0.launch" />
--->
-	<include file="$(find observer)/launch/video/video1.launch" />
-	
 
-	<include file="$(find observer)/launch/video/video2.launch" />
-	<include file="$(find observer)/launch/video/video3.launch" />
-	<include file="$(find observer)/launch/video/video4.launch" />
-<!--
-	<include file="$(find observer)/launch/video/video5.launch" />
-	<include file="$(find observer)/launch/video/video8.launch" />
--->
-
-<!--
-	<include file="$(find observer)/launch/video/video6.launch" />
-	<include file="$(find observer)/launch/video/video7.launch" />
--->
+	<node name="usb_cam_0" pkg="usb_cam" type="usb_cam_node" output="screen" >
+		<param name="video_device" value="/dev/video0" />
+		<param name="image_width" value="640" />
+		<param name="image_height" value="480" />
+		<param name="pixel_format" value="yuyv" />
+		<param name="camera_frame_id" value="usb_cam" />
+		<param name="framerate" value="30"/>
+		<param name="io_method" value="mmap"/>
+	</node>
+	<node name="image_peripherals" pkg="observer" type="peripherals" output="screen" />
 	
 </launch>

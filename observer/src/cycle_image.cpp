@@ -12,14 +12,12 @@ namespace enc = sensor_msgs::image_encodings;
 
 bool DEBUG = true;
 
-
 image_transport::Publisher image_pub1;
 image_transport::Publisher image_pub2;
 image_transport::Publisher image_pub3;
 image_transport::Publisher image_pub4;
 image_transport::Publisher image_pub5;
 image_transport::Publisher image_pub6;
-
 
 int main(int argc, char** argv)
 {
@@ -47,19 +45,6 @@ int main(int argc, char** argv)
 		while(1)
 		{
 			cap >> frame;
-			
-			//~ cout << "CV_CAP_PROP_FORMAT: " << cap.get(CV_CAP_PROP_FORMAT) << endl;
-			//~ cout << "CV_CAP_PROP_FOURCC: " << cap.get(CV_CAP_PROP_FOURCC) << endl;
-			//~ cout << "CV_CAP_PROP_FRAME_WIDTH: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << endl;
-			//~ cout << "CV_CAP_PROP_FRAME_HEIGHT: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
-			//~ cout << "CV_CAP_PROP_FPS: " << cap.get(CV_CAP_PROP_FPS) << endl;
-			//~ cout << "CV_CAP_PROP_MODE: " << cap.get(CV_CAP_PROP_MODE) << endl;
-			
-			// timeout sequence for waiting for images
-			//~ while (!cap.isOpened())
-			//~ {
-				//~ waitKey(10);
-			//~ }
 			
 			if (DEBUG)
 			{
@@ -104,22 +89,17 @@ int main(int argc, char** argv)
 					break;
 			}
 			
+			cap.release();
+			if(camera > 5)
+				camera = 1;
+			else
+				camera++;
 			
-			if (waitKey(10) >= 27)
-			{
-				cap.release();
-				if(camera > 5)
-					camera = 1;
-				else
-					camera++;
-				
-				continue;
-			}
+			continue;
 			
 			waitKey(10);
 		}
 	} while (ros::ok());
-    // the camera will be closed automatically upon exit
-    // cap.close();
+    
     return 0;
 }
