@@ -10,7 +10,7 @@ using namespace cv;
 
 namespace enc = sensor_msgs::image_encodings;
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 image_transport::Publisher image_pub1;
 image_transport::Publisher image_pub2;
@@ -32,19 +32,36 @@ int main(int argc, char** argv)
 	image_pub3 = it.advertise("/uvc_cam_3/image_raw", 1);
 	image_pub4 = it.advertise("/uvc_cam_4/image_raw", 1);
 	image_pub5 = it.advertise("/uvc_cam_5/image_raw", 1);
-	image_pub6 = it.advertise("/uvc_cam_6/image_raw", 1);
+	image_pub6 = it.advertise("/uvc_cam_8/image_raw", 1);
 	
 	int camera = 1;
 	Mat frame;
+	Mat frame2;
 	int seq = 0;
-	
+	int counter = 1;
+        
+	VideoCapture cap;
+
 	do
 	{
-		cout << "grab new cam: " << endl;
-		VideoCapture cap(camera);
-		while(1)
+		cap.open(camera);
+
+		//cap.set(CV_CAP_PROP_FOURCC, CV_FOURCC('M', 'J', 'P', 'G'));
+		cout << "CV_CAP_PROP_FOURCC::  " << cap.getCV_CAP_PROP_FOURCC) << endl;
+		cout << "CV_CAP_PROP_WIDTH::  " << cap.get(CV_CAP_PROP_WIDTH) << endl;
+		cout << "CV_CAP_PROP_HEIGHT::  " << cap.get(CV_CAP_PROP_HEIGHT) << endl;
+
+		cout << "counter: " << counter << endl;
+		counter++;
+
+		while(true)
 		{
 			cap >> frame;
+			
+			if (frame.empty())
+			{
+				break;
+			}
 			
 			if (DEBUG)
 			{
@@ -83,21 +100,42 @@ int main(int argc, char** argv)
 					out_msg.image = frame;
 					image_pub5.publish(out_msg.toImageMsg());
 					break;
-				case 6:
+				case 8:
 					out_msg.image = frame;
 					image_pub6.publish(out_msg.toImageMsg());
 					break;
 			}
 			
-			cap.release();
-			if(camera > 5)
+			if(cap.isOpened())
+				cap.release();
+			//if(camera == 2)
+			//{
+			//	camera = 4;
+			//}
+			//else 
+			//if (camera == 5)
+			//{
+			//	camera = 8;
+			//}
+			//else
+			if (camera >= 5)
+			{
+				camera = 8;
+			}
+			else if(camera == 8)
+			{
 				camera = 1;
+			}
 			else
+			{
 				camera++;
-			
+			}
 			continue;
 			
-			waitKey(10);
+			//ros::spinOnce();
+			
+			//waitKey(10);
+			waitKey(33);
 		}
 	} while (ros::ok());
     
