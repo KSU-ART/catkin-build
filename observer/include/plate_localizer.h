@@ -32,6 +32,7 @@ public:
 	void update_pose(const geometry_msgs::PoseStamped& cur_loc);
 	void update_g_angle(const std_msgs::Float32 &msg);
 	void update_r_angle(const std_msgs::Float32 &msg);
+	
 	void cam_1r_callback(const std_msgs::Int32MultiArray& msg);
 	void cam_2r_callback(const std_msgs::Int32MultiArray& msg);
 	void cam_3r_callback(const std_msgs::Int32MultiArray& msg);
@@ -39,6 +40,7 @@ public:
 	void cam_5r_callback(const std_msgs::Int32MultiArray& msg);
 	void cam_6r_callback(const std_msgs::Int32MultiArray& msg);
 	void cam_0r_callback(const std_msgs::Int32MultiArray& msg);
+	
 	void cam_1g_callback(const std_msgs::Int32MultiArray& msg);
 	void cam_2g_callback(const std_msgs::Int32MultiArray& msg);
 	void cam_3g_callback(const std_msgs::Int32MultiArray& msg);

@@ -10,18 +10,19 @@ using namespace projection_;
 plate_localizer::plate_localizer()
 {
 	//load cameramodels
-	c1.loadModel('1');
+	c1.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,0.0d, 0.887010d,0.0d,0.461748d,0.0d);
 	c2.loadModel('2');
 	c3.loadModel('3');
 	c4.loadModel('4');
 	c5.loadModel('5');
 	c6.loadModel('6');
-	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d,0.0d,0.0d,-0.1d,1.0d,0.0d,0.0d,0.0d);
+	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	
 	//initiate subscribers
 	curr_pose = s_.subscribe("/localizer/curent_pose", 3, &plate_localizer::update_pose, this);
 	r_plate_angle = s_.subscribe("/observer/red_plate_angle", 3, &plate_localizer::update_g_angle, this);
 	g_plate_angle = s_.subscribe("/observer/green_plate_angle", 3, &plate_localizer::update_r_angle, this);
+	
 	r1 = s_.subscribe("/observer/r_cam_points_1", 3, &plate_localizer::cam_1r_callback, this);
 	r2 = s_.subscribe("/observer/r_cam_points_2", 3, &plate_localizer::cam_2r_callback, this);
 	r3 = s_.subscribe("/observer/r_cam_points_3", 3, &plate_localizer::cam_3r_callback, this);
@@ -29,6 +30,7 @@ plate_localizer::plate_localizer()
 	r5 = s_.subscribe("/observer/r_cam_points_5", 3, &plate_localizer::cam_5r_callback, this);
 	r6 = s_.subscribe("/observer/r_cam_points_6", 3, &plate_localizer::cam_6r_callback, this);
 	r0 = s_.subscribe("/observer/r_cam_points_0", 3, &plate_localizer::cam_0r_callback, this);
+	
 	g1 = s_.subscribe("/observer/g_cam_points_1", 3, &plate_localizer::cam_1g_callback, this);
 	g2 = s_.subscribe("/observer/g_cam_points_2", 3, &plate_localizer::cam_2g_callback, this);
 	g3 = s_.subscribe("/observer/g_cam_points_3", 3, &plate_localizer::cam_3g_callback, this);

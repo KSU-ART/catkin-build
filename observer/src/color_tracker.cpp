@@ -12,7 +12,7 @@ namespace enc = sensor_msgs::image_encodings;
 trackobjects::trackobjects()
 : it_(nh_)
 {
-	angler = false;
+	angler = true;
 	MIN_OBJECT_AREA = 50*50;
 	MAX_NUM_OBJECTS=10;
 	image_sub_ = it_.subscribe("/usb_cam_0/image_rect_color", 1, &trackobjects::track, this);
@@ -92,7 +92,6 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	
 	morphOps(threshold);
 	trackFilteredObject(green,threshold);
-	//g_point_arr.data.push_back(200);
 	green_pub.publish(g_point_arr);
 	
 	waitKey(15);
