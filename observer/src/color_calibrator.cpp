@@ -13,6 +13,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <iostream>
 #include "std_msgs/MultiArrayLayout.h"
 #include "std_msgs/MultiArrayDimension.h"
@@ -47,6 +48,7 @@ const string windowName3 = "After Morphological Operations";
 const string trackbarWindowName = "Trackbars";
 
 bool calibrationMode = true;
+Mat cameraFeed;
 
 //The following for location publishers
 std_msgs::Int16MultiArray greenArr;
@@ -269,7 +271,22 @@ void trackFilteredObject(LAB_Object theObject,Mat threshold,Mat LAB, Mat &camera
 			else putText(cameraFeed,"TOO MUCH NOISE! ADJUST FILTER",Point(0,50),1,2,Scalar(0,0,255),2);
 	}
 } 
-
+void onMouse( int event, int x, int y, int, void* )
+{
+	if( event != EVENT_LBUTTONDOWN )
+		return;
+	
+	int rangeSlider = 25;
+	Vec3b temp(cameraFeed.at<Vec3b>(Point(x,y)));
+	
+	L_MIN = temp.val[0]-rangeSlider;
+	L_MAX = temp.val[0]+rangeSlider;
+	A_MIN = temp.val[1]-rangeSlider;
+	A_MAX = temp.val[1]+rangeSlider;
+	B_MIN = temp.val[2]-rangeSlider;
+	B_MAX = temp.val[2]+rangeSlider;
+	
+}
 class trackobjects
 {
     ros::NodeHandle loc_node;
@@ -286,6 +303,7 @@ class trackobjects
     std_msgs::String msg;
 
 public:
+
     trackobjects()
     : it_(nh_)
     {
@@ -296,6 +314,7 @@ public:
 		red_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("red_loc", 50);
 		green_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("green_loc", 50);
 		test_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("calibrating_loc", 100);
+		setMouseCallback(windowName, onMouse);
     }
 
     ~trackobjects()
@@ -321,7 +340,7 @@ public:
             ROS_ERROR("tutorialROSOpenCV::main.cpp::cv_bridge exception: %s", e.what());
             return;
         }
-        Mat cameraFeed;
+        
 		Mat threshold;
 		//Mat HSV;
 		Mat LAB;
@@ -339,6 +358,9 @@ public:
 			//if in calibration mode, we track objects based on the LAB slider values.			
 			
 			inRange(LAB,Scalar((L_MIN),(A_MIN),(B_MIN)),Scalar((L_MAX),(A_MAX),(B_MAX)),threshold);
+			
+			cout << "setLABmin(Scalar(" << L_MIN << "," << A_MIN << "," << B_MIN << "));" << endl;
+			cout << "setLABmax(Scalar(" << L_MAX << "," << A_MAX << "," << B_MAX << "));" << endl;
 			
 			morphOps(threshold);
 			thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
