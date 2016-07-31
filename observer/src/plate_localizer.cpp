@@ -40,6 +40,16 @@ plate_localizer::plate_localizer()
 	//initiate publishers
 	rpp = s_.advertise<geometry_msgs::PoseArray>("/observer/red_plate_poses", 1);
 	gpp = s_.advertise<geometry_msgs::PoseArray>("/observer/green_plate_poses", 1);
+
+	//initialize pose data
+	uavPose_.pose.position.x = 0;
+	uavPose_.pose.position.y = 0;
+	uavPose_.pose.position.z = 1;
+	uavPose_.pose.orientation.x=0;
+	uavPose_.pose.orientation.y=0;
+	uavPose_.pose.orientation.z=0;
+	uavPose_.pose.orientation.w=1;
+
 }
 
 ///destructor (unused, could be optimized in future)
@@ -368,7 +378,7 @@ void plate_localizer::cam_0g_callback(const std_msgs::Int32MultiArray& msg)
 int main(int argc, char** argv)
 {	
 	waitKey(5000);
-   ros::init(argc, argv, "/observer/plate_localizer");
+   ros::init(argc, argv, "observer_plate_localizer");
    plate_localizer l1;
    ros::spin(); //use 1 thread
 }

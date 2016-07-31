@@ -14,6 +14,8 @@
 #include "LAB_Object.h"
 #include <string.h>
 #include <std_msgs/Int32MultiArray.h>
+#include "std_msgs/MultiArrayLayout.h"
+#include "std_msgs/MultiArrayDimension.h"
 
 class trackobjects{
 private:

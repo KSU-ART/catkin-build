@@ -289,7 +289,7 @@ public:
     trackobjects()
     : it_(nh_)
     {
-        image_sub_ = it_.subscribe("/usb_cam_4/image_raw", 1, &trackobjects::imageCb, this);
+        image_sub_ = it_.subscribe("/usb_cam_0/image_raw", 1, &trackobjects::imageCb, this);
         image_pub_= it_.advertise("/usb_cam/image_tracked",1);
         image_pub2_=it_.advertise("green_binary",1);
         image_pub3_=it_.advertise("red_binary",1);
