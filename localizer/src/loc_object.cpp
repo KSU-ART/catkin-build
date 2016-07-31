@@ -68,8 +68,8 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 
 void sensor_processor::gridflow_cb(const geometry_msgs::Point& msg)
 {
-	grid_flow_point.x = msg.x;
-	grid_flow_point.y = msg.y;
+	grid_flow_point.x = msg.x + OFFSET_X;
+	grid_flow_point.y = msg.y + OFFSET_Y;
 }
 
 /// Global referace
