@@ -25,6 +25,8 @@ class sensor_processor
 private:
 	/// Weight of the velocity guidance data (0-1)
 	static const float GUIDANCE_VEL_WEIGHT = 1;
+	const float OFFSET_X = -1; 
+	const float OFFSET_Y = 10; 
 	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
