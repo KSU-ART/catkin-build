@@ -44,8 +44,8 @@ plate_localizer::plate_localizer()
 	gpp = s_.advertise<geometry_msgs::PoseArray>("/observer/green_plate_poses", 1);
 
 	//initialize pose data
-	uavPose_.pose.position.x = 1;
-	uavPose_.pose.position.y = 1;
+	uavPose_.pose.position.x = 0;
+	uavPose_.pose.position.y = 0;
 	uavPose_.pose.position.z = 1;
 	uavPose_.pose.orientation.x=0;
 	uavPose_.pose.orientation.y=0;
@@ -73,26 +73,41 @@ void plate_localizer::update_r_angle(const std_msgs::Float32 &msg)
 }
 void plate_localizer::checkTimes(char &color)
 {
+	vector <int> g_targets_to_delete;
+	vector <int> r_targets_to_delete;
 	for (int i = 0; i < gTimeStamps.size(); i++)
 	{
 		//verify < 3 secs old
 		if ( (ros::Time::now().toSec() - gTimeStamps[i]) > 3) //3 secs old
 		{
 			//erase old element:
-			if (color == 'g')
-			{
-				green_groundbots_world_loc.poses.erase(green_groundbots_world_loc.poses.begin() + i);
-				gTimeStamps.erase(gTimeStamps.begin() + i);
-				gRotTimeStamps.erase(gRotTimeStamps.begin() + i);
-			}
-			else
-			{
-				red_groundbots_world_loc.poses.erase(red_groundbots_world_loc.poses.begin() + i);
-				rTimeStamps.erase(rTimeStamps.begin() + i);
-				rRotTimeStamps.erase(rRotTimeStamps.begin() + i);
-			}
+			g_targets_to_delete.push_back(i);
 		}
 	}
+	for (int i = 0; i < rTimeStamps.size(); i++)
+	{
+		//verify < 3 secs old
+		if ( (ros::Time::now().toSec() - rTimeStamps[i]) > 3) //3 secs old
+		{
+			//erase old element:
+			r_targets_to_delete.push_back(i);
+		}
+	}
+	
+	for (int i = 0; i < g_targets_to_delete.size(); i++)
+	{
+		green_groundbots_world_loc.poses.erase(green_groundbots_world_loc.poses.begin() + g_targets_to_delete[i]);
+		gTimeStamps.erase(gTimeStamps.begin() + g_targets_to_delete[i]);
+		gRotTimeStamps.erase(gRotTimeStamps.begin() + g_targets_to_delete[i]);
+	}
+	
+	for (int i = 0; i < r_targets_to_delete.size(); i++)
+	{
+		red_groundbots_world_loc.poses.erase(red_groundbots_world_loc.poses.begin() + r_targets_to_delete[i]);
+		rTimeStamps.erase(rTimeStamps.begin() + r_targets_to_delete[i]);
+		rRotTimeStamps.erase(rRotTimeStamps.begin() + r_targets_to_delete[i]);
+	}
+	
 }
 
 ///merge locations, discard out of bounds locations
@@ -171,8 +186,9 @@ void plate_localizer::merge_positions_location(std::vector<geometry_msgs::Pose> 
 						angleAdded = false;
 					}
 					else
+					{
 						gRotTimeStamps.push_back(0.0d);
-						
+					}	
 					green_groundbots_world_loc.poses.push_back(po_v[i]);
 					gTimeStamps.push_back(ros::Time::now().toSec());
 				}		
@@ -268,8 +284,8 @@ void plate_localizer::point_callback(const std_msgs::Int32MultiArray& msg, char 
 	bool downcam = false;
 	for (int i = 0; i < msg.data.size(); i+=2)
 	{
-		p_.x = i;
-		p_.y = i + 2;
+		p_.x = msg.data[i];
+		p_.y = msg.data[i + 1];
 		pt_v.push_back(p_);
 	}
 	switch (camID)
