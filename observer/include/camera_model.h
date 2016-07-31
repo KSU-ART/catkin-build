@@ -23,8 +23,7 @@ namespace projection_
 		int image_width, image_height;
 		double camera_focal_distance_x, camera_focal_distance_y, 
 			camera_center_x_pixels, camera_center_y_pixels, 
-			camera_pixel_width_meters, camera_pixel_height_meters, 
-			roomba_height;
+			camera_pixel_width_meters, camera_pixel_height_meters;
 			
 		HTMatrix4 camera_transform_from_drone;
 		

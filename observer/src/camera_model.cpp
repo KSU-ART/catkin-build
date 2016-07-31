@@ -173,6 +173,8 @@ Vector3 cameraModel::findLinePlaneIntersection(const Vector3 &lineVector, const 
 
 geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel)
 {
+	double roomba_height = 0.091;
+	
 	Quaternion q1(uavPose.pose.orientation.x, uavPose.pose.orientation.y, 
 					uavPose.pose.orientation.z, uavPose.pose.orientation.w);
 					
