@@ -207,11 +207,11 @@ geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStampe
 											pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
 	
 	geometry_msgs::Pose p1;
-	p1.position.x = pointOnFloorFromWorld.x;
-	p1.position.y = pointOnFloorFromWorld.y;
-	p1.position.z = pointOnFloorFromWorld.z;
-	p1.orientation.w = 1;
-	p1.orientation.x = 0;
+	p1.position.x = pointOnFloorFromWorld.x/10;
+	p1.position.y = pointOnFloorFromWorld.y/10;
+	p1.position.z = pointOnFloorFromWorld.z + roomba_height;
+	p1.orientation.w = 0;
+	p1.orientation.x = 1;
 	p1.orientation.y = 0;
 	p1.orientation.z = 0;
 	return p1;						
