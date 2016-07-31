@@ -11,11 +11,11 @@ plate_localizer::plate_localizer()
 {
 	//load cameramodels
 	c1.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,0.0d, 0.887010d,0.0d,0.461748d,0.0d);
-	c2.loadModel('2');
-	c3.loadModel('3');
-	c4.loadModel('4');
-	c5.loadModel('5');
-	c6.loadModel('6');
+	c2.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
+	c3.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
+	c4.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
+	c5.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
+	c6.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	
 	//initiate subscribers
@@ -44,8 +44,8 @@ plate_localizer::plate_localizer()
 	gpp = s_.advertise<geometry_msgs::PoseArray>("/observer/green_plate_poses", 1);
 
 	//initialize pose data
-	uavPose_.pose.position.x = 0;
-	uavPose_.pose.position.y = 0;
+	uavPose_.pose.position.x = 1;
+	uavPose_.pose.position.y = 1;
 	uavPose_.pose.position.z = 1;
 	uavPose_.pose.orientation.x=0;
 	uavPose_.pose.orientation.y=0;
