@@ -178,7 +178,7 @@ geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStampe
 					
 	RotMatrix3 rot = q1.getRotMatrix();
 	
-	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.pose.position.z - roomba_height));
+	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.pose.position.x, uavPose.pose.position.y, uavPose.pose.position.z - roomba_height));
 	HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 	HTMatrix4 worldFromCam = camFromWorld.inverse();
 	Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);

@@ -24,8 +24,8 @@ LAB_Object::LAB_Object(string name){ //constructor with string 'name' as the par
 	
 	if(name=="green"){
 
-		setLABmin(Scalar(0,93,115));
-		setLABmax(Scalar(255,121,150));
+		setLABmin(Scalar(56,76,140));
+		setLABmax(Scalar(129,115,178));
 
 		//BGR value for Green:
 		setColor(Scalar(0,255,0));

@@ -37,7 +37,7 @@ const int FRAME_HEIGHT = 720;
 //max number of objects to be detected in frame
 const int MAX_NUM_OBJECTS=50;
 //minimum and maximum object area
-const int MIN_OBJECT_AREA = 100*100;
+const int MIN_OBJECT_AREA = 20*20;
 const int MAX_OBJECT_AREA = FRAME_HEIGHT*FRAME_WIDTH/1.5;
 //names that will appear at the top of each window
 const string windowName = "Original Image";
@@ -289,7 +289,7 @@ public:
     trackobjects()
     : it_(nh_)
     {
-        image_sub_ = it_.subscribe("/usb_cam/image_raw", 1, &trackobjects::imageCb, this);
+        image_sub_ = it_.subscribe("/usb_cam_4/image_raw", 1, &trackobjects::imageCb, this);
         image_pub_= it_.advertise("/usb_cam/image_tracked",1);
         image_pub2_=it_.advertise("green_binary",1);
         image_pub3_=it_.advertise("red_binary",1);

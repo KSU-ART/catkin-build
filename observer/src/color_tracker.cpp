@@ -13,20 +13,20 @@ trackobjects::trackobjects()
 : it_(nh_)
 {
 	angler = false;
-	MIN_OBJECT_AREA = 50*50;
+	MIN_OBJECT_AREA = 20*20;
 	MAX_NUM_OBJECTS=10;
 	image_sub_ = it_.subscribe("/usb_cam_0/image_rect_color", 1, &trackobjects::track, this);
-    image_pub1_=it_.advertise("/observer/red_binary",1);
-	image_pub2_=it_.advertise("/observer/green_binary",1);
-	red_pub = a.advertise<std_msgs::Int32MultiArray>("/observer/r_cam_points_0", 1);
-	green_pub = a.advertise<std_msgs::Int32MultiArray>("/observer/g_cam_points_0", 1);
+    image_pub1_=it_.advertise("observer/red_binary",1);
+	image_pub2_=it_.advertise("observer/green_binary",1);
+	red_pub = a.advertise<std_msgs::Int32MultiArray>("observer/r_cam_points_0", 1);
+	green_pub = a.advertise<std_msgs::Int32MultiArray>("observer/g_cam_points_0", 1);
 }
 trackobjects::trackobjects(std::string camID)
 : it_(nh_)
 {
 	angler = false;
 	MIN_OBJECT_AREA = 20*20;
-	MAX_NUM_OBJECTS=10;
+	MAX_NUM_OBJECTS=15;
 	string topicName = "/usb_cam_" + camID + "/image_rect_color";
 	image_sub_ = it_.subscribe(topicName.c_str(), 1, &trackobjects::track, this);
 	topicName = "/observer/r_cam_points_" + camID;
@@ -90,6 +90,8 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	
 	morphOps(threshold);
 	trackFilteredObject(green,threshold);
+	if (g_point_arr.data[0] > 1)
+		ROS_INFO("OUTPUT GREEN PUB");
 	green_pub.publish(g_point_arr);
 	
 	waitKey(15);
@@ -197,12 +199,13 @@ void trackobjects::trackFilteredObject(LAB_Object& theObject, Mat threshold)
 int main(int argc, char** argv)
 {	
 	waitKey(2000);
-   ros::init(argc, argv, "/observer/color_tracker");
-   trackobjects /*top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
+	ros::init(argc, argv, "observer_color_tracker");
+	trackobjects /*top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
 				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),*/
-				down_cam();
-   ros::MultiThreadedSpinner spinner(8); //use 8 threads
-   spinner.spin(); //will not return until node is shut down
+				bottom_cam("4");
+				//down_cam();
+	ros::MultiThreadedSpinner spinner(8); //use 8 threads
+	spinner.spin(); //will not return until node is shut down
 }
 
  
