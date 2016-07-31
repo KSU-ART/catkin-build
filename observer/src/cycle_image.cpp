@@ -117,16 +117,16 @@ int main(int argc, char** argv)
 					break;
 			}
 			
-			if(cap.isOpened())
-				cap.release();
+			//if(cap.isOpened())
+			cap.release();
 			 
 			if(cam_id == 5)
 			{
-				camera = 0;
+				cam_id = 0;
 			}
 			else
 			{
-				camera++;
+				cam_id++;
 			}
 			continue;
 			
