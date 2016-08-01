@@ -206,7 +206,7 @@ using namespace cv;
 int main(int argc, char** argv)
 {	
 	waitKey(1000);
-	ros::init(argc, argv, "/observer/plate_angler");
+	ros::init(argc, argv, "observer_plate_angler");
 	angleFinder angler;
 	ros::spin(); //use 1 thread
 	return 0;
