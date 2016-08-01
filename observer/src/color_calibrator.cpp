@@ -51,8 +51,6 @@ ros::NodeHandle loc_node;
 ros::Publisher green_loc_arr;
 ros::Publisher red_loc_arr;
 ros::Publisher test_loc_arr;
-ros::NodeHandle nh_;
-image_transport::ImageTransport it_;    
 image_transport::Subscriber image_sub_; //image subscriber 
 image_transport::Publisher image_pub_; //image publisher
 image_transport::Publisher image_pub2_;
@@ -399,12 +397,15 @@ void imageCb(const sensor_msgs::ImageConstPtr& original_image)
  
 int main(int argc, char** argv)
 {
-
+	waitKey(1000);
+    ros::init(argc, argv, "find_objectblob");
+    
 	if(calibrationMode){
 		//create slider bars for LAB filtering
 		createTrackbars();
 	}
-	
+	ros::NodeHandle nh_;
+	image_transport::ImageTransport it_(nh_);
 	image_sub_ = it_.subscribe("/usb_cam_2/image_rect_color", 1, imageCb);
 	image_pub_= it_.advertise("/usb_cam/image_tracked",1);
 	image_pub2_=it_.advertise("green_binary",1);
@@ -414,8 +415,7 @@ int main(int argc, char** argv)
 	test_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("calibrating_loc", 100);
 	setMouseCallback(windowName, onMouse);
 	
-	waitKey(1000);
-    ros::init(argc, argv, "find_objectblob");
+
     
     ros::spin();
 
