@@ -16,7 +16,8 @@ plate_localizer::plate_localizer()
 	c4.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	c5.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	c6.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
-	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
+	//c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d, 0.0d, 1.0d,0.0d,0.0d,0.0d);
+	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d,282.671480d,320.0d,230.0d, 0.0d,0.0d, 0.0d, 1.0d,0.0d,0.0d,0.0d);
 	
 	//initiate subscribers
 	curr_pose = s_.subscribe("/localizer/curent_pose", 3, &plate_localizer::update_pose, this);
@@ -46,7 +47,7 @@ plate_localizer::plate_localizer()
 	//initialize pose data
 	uavPose_.pose.position.x = 0;
 	uavPose_.pose.position.y = 0;
-	uavPose_.pose.position.z = 1;
+	uavPose_.pose.position.z = 1.79;
 	uavPose_.pose.orientation.x=0;
 	uavPose_.pose.orientation.y=0;
 	uavPose_.pose.orientation.z=0;

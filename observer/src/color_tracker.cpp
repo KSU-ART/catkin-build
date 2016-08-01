@@ -25,9 +25,9 @@ trackobjects::trackobjects(std::string camID)
 : it_(nh_)
 {
 	angler = false;
-	MIN_OBJECT_AREA = 20*20;
+	MIN_OBJECT_AREA = 10*10;
 	MAX_NUM_OBJECTS=15;
-	string topicName = "/usb_cam_" + camID + "/image_raw";
+	string topicName = "/usb_cam_" + camID + "/image_rect_color";
 	image_sub_ = it_.subscribe(topicName.c_str(), 1, &trackobjects::track, this);
 	ROS_INFO("Color tracker subscribed to camera %s", topicName.c_str());
 	topicName = "/observer/r_cam_points_" + camID;

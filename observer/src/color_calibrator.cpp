@@ -357,7 +357,8 @@ public:
 
 			//if in calibration mode, we track objects based on the LAB slider values.			
 			
-			inRange(LAB,Scalar((L_MIN),(A_MIN),(B_MIN)),Scalar((L_MAX),(A_MAX),(B_MAX)),threshold);
+			inRange(LAB,Scalar((L_MIN),(A_MIN),(B_MIN)),Scalar((L_MAX),
+(A_MAX),(B_MAX)),threshold);
 			
 			cout << "setLABmin(Scalar(" << L_MIN << "," << A_MIN << "," << B_MIN << "));" << endl;
 			cout << "setLABmax(Scalar(" << L_MAX << "," << A_MAX << "," << B_MAX << "));" << endl;
@@ -404,8 +405,10 @@ public:
 		//imshow(windowName1,LAB);
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command
+		imshow(windowName2,threshold);
+		imshow(windowName,cameraFeed);
 		waitKey(30);
-		image_pub_.publish(cv_ptr->toImageMsg());
+		
 	}
 };
  
