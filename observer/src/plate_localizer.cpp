@@ -21,8 +21,8 @@ plate_localizer::plate_localizer()
 	
 	//initiate subscribers
 	curr_pose = s_.subscribe("/localizer/curent_pose", 3, &plate_localizer::update_pose, this);
-	r_plate_angle = s_.subscribe("/observer/red_plate_angle", 3, &plate_localizer::update_g_angle, this);
-	g_plate_angle = s_.subscribe("/observer/green_plate_angle", 3, &plate_localizer::update_r_angle, this);
+	r_plate_angle = s_.subscribe("/observer/red_plate_angle", 1, &plate_localizer::update_r_angle, this);
+	g_plate_angle = s_.subscribe("/observer/green_plate_angle", 1, &plate_localizer::update_g_angle, this);
 	
 	r1 = s_.subscribe("/observer/r_cam_points_1", 3, &plate_localizer::cam_1r_callback, this);
 	r2 = s_.subscribe("/observer/r_cam_points_2", 3, &plate_localizer::cam_2r_callback, this);

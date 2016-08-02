@@ -15,7 +15,8 @@ trackobjects::trackobjects()
 	angler = true;
 	MIN_OBJECT_AREA = 50*50;
 	MAX_NUM_OBJECTS=10;
-	image_sub_ = it_.subscribe("/usb_cam_0/image_rect_color", 1, &trackobjects::track, this);
+	image_sub_ = it_.subscribe("/usb_cam_2/image_rect_color", 1, &trackobjects::track, this);
+	ROS_INFO("Color tracker subscribed to camera  /usb_cam_2/image_rect_color");
     image_pub1_=it_.advertise("observer/red_binary",1);
 	image_pub2_=it_.advertise("observer/green_binary",1);
 	red_pub = a.advertise<std_msgs::Int32MultiArray>("observer/r_cam_points_0", 1);
@@ -200,11 +201,11 @@ int main(int argc, char** argv)
 {	
 	waitKey(2000);
 	ros::init(argc, argv, "observer_color_tracker");
-	ROS_INFO("Color_tracking ode initialized");
+	ROS_INFO("Color_tracking node initialized");
 	trackobjects /*top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
 				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),*/
-				bottom_cam("0");
-				//down_cam();
+				//bottom_cam("0");
+				down_cam;
 	ros::MultiThreadedSpinner spinner(8); //use 8 threads
 	spinner.spin(); //will not return until node is shut down
 }
