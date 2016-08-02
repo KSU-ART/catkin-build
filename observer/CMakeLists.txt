@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   image_transport
   roscpp
+  rospy
   std_msgs
   roslaunch
 )
@@ -147,7 +148,7 @@ add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
 						
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
 add_executable(color_filter src/image_process.cpp)
-add_executable(pokestick_talker src/pokestick_talker.cpp)
+#add_executable(pokestick_talker src/pokestick_talker.cpp)
 
 add_executable(grid_tracker src/grid_tracker.cpp src/camera_model.cpp )
 add_executable(peripherals src/cycle_image.cpp )
@@ -195,14 +196,7 @@ add_dependencies(pokestick_talker wiringPi)
 
 target_link_libraries(color_filter
   ${catkin_LIBRARIES}
-)
-
- target_link_libraries(pokestick_talker
-  ${catkin_LIBRARIES}
-  ${WIRINGPI_LIBRARY}
- )
- 
- 
+) 
  
  target_link_libraries(grid_tracker 
    ${catkin_LIBRARIES}
@@ -227,6 +221,11 @@ target_link_libraries(color_filter
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
+
+install(PROGRAMS 
+	scripts/pokestick.py
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS observer observer_node
