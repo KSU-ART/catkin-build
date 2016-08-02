@@ -141,6 +141,7 @@ include_directories(
 ## Declare a C++ executable
 add_executable(cam_model_test src/cam_model_test.cpp src/camera_model.cpp )
 add_executable(color_tracker src/color_tracker.cpp src/LAB_Object.cpp )
+add_executable(multi_vid_cap_down_front src/multi_vid_cap_down_front.cpp )
 add_executable(plate_angler	src/plate_angler.cpp)
 add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
 #~ add_executable(optical_flow src/optical_flow_object.cpp src/camera_model.cpp)
@@ -164,6 +165,10 @@ add_executable(peripherals src/cycle_image.cpp )
    ${ATLANTE_LIBRARIES}
  )
  target_link_libraries(color_tracker
+   ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
+ )
+ target_link_libraries(multi_vid_cap_down_front
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
  )
