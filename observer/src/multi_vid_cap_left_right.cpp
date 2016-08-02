@@ -19,7 +19,7 @@ image_transport::Publisher image_pub3;
 
 int main(int argc, char** argv)
 {
-	ros::init(argc, argv, "multi_vid_cap_down_front");
+	ros::init(argc, argv, "multi_vid_cap_left_right");
 	ros::NodeHandle n;
 	image_transport::ImageTransport it(n);
 	
