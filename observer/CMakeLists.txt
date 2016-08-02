@@ -233,6 +233,11 @@ target_link_libraries(color_filter
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
+install(PROGRAMS 
+	scripts/pokestick.py
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+
 ## Mark executables and/or libraries for installation
 # install(TARGETS observer observer_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
