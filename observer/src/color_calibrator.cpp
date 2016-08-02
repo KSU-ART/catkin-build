@@ -47,7 +47,7 @@ const string windowName2 = "Thresholded Image";
 const string windowName3 = "After Morphological Operations";
 const string trackbarWindowName = "Trackbars";
 
-ros::NodeHandle loc_node;
+
 ros::Publisher green_loc_arr;
 ros::Publisher red_loc_arr;
 ros::Publisher test_loc_arr;
@@ -60,7 +60,7 @@ Point prev_point, test_point;
 
 std_msgs::String msg;
 
-bool calibrationMode = true;
+bool calibrationMode = false;
 Mat cameraFeed;
 
 //The following for location publishers
@@ -404,6 +404,7 @@ int main(int argc, char** argv)
 		//create slider bars for LAB filtering
 		createTrackbars();
 	}
+	ros::NodeHandle loc_node;
 	ros::NodeHandle nh_;
 	image_transport::ImageTransport it_(nh_);
 	image_sub_ = it_.subscribe("/usb_cam_2/image_rect_color", 1, imageCb);
