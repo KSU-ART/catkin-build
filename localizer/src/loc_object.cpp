@@ -7,6 +7,12 @@ sensor_processor::sensor_processor()
 {
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("/localizer/current_pose", 1);
 	
+	//init important vars
+	ALT_OFFSET = 0.0d;
+	GUIDANCE_VEL_WEIGHT = 1;
+	OFFSET_X = -1; 
+	OFFSET_Y = 10; 
+	
 	//clear vital variables:
 	orientation_fused.v.x = 0;
 	orientation_fused.v.y = 0;
@@ -264,7 +270,7 @@ void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
             avg += (double)(4/(sizeof(4)));
         }
     }
-    fused_altitude = avg;
+    fused_altitude = avg + ALT_OFFSET;
 }
 
 void sensor_processor::zero_position_callback(const std_msgs::Bool msg)

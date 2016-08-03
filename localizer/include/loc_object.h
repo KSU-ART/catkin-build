@@ -24,9 +24,9 @@ class sensor_processor
 {
 private:
 	/// Weight of the velocity guidance data (0-1)
-	static const float GUIDANCE_VEL_WEIGHT = 1;
-	const float OFFSET_X = -1; 
-	const float OFFSET_Y = 10; 
+	float GUIDANCE_VEL_WEIGHT;
+	float OFFSET_X; 
+	float OFFSET_Y; 
 	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
@@ -55,6 +55,7 @@ private:
 	
 	double sonar_altitude;
 	double fused_altitude;
+	double ALT_OFFSET;
 	
 	bool pos_reset;
 	bool vel_reset;
