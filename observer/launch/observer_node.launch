@@ -17,10 +17,11 @@
 		<param name="autoexposure" value="false" />
 	</node>
 -->
-	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_0"/>
+<!--	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_0"/>
+-->
 	<node name="color_tracker" pkg="observer" type="color_tracker"/>
 	<node name="plate_angler" pkg="observer" type="plate_angler"/>
 	<node name="plate_localizer" pkg="observer" type="plate_localizer" cwd="node"/>
-	<node name="optical_flow" pkg="observer" type="optical_flow"/>
+	<node name="grid_tracker" pkg="observer" type="grid_tracker"/>
 	
 </launch>
