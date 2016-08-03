@@ -7,23 +7,28 @@ sensor_processor::sensor_processor()
 {
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("/localizer/current_pose", 1);
 	
+	//init important vars
+	ALT_OFFSET = 0.0f;
+	GUIDANCE_VEL_WEIGHT = 1;
+	OFFSET_X = -1; 
+	OFFSET_Y = 10; 
+	
 	//clear vital variables:
 	orientation_fused.v.x = 0;
 	orientation_fused.v.y = 0;
 	orientation_fused.v.z = 0;
 	orientation_fused.w = 0;
-	grid_flow_point.x = 0;
-	grid_flow_point.y = 0;
-	grid_flow_point.z = 0;
+	grid_flow_position.x = 0;
+	grid_flow_position.y = 0;
+	grid_flow_position.z = 0;
 	
-	pos_reset = true;
 	vel_calib = new double[3];
 	std::fill_n(vel_calib, 3, 0);
 	first_calib = true;
 	
 	// resets
 	vel_reset = true;
-	pos_reset = true;
+	grid_pos_zero = false;
 	
 	//subs
 	sub_zero_position = n.subscribe("/ground_station/zero_position", 1, &sensor_processor::zero_position_callback, this);
@@ -32,6 +37,9 @@ sensor_processor::sensor_processor()
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
 	sub_pixhawk_imu = n.subscribe("/mavros/imu/data", 1, &sensor_processor::pixhawk_imu_callback, this);
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
+	
+	
+	startTime = ros::Time::now().toSec();
 }
 
 sensor_processor::~sensor_processor()
@@ -55,9 +63,19 @@ void sensor_processor::system_loop()
 void sensor_processor::merge_and_publish(ros::Time current_time)
 {
 	pos_fused_msg.header.seq++;
-	pos_fused_msg.header.stamp = current_time;
-	pos_fused_msg.pose.position.x = grid_flow_point.x /*pos_fused.x*/;
-	pos_fused_msg.pose.position.y = grid_flow_point.y /*pos_fused.y*/;
+	pos_fused_msg.header.stamp = ros::Time::now();
+	
+	if( ros::Time::now().toSec() - startTime <  6.00)
+	{
+		pos_fused_msg.pose.position.x = pos_fused.x;
+		pos_fused_msg.pose.position.y = pos_fused.y;
+	}
+	else
+	{
+		pos_fused_msg.pose.position.x = grid_flow_position.x;
+		pos_fused_msg.pose.position.y = grid_flow_position.y;
+	}
+	
 	pos_fused_msg.pose.position.z = fused_altitude;
 	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
 	pos_fused_msg.pose.orientation.y = orientation_fused.v.y;
@@ -66,10 +84,27 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 	pose_pub.publish(pos_fused_msg);
 }
 
-void sensor_processor::gridflow_cb(const geometry_msgs::Point& msg)
+void sensor_processor::gridflow_cb(const geometry_msgs::PointStamped& msg)
 {
-	grid_flow_point.x = msg.x + OFFSET_X;
-	grid_flow_point.y = msg.y + OFFSET_Y;
+	if (grid_pos_zero)
+	{
+		OFFSET_X =  -(msg.point.x);
+		OFFSET_Y = -(msg.point.y);
+		grid_pos_zero = false;
+	}
+	double dt = msg.header.stamp.toSec() - prev_grid_position.header.stamp.toSec();
+	double dvx = msg.point.x - prev_grid_position.point.x;
+	double dvy = msg.point.y - prev_grid_position.point.x;
+	double v_x = dvx/dt;
+	double v_y = dvy/dt;
+	ROS_INFO("vel_x: %f", v_x);
+	ROS_INFO("vel_y: %f", v_y);
+	
+	grid_flow_position.x = msg.point.x + OFFSET_X;
+	grid_flow_position.y = msg.point.y + OFFSET_Y;	
+	prev_grid_position = msg;
+
+	//msg.header.stamp.toSec()
 }
 
 /// Global referace
@@ -83,6 +118,7 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	double vel_x = -vel_calib[0] - (msg->vector.x);//guidance x is opposite hank x
 	double vel_y = -vel_calib[1] + msg->vector.y;
 	double vel_z = -vel_calib[2] - (msg->vector.z);//guidance z is opposite hank z
+
 	
 	//First iteration Calibration (zero out the values at the beginning)
 	if (first_calib)
@@ -118,9 +154,6 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 		vel_z = low_val_minus;
 	}
 	
-	std::cout << "Vel X: " << vel_x << std::endl;
-	std::cout << "Vel Y: " << vel_y << std::endl;
-	std::cout << "Vel Z: " << vel_z << std::endl;
 	
 	// global velocity
 	Vector vel_G(vel_x, vel_y, vel_z);
@@ -131,12 +164,12 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	
 	// integrate velocity
 	ros::Time current_time = msg->header.stamp;
-	if (pos_reset)
+	if (guidance_pos_reset)
 	{
 		pos_fused.x = 0;
 		pos_fused.y = 0;
 		pos_fused.z = 0;
-		pos_reset = false;
+		guidance_pos_reset = false;
 	}
 	else
 	{
@@ -149,58 +182,8 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	pre_pos_fused.header.stamp = current_time;
 	pre_pos_fused.vector = msg->vector;
     
-    //could add cout for debugging if needed:
-	/*cout << "goal: " << nav_path.poses[current_goal] << endl;
-    cout << "est: " << pos_est << endl;
-    cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;*/
-    
     merge_and_publish(current_time);
 }
-
-/// Integrate acceleration
-/// passin fusion orientation
-/// calculate Global velocity
-/*
-void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamped::ConstPtr& msg)
-{
-	double acc_x = msg->transform.translation.x;
-	double acc_y = msg->transform.translation.y;
-	double acc_z = msg->transform.translation.z;
-	
-	ros::Time current_time = msg->header.stamp;
-	
-	if (vel_reset)
-	{
-		vel_guid_imu.x = 0;
-		vel_guid_imu.y = 0;
-		vel_guid_imu.z = 0;
-		vel_reset = false;
-	}
-	else
-	{
-		double sec_diff = current_time.toSec() - pre_acc_guid.header.stamp.toSec();
-		vel_guid_imu.x += (acc_x + pre_acc_guid.vector.x)/2*sec_diff;
-		vel_guid_imu.y += (acc_y + pre_acc_guid.vector.y)/2*sec_diff;
-		vel_guid_imu.z += (acc_z + pre_acc_guid.vector.z)/2*sec_diff;
-	}
-	
-	pre_acc_guid.header.stamp = current_time;
-	pre_acc_guid.vector = msg->transform.translation;
-	
-	//orientation
-	//*********    without the sensor fusion of pixhawks IMUs    **********
-	orientation_fused.v.x = -(msg->transform.rotation.x);
-	orientation_fused.v.y = msg->transform.rotation.y;
-	orientation_fused.v.z = -(msg->transform.rotation.z);
-	orientation_fused.w   = msg->transform.rotation.w;
-	
-	//global vel est
-	vel_guid_G = orientation_fused*vel_guid_imu;
-	
-	// sensor fuse vel, simple average
-	vel_guid_G = (vel_pix_G+vel_guid_G)/2;
-}
-*/
 
 /// Pass altitude value to Hokuyo
 void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
@@ -210,7 +193,6 @@ void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::Con
 	
 }
 
-/// Integrate to velocity
 /// Set to global referance
 /// Sent value to guidance IMU
 void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
@@ -251,7 +233,7 @@ void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& ms
 	merge_and_publish(current_time);
 }
 
-/// fuse data with sonar
+///get altitude from lidar
 void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 	double avg = 0;
@@ -264,13 +246,13 @@ void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
             avg += (double)(4/(sizeof(4)));
         }
     }
-    fused_altitude = avg;
+    fused_altitude = avg + ALT_OFFSET;
 }
 
 void sensor_processor::zero_position_callback(const std_msgs::Bool msg)
 {
 	if (msg.data == true)
 	{
-		pos_reset = true;
+		grid_pos_zero = true;
 	}
 }

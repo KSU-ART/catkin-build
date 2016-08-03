@@ -9,7 +9,7 @@
 #include "ros/ros.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
-#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -24,9 +24,9 @@ class sensor_processor
 {
 private:
 	/// Weight of the velocity guidance data (0-1)
-	static const float GUIDANCE_VEL_WEIGHT = 1;
-	const float OFFSET_X = -1; 
-	const float OFFSET_Y = 10; 
+	float GUIDANCE_VEL_WEIGHT;
+	float OFFSET_X; 
+	float OFFSET_Y; 
 	
 	ros::NodeHandle n;
 	ros::Publisher pose_pub; // in global reference (meters)
@@ -35,7 +35,7 @@ private:
 	/// sensor fused data, global values (world oriented)
 	// message for Position and Orientation
 	geometry_msgs::PoseStamped pos_fused_msg;
-	geometry_msgs::Point grid_flow_point;
+	geometry_msgs::Point grid_flow_position;
 	Vector pos_fused;
 	geometry_msgs::Vector3Stamped pre_pos_fused;
 	
@@ -53,14 +53,19 @@ private:
 	Vector vel_pix_G;
 	Vector vel_guid_G;
 	
+	geometry_msgs::PointStamped prev_grid_position;
 	double sonar_altitude;
 	double fused_altitude;
+	float ALT_OFFSET;
 	
-	bool pos_reset;
+	bool grid_pos_zero;
+	bool guidance_pos_reset;
 	bool vel_reset;
 	
 	double* vel_calib;
 	bool first_calib;
+	
+	double startTime;
 	
 public:
 	///Final function merging most recent data and publishing
@@ -99,7 +104,7 @@ public:
 	
 	
 	///subscribe to grid_flow position
-	void gridflow_cb(const geometry_msgs::Point& msg);
+	void gridflow_cb(const geometry_msgs::PointStamped& msg);
 };
 
 #endif
