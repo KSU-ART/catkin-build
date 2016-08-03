@@ -37,6 +37,9 @@ sensor_processor::sensor_processor()
 	sub_guidance_sonar = n.subscribe("/guidance/ultrasound", 1, &sensor_processor::guidance_sonar_callback, this);
 	sub_pixhawk_imu = n.subscribe("/mavros/imu/data", 1, &sensor_processor::pixhawk_imu_callback, this);
 	sub_hokuyo = n.subscribe("/scan2", 1, &sensor_processor::hokuyo_sub, this);
+	
+	
+	startTime = ros::Time::now().toSec();
 }
 
 sensor_processor::~sensor_processor()
@@ -61,8 +64,18 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 {
 	pos_fused_msg.header.seq++;
 	pos_fused_msg.header.stamp = ros::Time::now();
-	pos_fused_msg.pose.position.x = grid_flow_position.x /*pos_fused.x*/;
-	pos_fused_msg.pose.position.y = grid_flow_position.y /*pos_fused.y*/;
+	
+	if( ros::Time::now().toSec() - startTime <  6.00)
+	{
+		pos_fused_msg.pose.position.x = pos_fused.x;
+		pos_fused_msg.pose.position.y = pos_fused.y;
+	}
+	else
+	{
+		pos_fused_msg.pose.position.x = grid_flow_position.x;
+		pos_fused_msg.pose.position.y = grid_flow_position.y;
+	}
+	
 	pos_fused_msg.pose.position.z = fused_altitude;
 	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
 	pos_fused_msg.pose.orientation.y = orientation_fused.v.y;
@@ -105,6 +118,42 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	double vel_x = -vel_calib[0] - (msg->vector.x);//guidance x is opposite hank x
 	double vel_y = -vel_calib[1] + msg->vector.y;
 	double vel_z = -vel_calib[2] - (msg->vector.z);//guidance z is opposite hank z
+
+	
+	//First iteration Calibration (zero out the values at the beginning)
+	if (first_calib)
+	{
+		first_calib = false;
+		vel_calib[0] = vel_x;
+		vel_calib[1] = vel_y;
+		vel_calib[2] = vel_z;
+	}
+	
+	if (vel_x > low_val_plus)
+	{
+		vel_x = low_val_plus;
+	}
+	if (vel_x < low_val_minus)
+	{
+		vel_x = low_val_minus;
+	}
+	if (vel_y > low_val_plus)
+	{
+		vel_y = low_val_plus;
+	}
+	if (vel_y < low_val_minus)
+	{
+		vel_y = low_val_minus;
+	}
+	if (vel_z > low_val_plus)
+	{
+		vel_z = low_val_plus;
+	}
+	if (vel_z < low_val_minus)
+	{
+		vel_z = low_val_minus;
+	}
+	
 	
 	// global velocity
 	Vector vel_G(vel_x, vel_y, vel_z);

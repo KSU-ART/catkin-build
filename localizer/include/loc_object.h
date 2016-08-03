@@ -65,6 +65,8 @@ private:
 	double* vel_calib;
 	bool first_calib;
 	
+	double startTime;
+	
 public:
 	///Final function merging most recent data and publishing
 	void merge_and_publish(ros::Time current_time);
