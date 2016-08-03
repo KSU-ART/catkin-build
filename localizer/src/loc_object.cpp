@@ -60,7 +60,7 @@ void sensor_processor::system_loop()
 void sensor_processor::merge_and_publish(ros::Time current_time)
 {
 	pos_fused_msg.header.seq++;
-	pos_fused_msg.header.stamp = current_time;
+	pos_fused_msg.header.stamp = ros::Time::now();
 	pos_fused_msg.pose.position.x = grid_flow_point.x /*pos_fused.x*/;
 	pos_fused_msg.pose.position.y = grid_flow_point.y /*pos_fused.y*/;
 	pos_fused_msg.pose.position.z = fused_altitude;
