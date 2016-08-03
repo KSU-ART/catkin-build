@@ -18,9 +18,9 @@ sensor_processor::sensor_processor()
 	orientation_fused.v.y = 0;
 	orientation_fused.v.z = 0;
 	orientation_fused.w = 0;
-	grid_flow_point.x = 0;
-	grid_flow_point.y = 0;
-	grid_flow_point.z = 0;
+	grid_flow_position.x = 0;
+	grid_flow_position.y = 0;
+	grid_flow_position.z = 0;
 	
 	vel_calib = new double[3];
 	std::fill_n(vel_calib, 3, 0);
@@ -28,7 +28,7 @@ sensor_processor::sensor_processor()
 	
 	// resets
 	vel_reset = true;
-	grid_pos_reset = true;
+	grid_pos_zero = false;
 	
 	//subs
 	sub_zero_position = n.subscribe("/ground_station/zero_position", 1, &sensor_processor::zero_position_callback, this);
@@ -61,8 +61,8 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 {
 	pos_fused_msg.header.seq++;
 	pos_fused_msg.header.stamp = ros::Time::now();
-	pos_fused_msg.pose.position.x = grid_flow_point.x /*pos_fused.x*/;
-	pos_fused_msg.pose.position.y = grid_flow_point.y /*pos_fused.y*/;
+	pos_fused_msg.pose.position.x = grid_flow_position.x /*pos_fused.x*/;
+	pos_fused_msg.pose.position.y = grid_flow_position.y /*pos_fused.y*/;
 	pos_fused_msg.pose.position.z = fused_altitude;
 	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
 	pos_fused_msg.pose.orientation.y = orientation_fused.v.y;
@@ -71,16 +71,27 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 	pose_pub.publish(pos_fused_msg);
 }
 
-void sensor_processor::gridflow_cb(const geometry_msgs::Point& msg)
+void sensor_processor::gridflow_cb(const geometry_msgs::PointStamped& msg)
 {
-	if (grid_pos_reset)
+	if (grid_pos_zero)
 	{
-		OFFSET_X =  -(msg.x);
-		OFFSET_Y = -(msg.y);
-		grid_pos_reset = false;
+		OFFSET_X =  -(msg.point.x);
+		OFFSET_Y = -(msg.point.y);
+		grid_pos_zero = false;
 	}
-	grid_flow_point.x = msg.x + OFFSET_X;
-	grid_flow_point.y = msg.y + OFFSET_Y;
+	double dt = msg.header.stamp.toSec() - prev_grid_position.header.stamp.toSec();
+	double dvx = msg.point.x - prev_grid_position.point.x;
+	double dvy = msg.point.y - prev_grid_position.point.x;
+	double v_x = dvx/dt;
+	double v_y = dvy/dt;
+	ROS_INFO("vel_x: %f", v_x);
+	ROS_INFO("vel_y: %f", v_y);
+	
+	grid_flow_position.x = msg.point.x + OFFSET_X;
+	grid_flow_position.y = msg.point.y + OFFSET_Y;	
+	prev_grid_position = msg;
+
+	//msg.header.stamp.toSec()
 }
 
 /// Global referace
@@ -193,6 +204,6 @@ void sensor_processor::zero_position_callback(const std_msgs::Bool msg)
 {
 	if (msg.data == true)
 	{
-		grid_pos_reset = true;
+		grid_pos_zero = true;
 	}
 }
