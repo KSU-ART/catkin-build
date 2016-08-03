@@ -451,6 +451,7 @@ void update_pose(const geometry_msgs::PoseStamped& cur_loc)
 {
 	pose = cur_loc;
 	current_altitude = cur_loc.pose.position.z;
+	GROUP_THRESH = 70/current_altitude;
 }
 
 /** @function main */
