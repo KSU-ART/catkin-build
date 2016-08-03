@@ -10,7 +10,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <string>
 #include <vector>
-#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PointStamped.h>
 #include "camera_model.h"
 
 using namespace cv;

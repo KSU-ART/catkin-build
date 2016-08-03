@@ -362,9 +362,11 @@ void grid_tracker::grid_algorithm()
 	distanceTraveled(preIntersects, curIntersects);
 	//cout << "pos in pixels:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
 	
-	geometry_msgs::Point pos_point;
-	pos_point.x = pos[0];
-	pos_point.y = pos[1];
+	geometry_msgs::PointStamped pos_point;
+	pos_point.point.x = pos[0];
+	pos_point.point.y = pos[1];
+	pos_point.point.z = 1;
+	pos_point.header.stamp = ros::Time::now();
 	pos_pub.publish(pos_point);
 	
 	/// Showing debug
