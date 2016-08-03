@@ -6,6 +6,16 @@
       <param name="fps" type="int" value="30"/>
 	</node>
 -->	
+	<node name="usb_cam_0" pkg="usb_cam" type="usb_cam_node" output="screen" >
+		<param name="video_device" value="/dev/video0" />
+		<param name="image_width" value="640" />
+		<param name="image_height" value="480" />
+		<param name="pixel_format" value="yuyv" />
+		<param name="camera_frame_id" value="usb_cam" />
+		<param name="framerate" value="30"/>
+		<param name="io_method" value="mmap"/>
+	</node>
+
 	<node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
 		<!-- Starts up faster, but timestamps will be inaccurate. --> 
 		<param name="calibrate_time" type="bool" value="false"/> 
