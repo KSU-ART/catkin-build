@@ -55,7 +55,7 @@ private:
 	
 	double sonar_altitude;
 	double fused_altitude;
-	double ALT_OFFSET;
+	float ALT_OFFSET;
 	
 	bool pos_reset;
 	bool vel_reset;

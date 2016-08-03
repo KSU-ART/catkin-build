@@ -8,7 +8,7 @@ sensor_processor::sensor_processor()
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("/localizer/current_pose", 1);
 	
 	//init important vars
-	ALT_OFFSET = 0.0d;
+	ALT_OFFSET = 0.0f;
 	GUIDANCE_VEL_WEIGHT = 1;
 	OFFSET_X = -1; 
 	OFFSET_Y = 10; 
