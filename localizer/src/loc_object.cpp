@@ -95,44 +95,6 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	double vel_y = -vel_calib[1] + msg->vector.y;
 	double vel_z = -vel_calib[2] - (msg->vector.z);//guidance z is opposite hank z
 	
-	//First iteration Calibration (zero out the values at the beginning)
-	if (first_calib)
-	{
-		first_calib = false;
-		vel_calib[0] = vel_x;
-		vel_calib[1] = vel_y;
-		vel_calib[2] = vel_z;
-	}
-	
-	if (vel_x > low_val_plus)
-	{
-		vel_x = low_val_plus;
-	}
-	if (vel_x < low_val_minus)
-	{
-		vel_x = low_val_minus;
-	}
-	if (vel_y > low_val_plus)
-	{
-		vel_y = low_val_plus;
-	}
-	if (vel_y < low_val_minus)
-	{
-		vel_y = low_val_minus;
-	}
-	if (vel_z > low_val_plus)
-	{
-		vel_z = low_val_plus;
-	}
-	if (vel_z < low_val_minus)
-	{
-		vel_z = low_val_minus;
-	}
-	
-	std::cout << "Vel X: " << vel_x << std::endl;
-	std::cout << "Vel Y: " << vel_y << std::endl;
-	std::cout << "Vel Z: " << vel_z << std::endl;
-	
 	// global velocity
 	Vector vel_G(vel_x, vel_y, vel_z);
 	vel_G = orientation_fused*vel_G;
@@ -160,58 +122,8 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	pre_pos_fused.header.stamp = current_time;
 	pre_pos_fused.vector = msg->vector;
     
-    //could add cout for debugging if needed:
-	/*cout << "goal: " << nav_path.poses[current_goal] << endl;
-    cout << "est: " << pos_est << endl;
-    cout << "x-corr: " << x_out << ", y-corr: " << y_out << endl;*/
-    
     merge_and_publish(current_time);
 }
-
-/// Integrate acceleration
-/// passin fusion orientation
-/// calculate Global velocity
-/*
-void sensor_processor::guidance_imu_callback(const geometry_msgs::TransformStamped::ConstPtr& msg)
-{
-	double acc_x = msg->transform.translation.x;
-	double acc_y = msg->transform.translation.y;
-	double acc_z = msg->transform.translation.z;
-	
-	ros::Time current_time = msg->header.stamp;
-	
-	if (vel_reset)
-	{
-		vel_guid_imu.x = 0;
-		vel_guid_imu.y = 0;
-		vel_guid_imu.z = 0;
-		vel_reset = false;
-	}
-	else
-	{
-		double sec_diff = current_time.toSec() - pre_acc_guid.header.stamp.toSec();
-		vel_guid_imu.x += (acc_x + pre_acc_guid.vector.x)/2*sec_diff;
-		vel_guid_imu.y += (acc_y + pre_acc_guid.vector.y)/2*sec_diff;
-		vel_guid_imu.z += (acc_z + pre_acc_guid.vector.z)/2*sec_diff;
-	}
-	
-	pre_acc_guid.header.stamp = current_time;
-	pre_acc_guid.vector = msg->transform.translation;
-	
-	//orientation
-	//*********    without the sensor fusion of pixhawks IMUs    **********
-	orientation_fused.v.x = -(msg->transform.rotation.x);
-	orientation_fused.v.y = msg->transform.rotation.y;
-	orientation_fused.v.z = -(msg->transform.rotation.z);
-	orientation_fused.w   = msg->transform.rotation.w;
-	
-	//global vel est
-	vel_guid_G = orientation_fused*vel_guid_imu;
-	
-	// sensor fuse vel, simple average
-	vel_guid_G = (vel_pix_G+vel_guid_G)/2;
-}
-*/
 
 /// Pass altitude value to Hokuyo
 void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::ConstPtr& msg)
@@ -221,7 +133,6 @@ void sensor_processor::guidance_sonar_callback(const sensor_msgs::LaserScan::Con
 	
 }
 
-/// Integrate to velocity
 /// Set to global referance
 /// Sent value to guidance IMU
 void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
@@ -262,7 +173,7 @@ void sensor_processor::pixhawk_imu_callback(const sensor_msgs::Imu::ConstPtr& ms
 	merge_and_publish(current_time);
 }
 
-/// fuse data with sonar
+///get altitude from lidar
 void sensor_processor::hokuyo_sub(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 	double avg = 0;
