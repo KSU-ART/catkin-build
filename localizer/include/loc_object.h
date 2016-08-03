@@ -57,7 +57,8 @@ private:
 	double fused_altitude;
 	float ALT_OFFSET;
 	
-	bool pos_reset;
+	bool grid_pos_reset;
+	bool guidance_pos_reset;
 	bool vel_reset;
 	
 	double* vel_calib;

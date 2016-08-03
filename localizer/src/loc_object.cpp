@@ -22,14 +22,13 @@ sensor_processor::sensor_processor()
 	grid_flow_point.y = 0;
 	grid_flow_point.z = 0;
 	
-	pos_reset = true;
 	vel_calib = new double[3];
 	std::fill_n(vel_calib, 3, 0);
 	first_calib = true;
 	
 	// resets
 	vel_reset = true;
-	pos_reset = true;
+	grid_pos_reset = true;
 	
 	//subs
 	sub_zero_position = n.subscribe("/ground_station/zero_position", 1, &sensor_processor::zero_position_callback, this);
@@ -74,6 +73,12 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 
 void sensor_processor::gridflow_cb(const geometry_msgs::Point& msg)
 {
+	if (grid_pos_reset)
+	{
+		OFFSET_X =  -(msg.x);
+		OFFSET_Y = -(msg.y);
+		grid_pos_reset = false;
+	}
 	grid_flow_point.x = msg.x + OFFSET_X;
 	grid_flow_point.y = msg.y + OFFSET_Y;
 }
@@ -137,12 +142,12 @@ void sensor_processor::guidance_vel_callback(const geometry_msgs::Vector3Stamped
 	
 	// integrate velocity
 	ros::Time current_time = msg->header.stamp;
-	if (pos_reset)
+	if (guidance_pos_reset)
 	{
 		pos_fused.x = 0;
 		pos_fused.y = 0;
 		pos_fused.z = 0;
-		pos_reset = false;
+		guidance_pos_reset = false;
 	}
 	else
 	{
@@ -277,6 +282,6 @@ void sensor_processor::zero_position_callback(const std_msgs::Bool msg)
 {
 	if (msg.data == true)
 	{
-		pos_reset = true;
+		grid_pos_reset = true;
 	}
 }
