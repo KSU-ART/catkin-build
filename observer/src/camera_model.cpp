@@ -173,12 +173,16 @@ Vector3 cameraModel::findLinePlaneIntersection(const Vector3 &lineVector, const 
 
 geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStamped uavPose, cv::Point pixel)
 {
+	double roomba_height = 0.091;
+	
 	Quaternion q1(uavPose.pose.orientation.x, uavPose.pose.orientation.y, 
 					uavPose.pose.orientation.z, uavPose.pose.orientation.w);
 					
 	RotMatrix3 rot = q1.getRotMatrix();
 	
-	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.pose.position.x, uavPose.pose.position.y, uavPose.pose.position.z - roomba_height));
+	HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(0, 0, uavPose.pose.position.z - roomba_height));
+	//HTMatrix4 droneFromWorld = HTMatrix4(rot, Vector3(uavPose.pose.position.x, uavPose.pose.position.y, uavPose.pose.position.z - roomba_height));
+	
 	HTMatrix4 camFromWorld = droneFromWorld * camera_transform_from_drone;
 	HTMatrix4 worldFromCam = camFromWorld.inverse();
 	Vector4 floorCenterFromCam4 = worldFromCam * Vector4(0, 0, 0, 1);
@@ -207,8 +211,8 @@ geometry_msgs::Pose cameraModel::getPlateWorldLocation(geometry_msgs::PoseStampe
 											pointOnFloorFromWorld4.z);//may want to add roomba height to this if using
 	
 	geometry_msgs::Pose p1;
-	p1.position.x = pointOnFloorFromWorld.x/10;
-	p1.position.y = pointOnFloorFromWorld.y/10;
+	p1.position.x = pointOnFloorFromWorld.y;//x and y are swapped
+	p1.position.y = pointOnFloorFromWorld.x;//x and y are swapped
 	p1.position.z = pointOnFloorFromWorld.z + roomba_height;
 	p1.orientation.w = 0;
 	p1.orientation.x = 1;

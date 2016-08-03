@@ -3,8 +3,11 @@
 
 namespace enc = sensor_msgs::image_encodings;
 
+/// **************** Grid Threshold ***********************
+double current_altitude = 0.10;
+int GROUP_THRESH = 70/current_altitude;
+
 /// ***************** CONSTANTS *******************
-int GROUP_THRESH = 60;
 int MAX_LINES = 1000;
 
 grid_tracker gt;
@@ -445,6 +448,7 @@ void downCamCB(const sensor_msgs::ImageConstPtr& msg)
 void update_pose(const geometry_msgs::PoseStamped& cur_loc) 
 {
 	pose = cur_loc;
+	current_altitude = cur_loc.pose.position.z;
 }
 
 /** @function main */

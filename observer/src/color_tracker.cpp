@@ -15,19 +15,20 @@ trackobjects::trackobjects()
 	angler = true;
 	MIN_OBJECT_AREA = 50*50;
 	MAX_NUM_OBJECTS=10;
-	image_sub_ = it_.subscribe("/usb_cam_0/image_rect_color", 1, &trackobjects::track, this);
-    image_pub1_=it_.advertise("observer/red_binary",1);
-	image_pub2_=it_.advertise("observer/green_binary",1);
-	red_pub = a.advertise<std_msgs::Int32MultiArray>("observer/r_cam_points_0", 1);
-	green_pub = a.advertise<std_msgs::Int32MultiArray>("observer/g_cam_points_0", 1);
+	image_sub_ = it_.subscribe("/usb_cam_2/image_rect_color", 1, &trackobjects::track, this);
+	ROS_INFO("Color tracker subscribed to camera  /usb_cam_2/image_rect_color");
+    image_pub1_=it_.advertise("/observer/red_binary",1);
+	image_pub2_=it_.advertise("/observer/green_binary",1);
+	red_pub = a.advertise<std_msgs::Int32MultiArray>("/observer/r_cam_points_0", 1);
+	green_pub = a.advertise<std_msgs::Int32MultiArray>("/observer/g_cam_points_0", 1);
 }
 trackobjects::trackobjects(std::string camID)
 : it_(nh_)
 {
 	angler = false;
-	MIN_OBJECT_AREA = 20*20;
+	MIN_OBJECT_AREA = 10*10;
 	MAX_NUM_OBJECTS=15;
-	string topicName = "/usb_cam_" + camID + "/image_raw";
+	string topicName = "/usb_cam_" + camID + "/image_rect_color";
 	image_sub_ = it_.subscribe(topicName.c_str(), 1, &trackobjects::track, this);
 	ROS_INFO("Color tracker subscribed to camera %s", topicName.c_str());
 	topicName = "/observer/r_cam_points_" + camID;
@@ -77,9 +78,13 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 		image_pub1_.publish(thresh);
 	}
 	
+	
 	morphOps(threshold);
+	/*imshow("red", threshold);
+	waitKey(15);//*/
 	trackFilteredObject(red,threshold);
 	red_pub.publish(r_point_arr);
+	//ROS_INFO("%d",r_point_arr.data.size());
 	
 	//then greens
 	inRange(LAB,green.getLABmin(),green.getLABmax(),threshold);
@@ -91,6 +96,8 @@ void trackobjects::track(const sensor_msgs::ImageConstPtr& original_image)
 	}
 	
 	morphOps(threshold);
+	/*imshow("green", threshold);
+	waitKey(15);//*/
 	trackFilteredObject(green,threshold);
 	green_pub.publish(g_point_arr);
 	
@@ -101,20 +108,22 @@ void broadcastAngles(bool angler){}
 
 void trackobjects::setLocArrs(vector<LAB_Object>& theObjects)
 {
-	g_point_arr.data.clear();
-	r_point_arr.data.clear();
+	if (theObjects.at(0).getColor() == Scalar(0,255,0))
+		g_point_arr.data.clear();
+	if (theObjects.at(0).getColor() == Scalar(0,0,255))
+		r_point_arr.data.clear();
 	//set the location arrays for the green and red objects :
 	//(the arrays are global data)
 	for (int i = 0; i<theObjects.size(); i++)
 	{
 		
-		theObjects.at(i).getYPos();
+		//theObjects.at(i).getYPos();
 		if (theObjects.at(i).getColor() == Scalar(0,255,0))//green objects
 		{
 			g_point_arr.data.push_back( theObjects.at(i).getXPos() );
 			g_point_arr.data.push_back( theObjects.at(i).getYPos() );
 		}
-		else //~ if (theObjects.at(i).getColor() == Scalar(0,0,255))//red objects
+		else if (theObjects.at(i).getColor() == Scalar(0,0,255))//red objects
 		{
 			r_point_arr.data.push_back( theObjects.at(i).getXPos() );
 			r_point_arr.data.push_back( theObjects.at(i).getYPos() );
@@ -200,12 +209,12 @@ int main(int argc, char** argv)
 {	
 	waitKey(2000);
 	ros::init(argc, argv, "observer_color_tracker");
-	ROS_INFO("Color_tracking ode initialized");
+	ROS_INFO("Color_tracking node initialized");
 	trackobjects /*top_cam("1"), top_right_cam("2"), bottom_right_cam("3"), 
 				bottom_cam("4"), bottom_left_cam("5"), top_left_cam("6"),*/
-				bottom_cam("0");
-				//down_cam();
-	ros::MultiThreadedSpinner spinner(8); //use 8 threads
+				//bottom_cam("2");
+				down_cam;
+	ros::MultiThreadedSpinner spinner(1); //use 8 threads
 	spinner.spin(); //will not return until node is shut down
 }
 

@@ -47,7 +47,20 @@ const string windowName2 = "Thresholded Image";
 const string windowName3 = "After Morphological Operations";
 const string trackbarWindowName = "Trackbars";
 
-bool calibrationMode = true;
+
+ros::Publisher green_loc_arr;
+ros::Publisher red_loc_arr;
+ros::Publisher test_loc_arr;
+image_transport::Subscriber image_sub_; //image subscriber 
+image_transport::Publisher image_pub_; //image publisher
+image_transport::Publisher image_pub2_;
+image_transport::Publisher image_pub3_;
+
+Point prev_point, test_point;
+
+std_msgs::String msg;
+
+bool calibrationMode = false;
 Mat cameraFeed;
 
 //The following for location publishers
@@ -275,152 +288,136 @@ void onMouse( int event, int x, int y, int, void* )
 {
 	if( event != EVENT_LBUTTONDOWN )
 		return;
-	
-	int rangeSlider = 25;
-	Vec3b temp(cameraFeed.at<Vec3b>(Point(x,y)));
-	
-	L_MIN = temp.val[0]-rangeSlider;
-	L_MAX = temp.val[0]+rangeSlider;
-	A_MIN = temp.val[1]-rangeSlider;
-	A_MAX = temp.val[1]+rangeSlider;
-	B_MIN = temp.val[2]-rangeSlider;
-	B_MAX = temp.val[2]+rangeSlider;
-	
+	test_point = Point(x,y);
 }
-class trackobjects
+
+void imageCb(const sensor_msgs::ImageConstPtr& original_image)
 {
-    ros::NodeHandle loc_node;
-    ros::Publisher green_loc_arr;
-    ros::Publisher red_loc_arr;
-    ros::Publisher test_loc_arr;
-	ros::NodeHandle nh_;
-    image_transport::ImageTransport it_;    
-    image_transport::Subscriber image_sub_; //image subscriber 
-    image_transport::Publisher image_pub_; //image publisher
-    image_transport::Publisher image_pub2_;
-    image_transport::Publisher image_pub3_;
-    
-    std_msgs::String msg;
+	
 
-public:
-
-    trackobjects()
-    : it_(nh_)
-    {
-        image_sub_ = it_.subscribe("/usb_cam_0/image_raw", 1, &trackobjects::imageCb, this);
-        image_pub_= it_.advertise("/usb_cam/image_tracked",1);
-        image_pub2_=it_.advertise("green_binary",1);
-        image_pub3_=it_.advertise("red_binary",1);
-		red_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("red_loc", 50);
-		green_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("green_loc", 50);
-		test_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("calibrating_loc", 100);
-		setMouseCallback(windowName, onMouse);
-    }
-
-    ~trackobjects()
-    {
+	//Convert from the ROS image message to a CvImage suitable for working with OpenCV for processing
+	cv_bridge::CvImagePtr cv_ptr;
+	try
+	{
+		//Always copy, returning a mutable CvImage
+		//OpenCV expects color images to use BGR channel order.
+		cv_ptr = cv_bridge::toCvCopy(original_image, enc::BGR8);
+	}
+	catch (cv_bridge::Exception& e)
+	{
+		//if there is an error during conversion, display it
+		ROS_ERROR("tutorialROSOpenCV::main.cpp::cv_bridge exception: %s", e.what());
+		return;
+	}
+	
+	if (test_point != prev_point)
+	{
+		prev_point = test_point;
+		int rangeSlider = 25;
+		Vec3b temp(cameraFeed.at<Vec3b>(test_point));
 		
-    }
+		L_MIN = temp.val[0]-rangeSlider;
+		L_MAX = temp.val[0]+rangeSlider;
+		A_MIN = temp.val[1]-rangeSlider;
+		A_MAX = temp.val[1]+rangeSlider;
+		B_MIN = temp.val[2]-rangeSlider;
+		B_MAX = temp.val[2]+rangeSlider;
+	}
+	
+	Mat threshold;
+	//Mat HSV;
+	Mat LAB;
+	cameraFeed = cv_ptr->image;
+	//cvtColor(cameraFeed,HSV,COLOR_BGR2HSV); //converts BGR image 'cameraFeed' to HSV image 'HSV' 
+	cvtColor(cameraFeed,LAB,CV_BGR2Lab); //converts BGR image 'cameraFeed' to LAB image 'LAB'
+	sensor_msgs::ImagePtr thresh;
+	
+	
+	if(calibrationMode==true){
 
-    void imageCb(const sensor_msgs::ImageConstPtr& original_image)
-    {
+		//need to find the appropriate color range values
+		// calibrationMode must be false
+
+		//if in calibration mode, we track objects based on the LAB slider values.			
 		
-
-        //Convert from the ROS image message to a CvImage suitable for working with OpenCV for processing
-        cv_bridge::CvImagePtr cv_ptr;
-        try
-        {
-            //Always copy, returning a mutable CvImage
-            //OpenCV expects color images to use BGR channel order.
-            cv_ptr = cv_bridge::toCvCopy(original_image, enc::BGR8);
-        }
-        catch (cv_bridge::Exception& e)
-        {
-            //if there is an error during conversion, display it
-            ROS_ERROR("tutorialROSOpenCV::main.cpp::cv_bridge exception: %s", e.what());
-            return;
-        }
-        
-		Mat threshold;
-		//Mat HSV;
-		Mat LAB;
-		cameraFeed = cv_ptr->image;
-        //cvtColor(cameraFeed,HSV,COLOR_BGR2HSV); //converts BGR image 'cameraFeed' to HSV image 'HSV' 
-        cvtColor(cameraFeed,LAB,CV_BGR2Lab); //converts BGR image 'cameraFeed' to LAB image 'LAB'
-		sensor_msgs::ImagePtr thresh;
-        
-        
-        if(calibrationMode==true){
-
-			//need to find the appropriate color range values
-			// calibrationMode must be false
-
-			//if in calibration mode, we track objects based on the LAB slider values.			
-			
-			inRange(LAB,Scalar((L_MIN),(A_MIN),(B_MIN)),Scalar((L_MAX),(A_MAX),(B_MAX)),threshold);
-			
-			cout << "setLABmin(Scalar(" << L_MIN << "," << A_MIN << "," << B_MIN << "));" << endl;
-			cout << "setLABmax(Scalar(" << L_MAX << "," << A_MAX << "," << B_MAX << "));" << endl;
-			
-			morphOps(threshold);
-			thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
-			image_pub2_.publish(thresh);
-			
-			imshow(windowName2,threshold);
-			trackFilteredObject(threshold,LAB,cameraFeed);
-			imshow(windowName,cameraFeed);
-			test_loc_arr.publish(testArr);
-		}
-        else{
-			//create some temp fruit objects so that
-			//we can use their member functions/information
-			LAB_Object red("red"), green("green");
-			
-			
+		inRange(LAB,Scalar((L_MIN),(A_MIN),(B_MIN)),Scalar((L_MAX),
+(A_MAX),(B_MAX)),threshold);
+		
+		cout << "setLABmin(Scalar(" << L_MIN << "," << A_MIN << "," << B_MIN << "));" << endl;
+		cout << "setLABmax(Scalar(" << L_MAX << "," << A_MAX << "," << B_MAX << "));" << endl;
+		
+		morphOps(threshold);
+		thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
+		image_pub2_.publish(thresh);
+		
+		imshow(windowName2,threshold);
+		trackFilteredObject(threshold,LAB,cameraFeed);
+		imshow(windowName,cameraFeed);
+		test_loc_arr.publish(testArr);
+	}
+	else{
+		//create some temp fruit objects so that
+		//we can use their member functions/information
+		LAB_Object red("red"), green("green");
+		
+		
 /*			To make program in LAB instead of HSV format, must change Object to be all in LAB format methods and 
- * 				save values in that format. Set the max and min values for the color that you want to detect.
- * 			Then must use inRange here in the else statement of imageCb to compare LAB to the color objects min and
- * 				max and the threshhold set.
+* 				save values in that format. Set the max and min values for the color that you want to detect.
+* 			Then must use inRange here in the else statement of imageCb to compare LAB to the color objects min and
+* 				max and the threshhold set.
 */
 
-			//forst track red objects
-			inRange(LAB,red.getLABmin(),red.getLABmax(),threshold);
-			thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
-			image_pub3_.publish(thresh);
-			morphOps(threshold);
-			trackFilteredObject(red,threshold,LAB,cameraFeed);
-			red_loc_arr.publish(redArr);
-			//then greens
-			inRange(LAB,green.getLABmin(),green.getLABmax(),threshold);
-			thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
-			image_pub2_.publish(thresh);
-			morphOps(threshold);
-			trackFilteredObject(green,threshold,LAB,cameraFeed);
-			green_loc_arr.publish(greenArr);
-		}
-		//show frames
-		//imshow(windowName2,threshold);
-		//use to imshow tracked objects
-		//imshow(windowName1,LAB);
-		//delay 30ms so that screen can refresh.
-		//image will not appear without this waitKey() command
-		waitKey(30);
-		image_pub_.publish(cv_ptr->toImageMsg());
+		//forst track red objects
+		inRange(LAB,red.getLABmin(),red.getLABmax(),threshold);
+		thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
+		image_pub3_.publish(thresh);
+		morphOps(threshold);
+		trackFilteredObject(red,threshold,LAB,cameraFeed);
+		red_loc_arr.publish(redArr);
+		//then greens
+		inRange(LAB,green.getLABmin(),green.getLABmax(),threshold);
+		thresh = cv_bridge::CvImage(std_msgs::Header(), "mono8", threshold).toImageMsg();
+		image_pub2_.publish(thresh);
+		morphOps(threshold);
+		trackFilteredObject(green,threshold,LAB,cameraFeed);
+		green_loc_arr.publish(greenArr);
 	}
-};
+	//show frames
+	//imshow(windowName2,threshold);
+	//use to imshow tracked objects
+	//imshow(windowName1,LAB);
+	//delay 30ms so that screen can refresh.
+	//image will not appear without this waitKey() command
+	imshow(windowName2,threshold);
+	imshow(windowName,cameraFeed);
+	waitKey(30);
+	
+}
  
  
 int main(int argc, char** argv)
 {
-
+	waitKey(1000);
+    ros::init(argc, argv, "find_objectblob");
+    
 	if(calibrationMode){
 		//create slider bars for LAB filtering
 		createTrackbars();
 	}
+	ros::NodeHandle loc_node;
+	ros::NodeHandle nh_;
+	image_transport::ImageTransport it_(nh_);
+	image_sub_ = it_.subscribe("/usb_cam_2/image_rect_color", 1, imageCb);
+	image_pub_= it_.advertise("/usb_cam/image_tracked",1);
+	image_pub2_=it_.advertise("green_binary",1);
+	image_pub3_=it_.advertise("red_binary",1);
+	red_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("red_loc", 50);
+	green_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("green_loc", 50);
+	test_loc_arr = loc_node.advertise<std_msgs::Int16MultiArray>("calibrating_loc", 100);
+	setMouseCallback(windowName, onMouse);
 	
-	waitKey(1000);
-    ros::init(argc, argv, "find_objectblob");
-    trackobjects ic;
+
+    
     ros::spin();
 
     return 0;

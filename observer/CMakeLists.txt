@@ -141,13 +141,15 @@ include_directories(
 ## Declare a C++ executable
 add_executable(cam_model_test src/cam_model_test.cpp src/camera_model.cpp )
 add_executable(color_tracker src/color_tracker.cpp src/LAB_Object.cpp )
+add_executable(multi_vid_cap_down_front src/multi_vid_cap_down_front.cpp )
+add_executable(multi_vid_cap_left_right src/multi_vid_cap_left_right.cpp )
 add_executable(plate_angler	src/plate_angler.cpp)
 add_executable(plate_localizer	src/plate_localizer.cpp src/camera_model.cpp)
 #~ add_executable(optical_flow src/optical_flow_object.cpp src/camera_model.cpp)
 						
 add_executable(color_calibrator src/color_calibrator.cpp src/LAB_Object.cpp)
 add_executable(color_filter src/image_process.cpp)
-add_executable(pokestick_talker src/pokestick_talker.cpp)
+#~ add_executable(pokestick_talker src/pokestick_talker.cpp)
 
 add_executable(grid_tracker src/grid_tracker.cpp src/camera_model.cpp )
 add_executable(peripherals src/cycle_image.cpp )
@@ -156,7 +158,7 @@ add_executable(peripherals src/cycle_image.cpp )
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(observer_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(pokestick_talker wiringPi)
+#~ add_dependencies(pokestick_talker wiringPi)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(cam_model_test
@@ -164,6 +166,14 @@ add_dependencies(pokestick_talker wiringPi)
    ${ATLANTE_LIBRARIES}
  )
  target_link_libraries(color_tracker
+   ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
+ )
+ target_link_libraries(multi_vid_cap_down_front
+   ${catkin_LIBRARIES}
+   ${OpenCV_LIBRARIES}
+ )
+ target_link_libraries(multi_vid_cap_left_right
    ${catkin_LIBRARIES}
    ${OpenCV_LIBRARIES}
  )
@@ -197,10 +207,10 @@ target_link_libraries(color_filter
   ${catkin_LIBRARIES}
 )
 
- target_link_libraries(pokestick_talker
-  ${catkin_LIBRARIES}
-  ${WIRINGPI_LIBRARY}
- )
+ #~ target_link_libraries(pokestick_talker
+  #~ ${catkin_LIBRARIES}
+  #~ ${WIRINGPI_LIBRARY}
+ #~ )
  
  
  
@@ -227,6 +237,11 @@ target_link_libraries(color_filter
 #   scripts/my_python_script
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
+
+install(PROGRAMS 
+	scripts/pokestick.py
+	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
 
 ## Mark executables and/or libraries for installation
 # install(TARGETS observer observer_node

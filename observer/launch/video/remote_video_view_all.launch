@@ -1,0 +1,37 @@
+<launch>
+
+	<!--
+	<machine name="other_odroid_xu4" address="192.168.2." env-loader="/opt/ros/indigo/env.sh" user="odroid" password="odroid"/>
+	-->
+
+	<machine name="other_odroid_u3" address="192.168.2.49" env-loader="/opt/ros/indigo/env.sh" user="odroid" password="odroid"/>
+
+	<!-- =========================================================== -->
+
+	<node machine="other_odroid_u3" name="usb_cam_1" pkg="usb_cam" type="usb_cam_node" respawn="false" output="screen">
+		<remap from="/usb_cam/image_raw" to="/usb_cam_1/image_raw" />
+		<param name="autosize" value="true" />
+		<param name="video_device" value="/dev/video0" />
+	</node>
+
+	<node name="image_view_1" pkg="image_view" type="image_view" respawn="false" output="screen">
+		<remap from="/usb_cam/image_raw" to="/usb_cam_1/image_raw" />
+		<param name="autosize" value="true" />
+	</node>
+
+	<!-- =========================================================== -->
+
+	<node machine="other_odroid_u3" name="usb_cam_2" pkg="usb_cam" type="usb_cam_node" respawn="false" output="screen">
+		<remap from="/usb_cam/image_raw" to="/usb_cam_2/image_raw" />
+		<param name="autosize" value="true" />
+		<param name="video_device" value="/dev/video1" />
+	</node>
+
+	<node name="image_view_2" pkg="image_view" type="image_view" respawn="false" output="screen">
+		<remap from="/usb_cam/image_raw" to="/usb_cam_2/image_raw" />
+		<param name="autosize" value="true" />
+	</node>
+
+	<!-- =========================================================== -->
+
+</launch>

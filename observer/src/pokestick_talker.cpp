@@ -3,7 +3,7 @@
 #include <iostream>
 #include "wiringPi.h"
 
-#define GPIO_BUTTON_PIN 8
+#define GPIO_BUTTON_PIN 26
 
 int main(int argc, char** argv)
 {
@@ -11,7 +11,6 @@ int main(int argc, char** argv)
 
   wiringPiSetup ();
   pinMode(GPIO_BUTTON_PIN, INPUT);
-  pullUpDnControl(GPIO_BUTTON_PIN, PUD_UP); // Enable pull-up resistor on button
 
   ros::NodeHandle n;
   ros::Rate loop_rate(10);
