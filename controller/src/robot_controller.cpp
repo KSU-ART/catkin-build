@@ -63,7 +63,7 @@ public:
 		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
 		
 		//this part is important:
-		MANNUAL_OVERRIDE = true;
+		MANNUAL_OVERRIDE = false;
 		EMERGENCY_LAND = false;
 		debug = true;
 		
@@ -208,8 +208,8 @@ public:
 	
 	void ai_msg_channels()
 	{
-		RC_MSG.channels[ROLL_CHANNEL] = roll + 118;
-		RC_MSG.channels[PITCH_CHANNEL] = pitch - 61;
+		RC_MSG.channels[ROLL_CHANNEL] = roll + 82;
+		RC_MSG.channels[PITCH_CHANNEL] = pitch - 36;
 		RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
 		RC_MSG.channels[MODE_CHANNEL] = mode;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;

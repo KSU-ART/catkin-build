@@ -36,7 +36,7 @@
 		<!-- Starts up faster, but timestamps will be inaccurate. --> 
 		<param name="calibrate_time" type="bool" value="false"/> 
 		<!-- Set the port to connect to here -->
-		<param name="port" type="string" value="/dev/ttyACM0"/> 
+		<param name="port" type="string" value="/dev/ttyACM1"/> 
 		<param name="intensity" type="bool" value="false"/>
 	</node>
 	
@@ -47,7 +47,7 @@
 	</node>
 	
 	<include file="$(find mavros)/launch/apm2.launch">
-		<arg name="fcu_url" default="/dev/ttyACM1:115200" />
+		<arg name="fcu_url" default="/dev/ttyACM0:115200" />
 	</include>
 
 <!--

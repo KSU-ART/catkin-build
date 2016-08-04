@@ -74,6 +74,11 @@ private:
 	bool found_red;
 	bool found_green;
 	
+<<<<<<< HEAD
+	int num_of_presses = 0;
+	
+=======
+>>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	/// interact ground robot
 	
 public:

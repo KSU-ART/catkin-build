@@ -10,7 +10,11 @@ using namespace projection_;
 plate_localizer::plate_localizer()
 {
 	//load cameramodels
+<<<<<<< HEAD
+	c1.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.16d,0.004d,0.0d, 0.887010d,0.0d,0.461748d,0.0d);
+=======
 	c1.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,0.0d, 0.887010d,0.0d,0.461748d,0.0d);
+>>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	//c2.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	//c3.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
 	//c4.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 442.198764d,441.266354d,326.721422d,218.200761d, 0.0d,0.0d,-0.1d, 1.0d,0.0d,0.0d,0.0d);
@@ -20,7 +24,7 @@ plate_localizer::plate_localizer()
 	c0.loadToMem(2.2e-6, 2.2e-6, (int)480, (int)640, 284.040145d,282.671480d,320.0d,230.0d, 0.18d,0.0d,-0.04d, 0.707d,0.0d,0.707d,0.0d);
 	
 	//initiate subscribers
-	curr_pose = s_.subscribe("/localizer/curent_pose", 3, &plate_localizer::update_pose, this);
+	curr_pose = s_.subscribe("/localizer/current_pose", 3, &plate_localizer::update_pose, this);
 	r_plate_angle = s_.subscribe("/observer/red_plate_angle", 1, &plate_localizer::update_r_angle, this);
 	g_plate_angle = s_.subscribe("/observer/green_plate_angle", 1, &plate_localizer::update_g_angle, this);
 	

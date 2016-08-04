@@ -16,7 +16,11 @@
 */
 
 // units: meters
+<<<<<<< HEAD
+const int MAX_PILLAR_HEIGHT = 2;
+=======
 #define MAX_PILLAR_HEIGHT 2
+>>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 class obstacle_ground_robot : ground_robot
 {
@@ -36,6 +40,8 @@ private:
 
 };
 
+<<<<<<< HEAD
+=======
 obstacle_ground_robot::obstacle_ground_robot()
 {
 }
@@ -43,3 +49,4 @@ obstacle_ground_robot::obstacle_ground_robot()
 obstacle_ground_robot::~obstacle_ground_robot()
 {
 }
+>>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
