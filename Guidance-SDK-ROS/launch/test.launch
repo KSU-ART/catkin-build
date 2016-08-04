@@ -1,3 +1,0 @@
- <launch>
- <node name="guidanceNode" pkg="guidance" type="guidanceNode" launch-prefix="xterm -e gdb --args" />
- </launch>
