@@ -24,13 +24,3 @@ private:
 
 };
 
-<<<<<<< HEAD
-=======
-herdable_ground_robot::herdable_ground_robot()
-{
-}
-
-herdable_ground_robot::~herdable_ground_robot()
-{
-}
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9

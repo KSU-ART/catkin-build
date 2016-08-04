@@ -18,7 +18,6 @@
 // Dimension units in meters
 
 // width  == x
-<<<<<<< HEAD
 const double ARENA_MAX_X = 20;
 const double ARENA_MIN_X = 0;
 // length == y
@@ -27,18 +26,6 @@ const double ARENA_MIN_Y = 0;
 // height == z
 const double ARENA_MAX_Z = 3;
 const double ARENA_MIN_Z = 0;
-=======
-#define ARENA_MAX_X 20
-#define ARENA_MIN_X 0
-
-// length == y
-#define ARENA_MAX_Y 20
-#define ARENA_MIN_Y 0
-
-// height == z
-#define ARENA_MAX_Z 3
-#define ARENA_MIN_Z 0
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 class arena
 {
@@ -52,18 +39,3 @@ public:
 private:
 
 };
-<<<<<<< HEAD
-=======
-
-arena::arena()
-{
-	//herdable_gr_list = new std::vector<herdable_ground_robot>(10);
-	//obstacle_gr_list = new std::vector<obstacle_ground_robot>(4);
-}
-
-arena::~arena()
-{
-	//delete herdable_gr_list;
-	//delete obstacle_gr_list;
-}
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9

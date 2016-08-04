@@ -473,13 +473,8 @@ int main( int argc, char** argv )
 	ros::NodeHandle n;
 
 	ros::Subscriber sub = n.subscribe("/usb_cam_0/image_rect_color", 1, downCamCB);
-<<<<<<< HEAD
 	ros::Subscriber curr_pose = n.subscribe("/localizer/current_pose", 1, update_pose);
 	pos_pub = n.advertise<geometry_msgs::PointStamped>("/observer/grid_pos", 1);
-=======
-	ros::Subscriber curr_pose = n.subscribe("/localizer/curent_pose", 1, update_pose);
-	pos_pub = n.advertise<geometry_msgs::Point>("/observer/grid_pos", 1);
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	
 	ros::NodeHandle nh;
 	image_transport::ImageTransport it(nh);

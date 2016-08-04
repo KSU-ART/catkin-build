@@ -1,30 +1,16 @@
-<<<<<<< HEAD
- 
-=======
 
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 #include "ai_nav.h"
 
 ai_navigator::ai_navigator()
 {
 	/// ************** Constants *****************
 	SETPOINT_INTERVAL = 3.0;
-<<<<<<< HEAD
 	TARGET_ALTITUDE = 1.0;
 	GOAL_ANGLE = PI / 180 * 45;
 
 	hank3.start_pose.pose.position.y = 10;
 	hank3.start_pose.pose.position.x = -1;
 	hank3.start_pose.pose.position.z = UAV_HEIGHT;
-=======
-	DEBUG = true;
-	TARGET_ALTITUDE = 1.0;
-	GOAL_ANGLE = PI / 180 * 45;
-
-	hank3.start_pose.position.x = 10;
-	hank3.start_pose.position.y = -1;
-	hank3.start_pose.position.z = UAV_HEIGHT;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 	start_time = ros::Time::now().toSec();
 
@@ -35,22 +21,14 @@ ai_navigator::ai_navigator()
 	curent_pose_sub = n_.subscribe("/localizer/current_pose", 1, &ai_navigator::current_pose_cb, this);
 	red_plate_poses_sub = n_.subscribe("/observer/red_plate_poses", 1, &ai_navigator::red_plate_poses_cb, this);
 	green_plate_poses_sub = n_.subscribe("/observer/green_plate_poses", 1, &ai_navigator::green_plate_poses_cb, this);
-<<<<<<< HEAD
 	//obstacles_sub = n_.subscribe("/observer/obstacles", 1, &ai_navigator::obstacles_cb, this);
-=======
-	obstacles_sub = n_.subscribe("/observer/obstacles", 1, &ai_navigator::obstacles_cb, this);
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 	//control pubs:
 	setpoint_pub = n_.advertise<geometry_msgs::Point>("/navigator/setpoint", 1);
 	retractMsg_pub = n_.advertise<std_msgs::Bool>("/navigator/retractMsg", 1);//true = retracts down, false = up;
 	pid_XY_pub = n_.advertise<std_msgs::Int32MultiArray>("/navigator/pid_XY", 1); //{p, i, d, min, max}
 	pid_z_pub = n_.advertise<std_msgs::Int32MultiArray>("/navigator/pid_z", 1);//{p, i, d, min, max}
-<<<<<<< HEAD
 	modeMsg_pub = n_.advertise<std_msgs::Int8>("/navigator_nav/modeMsg", 1);//0 = altitude hold, 1 = stabilize, 2 = land;
-=======
-	modeMsg_pub = n_.advertise<std_msgs::Int8>("/ainavigator_nav/modeMsg", 1);//0 = altitude hold, 1 = stabilize, 2 = land;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 }
 
@@ -60,7 +38,6 @@ void ai_navigator::init()
 	while (ros::ok())
 	{
 		determine_state();
-<<<<<<< HEAD
 		
 		if(cur_state == TargetGR)
 		{
@@ -71,58 +48,35 @@ void ai_navigator::init()
 		// TODO ?
 		if (at_setpoint)
 		{
-=======
-
-		// TODO ?
-		/*
-		if (at_setpoint == false)
-		{
-			
+			switch (cur_state)
+			{
+			case TakeOff:
+				take_off();
+				break;
+				
+			case RandomTraversal:
+				random_traversal();
+				break;
+				
+			case InteractWithRobot:
+				interact_with_robot();
+				break;
+				
+			// TODO
+			case AvoidObstacle:
+				avoid_obstacle();
+				break;
+				
+			case HoldPosition:
+				hold_position();
+				break;
+				
+			// TODO
+			case Land:
+				land();
+				break;
+			}
 		}
-		*/
-
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
-		switch (cur_state)
-		{
-		case TakeOff:
-			take_off();
-			break;
-			
-		case RandomTraversal:
-			random_traversal();
-			break;
-			
-<<<<<<< HEAD
-=======
-		case TargetGR:
-			target_ground_robot();
-			break;
-			
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
-		case InteractWithRobot:
-			interact_with_robot();
-			break;
-			
-		// TODO
-		case AvoidObstacle:
-			avoid_obstacle();
-			break;
-			
-		case HoldPosition:
-			hold_position();
-			break;
-			
-		// TODO
-		case Land:
-			land();
-			break;
-		}
-<<<<<<< HEAD
-			
-		}
-
-=======
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 #ifdef DEBUG_MODE
 		std::cout << "Current State" << cur_state << std::endl;
@@ -228,13 +182,8 @@ void ai_navigator::take_off()
 		return;
 	}
 	
-<<<<<<< HEAD
 	setpoint.x = hank3.start_pose.pose.position.x;
 	setpoint.y = hank3.start_pose.pose.position.y;
-=======
-	setpoint.x = hank3.start_pose.position.x;
-	setpoint.y = hank3.start_pose.position.y;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	setpoint.z = TARGET_ALTITUDE;
 	setpoint_pub.publish(setpoint);
 }
@@ -291,12 +240,7 @@ void ai_navigator::target_ground_robot()
 				
 				crop_angle(angle);
 				
-<<<<<<< HEAD
 				while (angle < 180-GOAL_ANGLE || angle > 180+GOAL_ANGLE)
-=======
-				int num_of_presses = 0;
-				while (angle < 180 - GOAL_ANGLE || angle > 180 + GOAL_ANGLE)
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 				{
 					num_of_presses++;
 					angle -= 45;
@@ -318,15 +262,9 @@ void ai_navigator::target_ground_robot()
 			//go to random_traversal
 			/// **************************** FOR TEST USING Hold position INSTEAD *************************************
 			new_state = true;
-<<<<<<< HEAD
-
+			
 			//cur_state = HoldPosition;
 			cur_state = RandomTraversal;
-=======
-			cur_state = HoldPosition;
-			
-			//cur_state = RandomTraversal;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 			return;
 		}
 	}
@@ -340,7 +278,6 @@ void ai_navigator::interact_with_robot()
 		new_state = false;
 	}
 	
-<<<<<<< HEAD
 	if(hank3.rotate_gr_counter < num_of_presses)
 	{		
 		if (hank3.current_altitude_state == HOVERING_ABOVE_GR)
@@ -372,32 +309,6 @@ void ai_navigator::interact_with_robot()
 		cur_state = TargetGR;
 		new_state = true;
 		
-=======
-	if(hank3.rotate_gr_state_actual < hank3.rotate_gr_state_desired)
-	{		
-		if (hank3.current_altitude_state == altitude_state::HOVERING_ABOVE_GR)
-		{
-			setpoint.z = INTERACTING_WITH_GR;
-		} 
-		else if (hank3.current_altitude_state == altitude_state::INTERACTING_WITH_GR)
-		{
-			setpoint.z = HOVERING_ABOVE_GR;
-		}
-		
-		hank3.rotate_gr_state_actual++;
-	}
-	else
-	{
-		if (hank3.current_altitude_state == altitude_state::INTERACTING_WITH_GR)
-		{			
-			setpoint.x = hank3.current_pose.position.x;
-			setpoint.y = hank3.current_pose.position.y;
-			setpoint.z = TARGET_ALTITUDE;
-		}
-		
-		hank3.rotate_gr_state_actual = rotate_gr_state::None;
-		hank3.rotate_gr_state_desired = rotate_gr_state::None;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	}
 	
 	setpoint_pub.publish(setpoint);
@@ -411,11 +322,7 @@ void ai_navigator::avoid_obstacle()
 		new_state = false;
 	}
 
-<<<<<<< HEAD
 	if (hank3.current_altitude_state == HOVERING_ABOVE_OBSTACLES)
-=======
-	if (hank3.current_altitude_state == altitude_state::HOVERING_ABOVE_OBSTACLES)
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	{
 		
 	}
@@ -437,13 +344,8 @@ void ai_navigator::hold_position()
 		retractMsg_pub.publish(retract);
 	}
 	
-<<<<<<< HEAD
 	setpoint.x = hank3.current_pose.pose.position.x;
 	setpoint.y = hank3.current_pose.pose.position.y;
-=======
-	setpoint.x = hank3.current_pose.position.x;
-	setpoint.y = hank3.current_pose.position.y;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	setpoint.z = TARGET_ALTITUDE;
 	setpoint_pub.publish(setpoint);
 }
@@ -455,13 +357,10 @@ void ai_navigator::land()
 		state_time = ros::Time::now().toSec();
 		new_state = false;
 	}
-<<<<<<< HEAD
 	setpoint.x = hank3.current_pose.pose.position.x;
 	setpoint.y = hank3.current_pose.pose.position.y;
 	setpoint.z = UAV_HEIGHT;
 	setpoint_pub.publish(setpoint);
-=======
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 }
 
 /*****************************************************************
@@ -471,20 +370,13 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 {
 	hank3.current_pose = msg;
 
-<<<<<<< HEAD
 	double hank3_x = hank3.current_pose.pose.position.x + (UAV_WIDTH/2);
 	double hank3_y = hank3.current_pose.pose.position.y + (UAV_LENGTH/2);
 	double hank3_z = hank3.current_pose.pose.position.z + (UAV_HEIGHT/2);
-=======
-	double hank3_x = hank3.current_pose.position.x + (UAV_WIDTH/2);
-	double hank3_y = hank3.current_pose.position.y + (UAV_LENGTH/2);
-	double hank3_z = hank3.current_pose.position.z + (UAV_HEIGHT/2);
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 	// TODO:: uav_state.update( altitude )
 	if (hank3_z > ARENA_MAX_Z)
 	{
-<<<<<<< HEAD
 		hank3.current_altitude_state = ABOVE_ARENA;
 	}
 	else if (hank3_z > MAX_PILLAR_HEIGHT)
@@ -502,29 +394,6 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 	else if (hank3.current_pose.pose.position.z == hank3.start_pose.pose.position.z)
 	{
 		hank3.current_altitude_state = ON_GROUND;
-=======
-		hank3.current_altitude_state = altitude_state::ABOVE_ARENA;
-	}
-	else if (hank3_z > MAX_PILLAR_HEIGHT)
-	{
-		hank3.current_altitude_state = altitude_state::HOVERING_ABOVE_OBSTACLES;
-	}
-	else if (hank3_z >= 1)
-	{
-		hank3.current_altitude_state = altitude_state::HOVERING_ABOVE_GR;
-	}
-	else if (hank3_z > GROUND_ROBOT_HEIGHT)
-	{
-		hank3.current_altitude_state = altitude_state::INTERACTING_WITH_GR;
-	}
-	else if (hank3.current_pose.position.z == hank3.start_pose.position.z)
-	{
-		hank3.current_altitude_state = altitude_state::ON_GROUND;
-	}
-	else
-	{
-		hank3.current_altitude_state = altitude_state::UNKNOWN;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	}
 
 	// TODO:: uav_state.update( is in arena )
@@ -542,11 +411,7 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 		// move to known set point inside arena		
 		setpoint.x = 10;
 		setpoint.y = 2;
-<<<<<<< HEAD
 		setpoint.z = SAFE_FLYING_ALTITUDE;
-=======
-		setpoint.z = uav::SAFE_FLYING_ALTITUDE;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	}
 	
 	if (hank3_y > ARENA_MIN_Y
@@ -563,11 +428,7 @@ void ai_navigator::current_pose_cb(const geometry_msgs::PoseStamped& msg)
 		// move to known set point inside arena		
 		setpoint.x = 10;
 		setpoint.y = 2;
-<<<<<<< HEAD
 		setpoint.z = SAFE_FLYING_ALTITUDE;
-=======
-		setpoint.z = uav::SAFE_FLYING_ALTITUDE;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	}
 
 	// setpoint based on current flight plan

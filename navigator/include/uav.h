@@ -1,10 +1,6 @@
 #pragma once
 
 #include <vector>
-<<<<<<< HEAD
-=======
-#include "collision_model.h"
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 #include "herdable_ground_robot.h"
 #include "obstacle_ground_robot.h"
 
@@ -27,11 +23,7 @@
 #define UAV_HEIGHT 0.147
 
 // altitude_state.ABOVE_OBSTACLES
-<<<<<<< HEAD
 const double SAFE_FLYING_ALTITUDE = 2.5;
-=======
-#define SAFE_FLYING_ALTITUDE 2.5
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 
 enum rc_channel
 {
@@ -48,10 +40,6 @@ enum rc_channel
 
 enum altitude_state
 {
-<<<<<<< HEAD
-=======
-	UNKOWN,
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	ON_GROUND,
 	HOVERING_ABOVE_OBSTACLES,
 	HOVERING_ABOVE_GR,
@@ -61,7 +49,6 @@ enum altitude_state
 
 enum rotate_gr_state
 {
-<<<<<<< HEAD
 	ROTATE_NONE,
 	ROTATE_45_DEGREES,
 	ROTATE_90_DEGREES,
@@ -70,16 +57,6 @@ enum rotate_gr_state
 	ROTATE_225_DEGREES,
 	ROTATE_270_DEGREES,
 	ROTATE_315_DEGREES
-=======
-	NONE,
-	45_DEGREES,
-	90_DEGREES,
-	135_DEGREES,
-	180_DEGREES,
-	225_DEGREES,
-	270_DEGREES,
-	315_DEGREES
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 };
 
 // cen_x ... middle of arena ... x
@@ -159,11 +136,7 @@ public:
 	int flight_plan_index;
 	//bool calibrated;
 	
-<<<<<<< HEAD
 	int rotate_gr_counter;
-=======
-	rotate_gr_state rotate_gr_state_actual;
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	rotate_gr_state rotate_gr_state_desired;
 	
 	//std::vector<geometry_msgs::PoseStamped> current_flight_path;
@@ -174,26 +147,3 @@ private:
 	
 };
 
-<<<<<<< HEAD
-=======
-uav::uav()
-{
-	current_altitude_state = altitude_state::ON_GROUND;
-	inside_arena = false;
-	flight_plan_index = 0;
-	
-	rotate_gr_state_actual = rotate_gr_state::None;
-	rotate_gr_state_desired = rotate_gr_state::None;
-}
-
-uav::~uav()
-{
-}
-
-/*
-bool uav::herd_ground_robot(herdable_ground_robot target_ground_robot)
-{
-	
-}
-*/
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9

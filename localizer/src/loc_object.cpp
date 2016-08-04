@@ -65,7 +65,6 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 	pos_fused_msg.header.seq++;
 	pos_fused_msg.header.stamp = ros::Time::now();
 	
-<<<<<<< HEAD
 ///do not use guidance
 /*	if( ros::Time::now().toSec() - startTime <  6.00)
 =======
@@ -81,12 +80,6 @@ void sensor_processor::merge_and_publish(ros::Time current_time)
 		pos_fused_msg.pose.position.x = grid_flow_position.x;
 		pos_fused_msg.pose.position.y = grid_flow_position.y;
 	//}
-=======
-	{
-		pos_fused_msg.pose.position.x = grid_flow_position.x;
-		pos_fused_msg.pose.position.y = grid_flow_position.y;
-	}
->>>>>>> f8a486467cd392ccb3654c62785ca9e2999e52c9
 	
 	pos_fused_msg.pose.position.z = fused_altitude;
 	pos_fused_msg.pose.orientation.x = orientation_fused.v.x;
