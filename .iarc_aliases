@@ -1,10 +1,35 @@
+alias ..='cd ..;'
+alias refresh='source ~/.bashrc; clear; l -a;'
+alias cls='clear; l -a;'
+alias vbrc='vim ~/.bashrc'
+alias vbra='vim ~/.bash_aliases'
+
+#alias cm='catkin_make -j8 -C ~/catkin_ws/;'
+
+alias gits='git status;'
+
 alias sensors='roslaunch spsuart PreStateMachine.launch'
 alias vision='roslaunch ros_opencv Vision.launch'
 alias beginmission='rosrun spsuart iarc_random'
-alias endmission='rosrun spsuart disable_overrides'
+alias endmission='rosrun controller disable_overrides'
 alias arm='rosrun mavros mavsafety arm'
 alias disarm='rosrun mavros mavsafety disarm'
 alias rbc='rosbag record /guidance/velocity /mavros/rc/out'
+
 function setPos() {
-    rostopic pub --once /fatcat/setpoint geometry_msgs/Point '(x:$1,y:$2,z:$3)'
+    rostopic pub --once /navigator/setpoint geometry_msgs/Point '(x:$1,y:$2,z:$3)'
 }
+
+alias observer='geany -i ~/catkin_ws/src/catkin-build/observer/*.txt ~/catkin_ws/src/catkin-build/observer/launch/* ~/catkin_ws/src/catkin-build/observer/src/* ~/catkin_ws/src/catkin-build/observer/include/* &'
+alias controller='geany -i ~/catkin_ws/src/catkin-build/controller/*.txt ~/catkin_ws/src/catkin-build/controller/src/* ~/catkin_ws/src/catkin-build/controller/include/* &'
+alias localizer='geany -i ~/catkin_ws/src/catkin-build/localizer/*.txt ~/catkin_ws/src/catkin-build/localizer/launch/* ~/catkin_ws/src/catkin-build/localizer/src/* ~/catkin_ws/src/catkin-build/localizer/include/* &'
+alias navigator='geany -i ~/catkin_ws/src/catkin-build/navigator/*.txt ~/catkin_ws/src/catkin-build/navigator/launch/* ~/catkin_ws/src/catkin-build/navigator/src/* ~/catkin_ws/src/catkin-build/navigator/include/* &'
+
+alias iarc_observer='roslaunch observer observer_node.launch'
+alias iarc_localizer='roslaunch localizer localizer_node.launch'
+alias iarc_navigator='roslaunch navigator navigator_node.launch'
+alias iarc_controller='roslaunch controller controller_node.launch'
+
+alias iarc_run='iarc_observer; iarc_localizer; iarc_navigator; iarc_controller; '
+
+
