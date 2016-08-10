@@ -1,5 +1,4 @@
-<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=ugRLvxzsf9tqqaFW7vdm&branch=master"/></a></h1>
-
+<h1>catkin-build <a href="https://travis-ci.com/KSU-ART/catkin-build"><img alt="Travis CI Build Status" src="https://travis-ci.com/KSU-ART/catkin-build.svg?token=ugRLvxzsf9tqqaFW7vdm&branch=master"/></a> <a href="https://waffle.io/KSU-ART/catkin-build"><img alt="Waffleio" src="https://badge.waffle.io/KSU-ART/catkin-build.svg?label=Ready"/></a></h1>
 ## How to use
 
 Please visit the wiki for this repository for setup and usage instructions.
