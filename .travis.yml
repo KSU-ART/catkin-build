@@ -4,6 +4,7 @@ sudo: required # enable admin rights in VM
 services:
   - docker
 notifications:
+  slack: ksurobotics:Gsh4WqJvIrB741sENQ9ofsXG
   email: # Email these scrubs when builds/tests fails
     - bhopewel@students.kennesaw.edu
     - sali37@students.kennesaw.edu
