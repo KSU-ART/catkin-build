@@ -1,6 +1,6 @@
 
 #include "ai_nav.h"
-
+//test
 ai_navigator::ai_navigator()
 {
 	/// ************** Constants *****************
