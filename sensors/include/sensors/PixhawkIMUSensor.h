@@ -1,22 +1,34 @@
-#ifndef PIXHAWK_IMU_SENSOR_CLASS_H
-#define PIXHAWK_IMU_SENSOR_CLASS_H
+#ifndef IMU_SENSOR_CLASS_H
+#define IMU_SENSOR_CLASS_H
 
 #include "ros/ros.h"
+#include <sensor_msgs/Imu.h>
 
-class PixhawkIMUSensor
+class IMUSensor
 {
 private:
-	ros::Subscriber _pixhawkIMUSub;
+	ros::Subscriber _IMUSub;
+	
+	std::array<double, 4> _quaternionImu;
 	
 public:
 	/// Pre: requires a nodehandle object
 	/// Post: 
-	PixhawkIMUSensor(ros::NodeHandle n);
+	IMUSensor(ros::NodeHandle n);
 	
 	/// Post: deconstructs any pointers
-	~PixhawkIMUSensor();
+	~IMUSensor();
 	
+	/// Post: Handles the imu messages
+	void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
 	
+	/// Post: Gets the current quaternion values
+	std::array<double, 4> getQuaternionImu ();
+	
+	double getQuaternionImuX ();
+	double getQuaternionImuY ();
+	double getQuaternionImuZ ();
+	double getQuaternionImuW ();
 };
 
 #endif
