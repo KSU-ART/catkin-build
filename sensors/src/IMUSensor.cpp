@@ -1,4 +1,4 @@
-#include <PixhawkIMUSensor.h>
+#include <IMUSensor.h>
 
 IMUSensor::IMUSensor(ros::NodeHandle n)
 {
