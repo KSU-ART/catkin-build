@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(sensors)
-
+add_definitions(-std=c++11)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -113,7 +113,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+	include
+	${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -137,6 +138,18 @@ include_directories(
 # target_link_libraries(sensors_node
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(IMUSensor src/IMUSensor.cpp)
+add_dependencies(IMUSensor ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(IMUSensor
+	${catkin_LIBRARIES}
+)
+
+add_executable(LidarSensor src/LidarSensor.cpp)
+add_dependencies(LidarSensor ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(LidarSensor
+	${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
