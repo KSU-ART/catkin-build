@@ -1,13 +1,12 @@
 #include <IMUSensor.h>
 
-IMUSensor::IMUSensor(ros::NodeHandle n, std::String topic="/mavros/imu/data")
+IMUSensor::IMUSensor(ros::NodeHandle nodeHandle, std::string topic="/mavros/imu/data")
 {
-	_IMUSub = n.subscribe(topic, 1, &IMUSensor::ImuCallback, this);
+	_IMUSub = nodeHandle.subscribe(topic, 1, &IMUSensor::ImuCallback, this);
 }
 
 IMUSensor::~IMUSensor()
 {
-	
 }
 
 void IMUSensor::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg)

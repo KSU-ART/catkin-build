@@ -13,7 +13,7 @@ private:
 public:
 	/// Pre: requires a nodehandle object
 	/// Post: 
-	LidarSensor(ros::NodeHandle nodeHandle, std::string topic="/scan2");
+	LidarSensor(ros::NodeHandle, std::string);
 	
 	/// Post: deconstructs any pointers
 	~LidarSensor();

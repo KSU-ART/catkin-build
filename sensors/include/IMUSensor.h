@@ -15,7 +15,7 @@ private:
 public:
 	/// Pre: requires a nodehandle object
 	/// Post: 
-	IMUSensor(ros::NodeHandle nodeHandle, std::string topic="/mavros/imu/data");
+	IMUSensor(ros::NodeHandle, std::string);
 	
 	/// Post: deconstructs any pointers
 	~IMUSensor();
