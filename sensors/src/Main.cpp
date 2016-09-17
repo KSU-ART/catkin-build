@@ -1,11 +1,12 @@
 #include "ros/ros.h"
+#include "IMUSensor.h"
+#include "LidarSensor.h"
 
 using namespace std;
-using namespace cv;
 
 int main(int argc, char** argv)
 {
-	ros::NodeHandle N;
+	ros::NodeHandle nodeHandle;
 	
 }
 
