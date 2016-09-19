@@ -1,20 +1,20 @@
 #!/bin/bash	
 #Install additional packages
-apt update && \
-apt -y install git vim cmake catkin python3-dev python3-numpy dos2unix curl && \
+sudo apt update && \
+sudo apt -y install git vim cmake catkin python3-dev python3-numpy dos2unix curl && \
 
 #Install ROS Kinetic
 sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list' && \
-apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 0xB01FA116 && \
-apt update && \
-apt -y install ros-kinetic-ros-core && \
+sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 0xB01FA116 && \
+sudo apt update && \
+sudo apt -y install ros-kinetic-ros-core && \
 rosdep init && \
 rosdep update && \
 echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc && \
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc && \
 
 #install ros packages
-apt -y install ros-kinetic-cv-bridge ros-kinetic-image-transport ros-kinetic-mavlink ros-kinetic-mavros ros-kinetic-mavros-msgs \
+sudo apt -y install ros-kinetic-cv-bridge ros-kinetic-image-transport ros-kinetic-mavlink ros-kinetic-mavros ros-kinetic-mavros-msgs \
     ros-kinetic-cmake-modules ros-kinetic-control-toolbox && \
 
 #Setup Catkin Workspace
@@ -41,7 +41,7 @@ cmake -D CMAKE_BUILD_TYPE=MinSizeRel  \
 	-D BUILD_PYTHON_SUPPORT=ON \
 	.. && \
 make -j $(nproc) && \
-make -j $(nproc) install && \
+sudo make -j $(nproc) install && \
 ldconfig && \
 
 #Install PID
@@ -51,13 +51,13 @@ mkdir pid-controller/build && \
 cd pid-controller/build && \
 cmake .. && \
 make -j $(nproc) &&
-make -j $(nproc) install && \
+sudo make -j $(nproc) install && \
 
 #Install Atlante
 cd && \
 git clone https://github.com/uavster/atlante.git && \
 cd atlante && \
-make -j $(nproc) install && \
+sudo make -j $(nproc) install && \
 
 #Vim Plugin Manager
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
