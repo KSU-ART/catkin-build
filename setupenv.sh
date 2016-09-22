@@ -15,7 +15,7 @@ echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc && \
 
 #install ros packages
 sudo apt -y install ros-kinetic-cv-bridge ros-kinetic-image-transport ros-kinetic-mavlink ros-kinetic-mavros ros-kinetic-mavros-msgs \
-    ros-kinetic-cmake-modules ros-kinetic-control-toolbox && \
+    ros-kinetic-cmake-modules ros-kinetic-control-toolbox python-roslaunch && \
 
 #Setup Catkin Workspace
 mkdir -p ~/catkin_ws/src && \
