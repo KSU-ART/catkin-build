@@ -42,7 +42,7 @@ cmake -D CMAKE_BUILD_TYPE=MinSizeRel  \
 	.. && \
 make -j $(nproc) && \
 sudo make -j $(nproc) install && \
-ldconfig && \
+sudo ldconfig && \
 
 #Install PID
 cd && \
