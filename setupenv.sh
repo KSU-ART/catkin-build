@@ -8,7 +8,7 @@ sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sour
 sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 0xB01FA116 && \
 sudo apt update && \
 sudo apt -y install ros-kinetic-ros-core && \
-rosdep init && \
+sudo rosdep init && \
 rosdep update && \
 echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc && \
 echo "source ~/catkin_ws/devel/setup.bash" >> ~/.bashrc && \
