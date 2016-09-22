@@ -4,7 +4,7 @@ sudo apt update && \
 sudo apt -y install git vim cmake catkin python3-dev python3-numpy dos2unix curl && \
 
 #Install ROS Kinetic
-sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list' && \
+sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list' && \
 sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 0xB01FA116 && \
 sudo apt update && \
 sudo apt -y install ros-kinetic-ros-core && \
