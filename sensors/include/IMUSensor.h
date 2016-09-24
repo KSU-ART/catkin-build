@@ -15,6 +15,7 @@ private:
 public:
 	/// Pre: requires a nodehandle object
 	/// Post: 
+	IMUSensor(ros::NodeHandle);
 	IMUSensor(ros::NodeHandle, std::string);
 	
 	/// Post: deconstructs any pointers
