@@ -4,10 +4,6 @@ sudo: required # enable admin rights in VM
 services:
   - docker
 notifications:
-  email: # Email these scrubs when builds/tests fails
-    - bhopewel@students.kennesaw.edu
-    - sali37@students.kennesaw.edu
-    - nschulz@students.kennesaw.edu
 env:
   global:
     - CI_SOURCE_PATH=$(pwd) # Save default repo location to environment variable 
