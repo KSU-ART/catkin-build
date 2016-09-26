@@ -28,7 +28,7 @@ env:
 #    OPTIONAL after_deploy
 
 install:
-  - docker pull ksuart/catkin-build:depends-ros
+  - docker pull shadysource/xenial
 
 before_script:
   - mkdir -p ~/ros/catkin_ws/
