@@ -141,9 +141,9 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(runSensors src/Main.cpp src/IMUSensor.cpp src/LidarSensor.cpp)
-add_dependencies(runSensors ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(runSensors
+add_executable(start src/Main.cpp src/IMUSensor.cpp src/LidarSensor.cpp)
+add_dependencies(start ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(start
 	${catkin_LIBRARIES}
 )
 
