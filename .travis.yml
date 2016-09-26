@@ -4,6 +4,7 @@ sudo: required # enable admin rights in VM
 services:
   - docker
 notifications:
+
 env:
   global:
     - CI_SOURCE_PATH=$(pwd) # Save default repo location to environment variable 
