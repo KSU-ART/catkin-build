@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslaunch
 )
 #set(OpenCV_DIR "/root/opencv/cv3-release")
-find_package(OpenCV REQUIRED PATHS /root/opencv/cv3-release)
+find_package(OpenCV 3 REQUIRED)
 FIND_LIBRARY(WIRINGPI_LIBRARY wiringPi /home/odroid/wiringPi)
 
 ## System dependencies are found with CMake's conventions

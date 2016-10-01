@@ -13,9 +13,9 @@ env:
   global:
     - CI_SOURCE_PATH=$(pwd) # Save default repo location to environment variable 
 
-branches:
-  only:
-   - master
+#branches:
+#  only:
+#   - master
 
 # NOTE: The build lifecycle on Travis.ci is something like this:
 #    before_install
@@ -29,11 +29,11 @@ branches:
 #    OPTIONAL after_deploy
 
 install:
-  - docker pull ksuart/catkin-build:depends-ros
+  - docker pull shadysource/xenial
 
 before_script:
   - mkdir -p ~/ros/catkin_ws/
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -v ~/ros/catkin_ws/src:/root/ros/catkin_ws/src --name build ksuart/catkin-build:depends-ros /bin/bash -c "cd ~/ros/catkin_ws; catkin_make -j8"
+  - docker run -v ~/ros/catkin_ws/src:/root/catkin_ws/src --name build shadysource/xenial /bin/bash -c "cd ~/catkin_ws; catkin_make -j$(nproc)"

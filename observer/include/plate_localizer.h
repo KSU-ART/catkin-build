@@ -6,6 +6,7 @@
 #include <vector>
 #include <std_msgs/Float32.h>
 #include <math.h>
+#include <opencv2/highgui.hpp>
 
 class plate_localizer
 {
