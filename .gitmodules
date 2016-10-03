@@ -1,4 +1,0 @@
-[submodule "scan_tools"]
-path = scan_tools
-url = https://github.com/ccny-ros-pkg/scan_tools.git
-
