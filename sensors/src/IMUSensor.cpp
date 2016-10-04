@@ -4,6 +4,10 @@ IMUSensor::IMUSensor(ros::NodeHandle nodeHandle, std::string topic="/mavros/imu/
 {
 	_IMUSub = nodeHandle.subscribe(topic, 1, &IMUSensor::ImuCallback, this);
 }
+IMUSensor::IMUSensor(ros::NodeHandle nodeHandle)
+{
+	_IMUSub = nodeHandle.subscribe("/mavros/imu/data", 1, &IMUSensor::ImuCallback, this);
+}
 
 IMUSensor::~IMUSensor()
 {
