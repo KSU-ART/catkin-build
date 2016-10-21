@@ -36,4 +36,4 @@ before_script:
   - cd ~/ros/catkin_ws && mv $CI_SOURCE_PATH ~/ros/catkin_ws/src
 
 script:
-  - docker run -v ~/ros/catkin_ws/src:/root/catkin_ws/src --name build shadysource/xenial /bin/bash -c "cd ~/catkin_ws; catkin_make -j$(nproc)"
+  - docker run -tv ~/ros/catkin_ws/src:/root/catkin_ws/src --name build shadysource/xenial /bin/bash -c "cd ~/catkin_ws; catkin_make -j$(nproc)"

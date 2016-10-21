@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(controller)
 
+add_definitions(-std=c++11)
+
 ############################################################
 ##Pkg to do list:
 ##1. Setpoints -> Output

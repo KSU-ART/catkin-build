@@ -76,7 +76,7 @@ extern void DebugPrint(const char* pszText);
 #else
 #if __GNUC__ < 4 || __GNUC_MINOR__ < 6
 
-const                        // this is a const object...
+/*const                        // this is a const object...
 class {
 public:
   template<class T>          // convertible to any type
@@ -87,7 +87,7 @@ public:
     { return 0; }
 private:
   void operator&() const;    // whose address can't be taken
-} nullptr = {};              // and whose name is nullptr
+}; nullptr = {};  */            // and whose name is nullptr
 
 #endif
 #endif
