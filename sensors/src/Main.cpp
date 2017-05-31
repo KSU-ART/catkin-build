@@ -1,6 +1,5 @@
 #include "ros/ros.h"
-#include "IMUSensor.h"
-#include "LidarSensor.h"
+#include "sensors.h"
 
 using namespace std;
 
@@ -8,8 +7,8 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "SensorMain");
 	ros::NodeHandle nodeHandle;
-	IMUSensor sensorPixhawkIMU(nodeHandle);
-	LidarSensor sensorAltitudeLidar(nodeHandle);
+	LidarSensor sensorHokuyo(nodeHandle, 0, "/scan");
+	LidarSensor sensorAltitudeLidar(nodeHandle, 1, "/terarangerone");
 
     return 0;
 }
