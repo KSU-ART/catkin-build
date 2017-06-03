@@ -1,8 +1,13 @@
 #include <LidarSensor.h>
 
-LidarSensor::LidarSensor(ros::NodeHandle nodeHandle, int type, std::string topic="/scan")
+LidarSensor::LidarSensor(int type, std::string topic="/scan")
 {
-	_LidarSub = nodeHandle.subscribe(topic, 1, &LidarSensor::LidarCallback, this);
+	if (type == 0){
+		_LidarSub = nh.subscribe(topic, 1, &LidarSensor::LidarCallback0, this);
+	}
+	else{
+		_LidarSub = nh.subscribe(topic, 1, &LidarSensor::LidarCallback1, this);
+	}
 	_LidarPubs = std::vector<ros::Publisher>();
 	if(type == 0){
 		// use Hokuyo
@@ -18,25 +23,27 @@ LidarSensor::~LidarSensor()
 {
 }
 
-void obstaclePublishers()
+
+void LidarSensor::obstaclePublishers()
 {
-	_LidarPubs.push_back( nodeHandle.advertise<std_msgs::float32>("closestObstacle", 1) );
-	_LidarPubs.push_back( nodeHandle.advertise<std_msgs::float32>("obstacleAngle", 1) );
+	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/iarc/obstacle/closest", 1) );
+	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/iarc/obstacle/angle", 1) );
 }
 
-void altitudePublishers()
+void LidarSensor::altitudePublishers()
 {
-	_LidarPubs.push_back( nodeHandle.advertise<std_msgs::float32>("altitudeLidar", 1) );
+	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/iarc/altitude/lidar", 1) );
 }
 
-void LidarSensor::LidarCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
+void LidarSensor::LidarCallback0(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
 	// Hokuyo
 	// publish angle and distance of closest object
+	// float[] ranges = msg->ranges;
 	float minElement = msg->ranges[0];
 	int iterCount = 0;
 	int minElementCount = 0;
-	for(std::vector<int>::const_iterator it = msg->ranges.begin(); it != msg->ranges.end(); ++it){
+	for(std::vector<float>::const_iterator it = msg->ranges.begin(); it != msg->ranges.end(); ++it){
 		if(*it < minElement){
 			minElement = *it;
 			minElementCount = iterCount;
@@ -55,7 +62,7 @@ void LidarSensor::LidarCallback(const sensor_msgs::LaserScan::ConstPtr& msg)
 	_LidarPubs[1].publish(obsAng);
 }
 
-void LidarSensor::LidarCallback(const sensor_msgs::Range::ConstPtr& msg)
+void LidarSensor::LidarCallback1(const sensor_msgs::Range::ConstPtr& msg)
 {
 	// Point lidar
 	// publish altitude
