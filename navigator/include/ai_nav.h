@@ -1,3 +1,6 @@
+#ifndef _IARC_NAV_H_
+#define _IARC_NAV_H_
+
 #include <ros/ros.h>
 #include <geometry_msgs/PoseArray.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -10,9 +13,8 @@
 #include <string>
 #include <vector>
 
-#include "uav.h"
-#include "arena.h"
-#include "obstacle_ground_robot.h"
+#include "actions.h"
+#include "conditions.h"
 
 #define PI 3.14159265359
 #define DEBUG_MODE
@@ -29,27 +31,29 @@ private:
 	ros::NodeHandle n_;
 
 	ros::Subscriber 
-		curent_pose_sub, 
+		curent_pose_sub,
 		red_plate_poses_sub,
-		green_plate_poses_sub, 
+		green_plate_poses_sub,
 		obstacles_sub;
 
-	ros::Publisher 
+	ros::Publisher
 		retractMsg_pub,
-		modeMsg_pub, 
+		modeMsg_pub,
 		setpoint_pub,
-		EMERGENCY_LAND_pub, 
-		pid_XY_pub, 
+		EMERGENCY_LAND_pub,
+		pid_XY_pub,
 		pid_z_pub;
+	
+	std::vector<decision_node> all_states;
 
 	enum state 
 	{
-		TakeOff, 
-		RandomTraversal, 
+		TakeOff,
+		RandomTraversal,
 		TargetGR,
-		InteractWithRobot, 
-		AvoidObstacle, 
-		HoldPosition, 
+		InteractWithRobot,
+		AvoidObstacle,
+		HoldPosition,
 		Land
 	};
 
@@ -83,18 +87,11 @@ public:
 	///main function loop
 	void init();
 
-	uav hank3;
-
 	state determine_state();
 	
 	///action functions:
-	void take_off();
-	void random_traversal();
-	void target_ground_robot();
-	void interact_with_robot();
-	void avoid_obstacle();
-	void hold_position();
-	void land();
+	action_list action;
+	condition_list condition;
 	
 	///data callback functions:
 	
@@ -109,3 +106,5 @@ public:
 	//void obstacles_cb(const geometry_msgs::PoseArray& msg);
 
 };
+
+#endif
