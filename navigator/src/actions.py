@@ -1,4 +1,3 @@
-
 from actionlib import *
 from actionlib_msgs.msg import *
 
@@ -16,4 +15,3 @@ class rosActionServer:
             self._sas.set_aborted()
         elif msg.goal == 2:
             self._sas.set_preempted()
-
