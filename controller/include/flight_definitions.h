@@ -1,3 +1,4 @@
+// Holds the Global Variables for the drone
 #ifndef FLIGHT_DEFINITIONS_H
 #define FLIGHT_DEFINITIONS_H
 
@@ -11,20 +12,24 @@
 #define RETRACT_CHANNEL 6
 #define MANUAL_CONTROL 8
 
-///PWM valuse can range from 1000 to 2000
-#define LOW_PWM 1000
+///PWM valuse can range from 1100 to 1900
+#define LOW_PWM 1100
 #define MID_PWM 1500
-#define HIGH_PWM 2000
+#define HIGH_PWM 1900
 
-#define LAND_MODE 1000
+#define LAND_MODE 1100
 #define STABILIZE_MODE 1500
-#define ALT_HOLD_MODE 2000
+#define ALT_HOLD_MODE 1900
 
-///could be useful later:
-//#define ROLL_TRIM 1513
-//#define PITCH_TRIM 1510
+///Slow descents rate needs to be tuned for landing 
+#define SLOW_DESCENT 1500
 
-#define MAX_HEIGHT 3.0
+///Trim values will be added onto the mavros message outside of PID loop:
+#define ROLL_TRIM 0
+#define PITCH_TRIM 0
+#define YAW_TRIM 0
+
+#define MAX_HEIGHT 2.0
 
 
 #endif

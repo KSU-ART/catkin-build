@@ -24,7 +24,7 @@
  * 
  * PRIORITY OF CONTROL:
  * physical mannual-override switch overrides software switch
- * mannual_override overrides emergency_land
+ * MANUAL_OVERRIDE overrides emergency_land
  * emergency_land overrides ai
  * 
  * 
@@ -34,6 +34,90 @@
  **************************************************************************************************/
 
 #include "robot_controller.h"
+
+
+class mavros_handler{
+private:
+	ros::NodeHandle n;
+	ros::Publisher rc_pub;
+
+	mavros_msgs::OverrideRCIn AI_RC_MSG;
+	mavros_msgs::OverrideRCIn LAND_RC_MSG;
+	mavros_msgs::OverrideRCIn RELEASE_RC_MSG;
+
+	short roll, pitch, yaw, throttle = MID_PWM;
+
+	enum flight_mode_enum{
+		ai,
+		land,
+		manual
+	};
+
+	flight_mode_enum flight_mode = ai;
+
+	bool MANUAL_OVERRIDE, LAND, 
+
+public:
+	mavros_handler(){
+		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
+
+		n.subscribe("/mavros/rc/in", 1, &mavros_handler::RCIn_callback, this);
+	}
+
+	void release_msg_channels(){
+		RC_MSG.channels[MODE_CHANNEL] = RC_MSG.CHAN_RELEASE;
+
+		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[THROTTLE_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[YAW_CHANNEL] = RC_MSG.CHAN_RELEASE;
+	}
+
+	void land_msg_channels(){
+		RC_MSG.channels[MODE_CHANNEL] = LAND_MODE;
+
+		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
+		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
+		RC_MSG.channels[THROTTLE_CHANNEL] = MID_PWM;
+	}
+	
+	void ai_msg_channels(){
+		RC_MSG.channels[MODE_CHANNEL] = mode;
+
+		RC_MSG.channels[ROLL_CHANNEL] = roll + ROLL_TRIM;
+		RC_MSG.channels[PITCH_CHANNEL] = pitch + PITCH_TRIM;
+		RC_MSG.channels[YAW_CHANNEL] = yaw + YAW_TRIM;
+		RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
+	}
+
+	void update_loop(){
+		switch(flight_mode){
+		case ai:
+			ai_msg_channels();
+			break;
+		case land:
+			land_msg_channels();
+			break;
+		default:
+			release_msg_channels();
+		}
+	}
+
+	void RCIn_callback(const mavros_msgs::RCIn& msg)
+	{
+		if (msg.channels[MANUAL_CONTROL] >= MID_PWM){
+			std::cout << "manual_mode\n";
+			MANUAL_OVERRIDE = true;
+			flight_mode = manual
+		}
+		else{
+			MANUAL_OVERRIDE = false;
+			// must reset ai
+		}
+	}
+
+}
 
 class robot_controller 
 {
@@ -45,25 +129,20 @@ private:
 	short throttle, roll, pitch, yaw, mode, retracts;
 	double target_x, current_x, target_y, current_y, target_z, current_z;
 	char landChar;
-	//RC msg container that will be sent to the FC @ fcuCommRate hz
-	mavros_msgs::OverrideRCIn RC_MSG;
-
 	
 	PIDController* xPosCtrl;
 	PIDController* yPosCtrl;
 	PIDController* zPosCtrl;
 
-	bool MANNUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH, NAV_CONNECT;
+	bool MANUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH, NAV_CONNECT;
 	bool debug;
 	
 public:
+	//contructor
 	robot_controller()
 	{
-		//pubs:
-		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
-		
 		//this part is important:
-		MANNUAL_OVERRIDE = false;
+		MANUAL_OVERRIDE = false;
 		EMERGENCY_LAND = false;
 		debug = true;
 		
@@ -73,7 +152,7 @@ public:
 		pitch = MID_PWM;
 		yaw = MID_PWM;
 		mode = ALT_HOLD_MODE;
-		retracts = HIGH_PWM; 
+		retracts = HIGH_PWM;
 		target_x = 0;
 		current_x = 0;
 		target_y = 0;
@@ -93,10 +172,9 @@ public:
 		zPosCtrl->on();
 		
 		//subs:
-		subRCIn = s.subscribe("/mavros/rc/in", 1, &robot_controller::RCIn_callback, this);
 		setpoint_sub = s.subscribe("/navigator/setpoint", 1, &robot_controller::setpoint_callback, this);
 		loc_sub = s.subscribe("/localizer/current_pose", 1, &robot_controller::loc_callback, this);
-		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::mannual_override_callback, this);
+		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::MANUAL_OVERRIDE_callback, this);
 		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
 		mode_sub = s.subscribe("/navigator/modeMsg", 1, &robot_controller::mode_callback, this);
 		retract_sub = s.subscribe("/navigator/retractMsg", 1, &robot_controller::retract_callback, this);
@@ -138,7 +216,7 @@ public:
 			{
 				land_msg_channels();
 			}			
-			else if(MANNUAL_OVERRIDE)
+			else if(MANUAL_OVERRIDE)
 			{
 				release_msg_channels();
 			}
@@ -188,31 +266,37 @@ public:
 	}
 	void release_msg_channels()
 	{
+		RC_MSG.channels[MODE_CHANNEL] = STABILIZE_MODE;
+
 		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[THROTTLE_CHANNEL] = RC_MSG.CHAN_RELEASE;
-		RC_MSG.channels[MODE_CHANNEL] = STABILIZE_MODE;
 		RC_MSG.channels[YAW_CHANNEL] = RC_MSG.CHAN_RELEASE;
+
 		RC_MSG.channels[RETRACT_CHANNEL]=HIGH_PWM;
 	}
 	
 	void land_msg_channels()
 	{
+		RC_MSG.channels[MODE_CHANNEL] = LAND_MODE;
+
 		RC_MSG.channels[ROLL_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[PITCH_CHANNEL] = RC_MSG.CHAN_RELEASE;
 		RC_MSG.channels[THROTTLE_CHANNEL] = MID_PWM;
-		RC_MSG.channels[MODE_CHANNEL] = LAND_MODE;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
+
 		RC_MSG.channels[RETRACT_CHANNEL]=HIGH_PWM;
 	}
 	
 	void ai_msg_channels()
 	{
+		RC_MSG.channels[MODE_CHANNEL] = mode;
+
 		RC_MSG.channels[ROLL_CHANNEL] = roll + 82;
 		RC_MSG.channels[PITCH_CHANNEL] = pitch - 36;
 		RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
-		RC_MSG.channels[MODE_CHANNEL] = mode;
 		RC_MSG.channels[YAW_CHANNEL] = MID_PWM;
+
 		RC_MSG.channels[RETRACT_CHANNEL]=retracts;
 	}
 	
@@ -243,9 +327,9 @@ public:
 			EMERGENCY_LAND = true;
 	}
 	
-	void mannual_override_callback(const std_msgs::Bool& msg)
+	void MANUAL_OVERRIDE_callback(const std_msgs::Bool& msg)
 	{
-			MANNUAL_OVERRIDE = msg.data;
+			MANUAL_OVERRIDE = msg.data;
 	}
 	
 	
@@ -293,20 +377,7 @@ public:
 		delete tmp;
 	}
 	
-	void RCIn_callback(const mavros_msgs::RCIn& msg)
-	{
-		if (msg.channels[MANUAL_CONTROL] >= MID_PWM)
-		{
-			std::cout << "mannual_mode\n";
-			MANNUAL_OVERRIDE = true;
-			MAN_SWITCH = true;
-		}
-		else
-		{
-			MAN_SWITCH = false;
-			MANNUAL_OVERRIDE = false;
-		}
-	}
+	
 };
 
 int main(int argc, char **argv)
