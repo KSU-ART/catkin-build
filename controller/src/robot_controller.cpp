@@ -39,11 +39,9 @@
 class mavros_handler{
 private:
 	ros::NodeHandle n;
-	ros::Publisher rc_pub;
+	ros::Publisher rc_pub, ai_reset_pub;
 
-	mavros_msgs::OverrideRCIn AI_RC_MSG;
-	mavros_msgs::OverrideRCIn LAND_RC_MSG;
-	mavros_msgs::OverrideRCIn RELEASE_RC_MSG;
+	mavros_msgs::OverrideRCIn RC_MSG;
 
 	short roll, pitch, yaw, throttle = MID_PWM;
 
@@ -55,11 +53,20 @@ private:
 
 	flight_mode_enum flight_mode = ai;
 
-	bool MANUAL_OVERRIDE, LAND, 
+	char landChar;
+
+	bool LAND_TOGGLE, DEBUG;
 
 public:
 	mavros_handler(){
+		LAND_TOGGLE = false;
+		DEBUG = true;
+
+		// just anything not space
+		landChar = 'f';
+
 		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
+		ai_reset_pub = n.advertise<std_msgs::Bool>("/IARC/ai_reset", 1);
 
 		n.subscribe("/mavros/rc/in", 1, &mavros_handler::RCIn_callback, this);
 	}
@@ -91,7 +98,41 @@ public:
 		RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
 	}
 
+	int getNonBlocking()
+	{
+		struct termios initial_settings, new_settings;
+		int n;
+
+		unsigned char key;
+
+		tcgetattr(0, &initial_settings);
+
+		new_settings = initial_settings;
+		new_settings.c_lflag &= ~ICANON;
+		new_settings.c_lflag &= ~ECHO;
+		new_settings.c_lflag &= ~ISIG;
+		new_settings.c_cc[VMIN] = 0;
+		new_settings.c_cc[VTIME] = 0;
+
+		tcsetattr(0, TCSANOW, &new_settings);
+		n = getchar();
+		key = n;
+		tcsetattr(0, TCSANOW, &initial_settings);
+
+		return key;
+	}
+
 	void update_loop(){
+		// get land command
+		landChar = getNonBlocking();
+
+		// one time only toggle to land mode
+		if (landChar == ' ' && !LAND_TOGGLE){
+			LAND_TOGGLE = true;
+			flight_mode = land;
+			std::cout << "LAND MODE ENGAGED" << std::endl;
+		}
+
 		switch(flight_mode){
 		case ai:
 			ai_msg_channels();
@@ -101,19 +142,31 @@ public:
 			break;
 		default:
 			release_msg_channels();
+			break;
+		}
+		if (DEBUG){
+			std::cout 
+				<< "mode: " 	<< RC_MSG.channels[MODE_CHANNEL] << std::endl
+				<< "roll: "		<< RC_MSG.channels[ROLL_CHANNEL] << std::endl
+				<< "pitch: "	<< RC_MSG.channels[PITCH_CHANNEL] << std::endl
+				<< "yaw: " 		<< RC_MSG.channels[YAW_CHANNEL] << std::endl
+				<< "throttle: " << RC_MSG.channels[THROTTLE_CHANNEL] << std::endl;
 		}
 	}
 
 	void RCIn_callback(const mavros_msgs::RCIn& msg)
 	{
 		if (msg.channels[MANUAL_CONTROL] >= MID_PWM){
-			std::cout << "manual_mode\n";
-			MANUAL_OVERRIDE = true;
-			flight_mode = manual
+			if(!LAND_TOGGLE){
+				std::cout << "manual_mode\n";
+				flight_mode = manual;
+			}
 		}
 		else{
-			MANUAL_OVERRIDE = false;
 			// must reset ai
+			std_msgs::Bool reset_signal;
+			reset_signal.data = true;
+			ai_reset_pub.publish(reset_signal);
 		}
 	}
 
@@ -122,67 +175,111 @@ public:
 class robot_controller 
 {
 private:
-	ros::NodeHandle n,s;
-	ros::Publisher rc_pub;
-	ros::Subscriber setpoint_sub, loc_sub, mode_sub, retract_sub, man_override_sub, land_sub, pid_sub, subRCIn;
+	ros::NodeHandle n;
 	
 	short throttle, roll, pitch, yaw, mode, retracts;
-	double target_x, current_x, target_y, current_y, target_z, current_z;
-	char landChar;
-	
-	PIDController* xPosCtrl;
-	PIDController* yPosCtrl;
-	PIDController* zPosCtrl;
+	int camera_width, camera_height;
+	double current_altitude,
+		   target_altitude,
 
-	bool MANUAL_OVERRIDE, EMERGENCY_LAND, MAN_SWITCH, NAV_CONNECT;
-	bool debug;
+		   current_yolo_yaw,
+		   target_yolo_yaw,
+
+		   current_yolo_pitch,
+		   target_yolo_pitch,
+
+		   current_down_cam_pitch,
+		   target_down_cam_pitch,
+
+		   current_down_cam_roll,
+		   target_down_cam_roll,
+
+		   current_obstacle_pitch,
+		   target_obstacle_pitch,
+
+		   current_obstacle_roll,
+		   target_obstacle_roll;
 	
 public:
 	//contructor
 	robot_controller()
 	{
-		//this part is important:
-		MANUAL_OVERRIDE = false;
-		EMERGENCY_LAND = false;
 		debug = true;
 		
 		//initial values
-		throttle = LOW_PWM;
-		roll = MID_PWM;
-		pitch = MID_PWM;
-		yaw = MID_PWM;
-		mode = ALT_HOLD_MODE;
-		retracts = HIGH_PWM;
-		target_x = 0;
-		current_x = 0;
-		target_y = 0;
-		current_y = 0;
-		target_z = 0;
-		current_z = 0;
-		landChar = 'f';
-		NAV_CONNECT = false;
-		
-		//default PIDs
-		xPosCtrl = new PIDController(80, 0, 0, -250, 250);
-		yPosCtrl = new PIDController(80, 0, 0, -250, 250);
-		zPosCtrl = new PIDController(200, 0, 0, -250, 250);
-		
-		xPosCtrl->on();
-		yPosCtrl->on();
-		zPosCtrl->on();
+		/// camera dimentions
+		camera_width 			= 640;
+		camera_height 			= 480;
+		/// altitude is in meters with the point lidar
+		current_altitude		= 0;
+		target_altitude 		= 0;
+		/// yolo yaw is the x value in pixels from the front camera
+		current_yolo_yaw		= camera_width / 2;
+		target_yolo_yaw			= camera_width / 2;
+		/// yolo pitch is the y value in pixels from the front camera
+		current_yolo_pitch		= camera_height;
+		target_yolo_pitch		= camera_height;
+		/// down cam pitch is the delta y value of the target to the center of the camera
+		current_down_cam_pitch	= 0
+		target_down_cam_pitch	= 0
+		/// down cam pitch is the delta x value of the target to the center of the camera
+		current_down_cam_roll	= 0
+		target_down_cam_roll	= 0
+		/// obstacle pitch is the y component of the obstacle avoidence vector, NOT the actual obstacle vector
+		current_obstacle_pitch	= 0
+		target_obstacle_pitch	= 0
+		/// obstacle pitch is the x component of the obstacle avoidence vector, NOT the actual obstacle vector
+		current_obstacle_roll	= 0
+		target_obstacle_roll	= 0
 		
 		//subs:
-		setpoint_sub = s.subscribe("/navigator/setpoint", 1, &robot_controller::setpoint_callback, this);
-		loc_sub = s.subscribe("/localizer/current_pose", 1, &robot_controller::loc_callback, this);
-		man_override_sub = s.subscribe("manOverrideMsg", 1, &robot_controller::MANUAL_OVERRIDE_callback, this);
-		land_sub = s.subscribe("EMERGENCY_LAND", 1, &robot_controller::emer_land_callback, this);
-		mode_sub = s.subscribe("/navigator/modeMsg", 1, &robot_controller::mode_callback, this);
-		retract_sub = s.subscribe("/navigator/retractMsg", 1, &robot_controller::retract_callback, this);
-		pid_sub = s.subscribe("/navigator/pid_XY", 1, &robot_controller::pidXY_callback, this);
-		pid_sub = s.subscribe("/navigator/pid_Z", 1, &robot_controller::pidZ_callback, this);
-		
+		n.subscribe("/IARC/ai_reset", 1, &robot_controller::ai_reset_cb, this);
+		n.subscribe("/IARC/currentAltitude", 1, &robot_controller::current_altitude_cb, this);
+		n.subscribe("/IARC/setAltitude", 1, &robot_controller::target_altitude_cb, this);
+		n.subscribe("/IARC/YOLO/target/x", 1, &robot_controller::target_yolo_x_cb, this);
+		n.subscribe("/IARC/YOLO/target/y", 1, &robot_controller::target_yolo_y_cb, this);
+		n.subscribe("/IARC/OrientationNet/pos/x", 1, &robot_controller::target_down_cam_x_cb, this);
+		n.subscribe("/IARC/OrientationNet/pos/y", 1, &robot_controller::target_down_cam_y_cb, this);
+		n.subscribe("/IARC/Obstacle/PitchPID", 1, &robot_controller::obstacle_pitch_cb, this);
+		n.subscribe("/IARC/Obstacle/RollPID", 1, &robot_controller::obstacle_roll_cb, this);
 	}
-	
+
+	void ai_reset_cb(const std_msgs::Bool& msg){
+
+	}
+
+	void current_altitude_cb(const std_msgs::Float32& msg){
+
+	}
+
+	void target_altitude_cb(const std_msgs::Float32& msg){
+
+	}
+
+	void target_yolo_x_cb(const std_msgs::Int16& msg){
+
+	}
+
+	void target_yolo_y_cb(const std_msgs::Int16& msg){
+
+	}
+
+	void target_down_cam_x_cb(const std_msgs::Int16& msg){
+
+	}
+
+	void target_down_cam_y_cb(const std_msgs::Int16& msg){
+
+	}
+
+	void obstacle_pitch_cb(const std_msgs::Float32& msg){
+
+	}
+
+	void obstacle_roll_cb(const std_msgs::Float32& msg){
+
+	}
+
 	void start_nav()
 	{
 		//speed of dx9 controller:
@@ -241,29 +338,6 @@ public:
 		}
 	}
 	
-	int getchNonBlocking()
-	{
-		struct termios initial_settings, new_settings;
-		int n;
-
-		unsigned char key;
-
-		tcgetattr(0, &initial_settings);
-
-		new_settings = initial_settings;
-		new_settings.c_lflag &= ~ICANON;
-		new_settings.c_lflag &= ~ECHO;
-		new_settings.c_lflag &= ~ISIG;
-		new_settings.c_cc[VMIN] = 0;
-		new_settings.c_cc[VTIME] = 0;
-
-		tcsetattr(0, TCSANOW, &new_settings);
-		n = getchar();
-		key = n;
-		tcsetattr(0, TCSANOW, &initial_settings);
-
-		return key;
-	}
 	void release_msg_channels()
 	{
 		RC_MSG.channels[MODE_CHANNEL] = STABILIZE_MODE;

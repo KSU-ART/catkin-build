@@ -20,12 +20,12 @@ int main(int argc, char **argv)
     while(ros::ok()){
 			msg.channels[ROLL_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[PITCH_CHANNEL]=msg.CHAN_RELEASE;
-           	msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
+      msg.channels[THROTTLE_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[YAW_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[MODE_CHANNEL]=msg.CHAN_RELEASE;
 			msg.channels[RETRACT_CHANNEL]=HIGH_PWM;
 			//msg.channels[MANUAL_CONTROL]= msg.CHAN_RELEASE;
-			rc_pub.publish(msg);  
+			rc_pub.publish(msg);
 			fcuCommRate.sleep();
 		}
 		
