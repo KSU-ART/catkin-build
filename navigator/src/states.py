@@ -2,7 +2,7 @@ import rospy
 import smach
 import smach_ros
 
-from std_msgs.msg import Float32, String, Bool
+from std_msgs.msg import Float32, String, Bool, Int16
 
 import numpy as np
 import json
@@ -40,7 +40,8 @@ class FindGR(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['RandomTraversal', 'FocusTarget'], output_keys=['enableCheckDownCamLoop', 'targetYolo'])
         rospy.Subscriber("/IARC/YOLO", String, callback=self.callback)
-        targetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Float32, queue_size=1)
+        XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
+        YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
         self.emptyYOLO = False
         self.minYolo = None
 
@@ -64,7 +65,8 @@ class FindGR(smach.State):
             if DEBUG:
                 # print minargs
                 print self.minYolo
-            targetYoloPub.publish(Float32(self.minYolo))
+            XtargetYoloPub.publish(Int16(self.minYolo[0]))
+            YtargetYoloPub.publish(Int16(self.minYolo[1]))
 
     def execute(self, userdata):
         userdata.enableCheckDownCamLoop = True
@@ -106,8 +108,8 @@ class CheckDownCam(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['CheckDownCam', 'FollowGR', 'Null'], input_keys=['enableCheckDownCamLoop'], output_keys=['enableTakeOffLoop', 'GRdist', 'GRangle'])
         rospy.Subscriber("/IARC/OrientationNet/angle", Float32, callback=self.callbackOrientation)
-        rospy.Subscriber("/IARC/OrientationNet/pos/x", Float32, callback=self.callbackPosX)
-        rospy.Subscriber("/IARC/OrientationNet/pos/y", Float32, callback=self.callbackPosY)
+        rospy.Subscriber("/IARC/OrientationNet/pos/x", Int16, callback=self.callbackPosX)
+        rospy.Subscriber("/IARC/OrientationNet/pos/y", Int16, callback=self.callbackPosY)
         rospy.Subscriber("/IARC/OrientationNet/detected", Bool, callback=self.callbackDetect)
 
         self.GRfound = False
