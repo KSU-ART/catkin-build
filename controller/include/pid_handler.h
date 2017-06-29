@@ -1,8 +1,8 @@
-/********************
+/*****************************************************************************************
  * Handles which PIDs are currently activated
  * Also manages PID callibration and holding the calibration values.
  *
- ********************/
+ *****************************************************************************************/
 #ifndef PID_HANDLER_H
 #define PID_HANDLER_H
 

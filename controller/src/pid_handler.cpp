@@ -1,4 +1,4 @@
-// All documentation are found in the *.h corresponding files in the /include file
+// More documentation are found in the *.h corresponding files in the /include file
 
 #include "pid_handler.h"
 
@@ -46,6 +46,7 @@ void pid_handler::set_pitch_mode(std::string value){
         std::cout << "pitch_mode: " << value << " does not exist" << std::endl;
     }
 }
+
 std::string pid_handler::get_pitch_mode(){
     switch (pitch_mode){
     case DownCam:
@@ -74,6 +75,7 @@ void pid_handler::set_roll_mode(std::string value){
         std::cout << "roll_mode: " << value << " does not exist" << std::endl;
     }
 }
+
 std::string pid_handler::get_roll_mode(){
     switch (roll_mode){
     case DownCam:

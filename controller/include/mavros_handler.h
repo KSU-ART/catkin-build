@@ -1,4 +1,13 @@
-
+/****************************************************************************************************
+ * mavros_handler class
+ * holds all the rc_msg types such as ai, land, and release(manual)
+ * 
+ * checks for the space bar key to be pressed durring a flight to set it to land mode
+ *
+ * subscribes to the rc controller for manual override
+ * 
+ * 
+ **************************************************************************************************/
 #ifndef MAVROS_HANDLER_H
 #define MAVROS_HANDLER_H
 #include <iostream>

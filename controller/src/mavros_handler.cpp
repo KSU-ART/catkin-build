@@ -1,4 +1,4 @@
-// All documentation are found in the *.h corresponding files in the /include file
+// More documentation are found in the *.h corresponding files in the /include file
 
 #include "mavros_handler.h"
 

@@ -8,16 +8,16 @@
  * 		Z+ => Up
  *
  * MSG GUIDE:
- * Subscribed Topic:	            Data Type					Usage
- * "/IARC/ai_reset"		            std_msgs::Bool	            resets state machine and pids for when manual override is turned off
- * "/IARC/currentAltitude"	        std_msgs::Float32			true = override, false = disabled
- * "/IARC/setAltitude"		        std_msgs::Float32			true = emergencyland, false = normal
- * "/IARC/YOLO/target/x"	        std_msgs::Int16&        	setpoint (desired location)
- * "/IARC/YOLO/target/y"	        std_msgs::Int16&        	0 = altitude hold, 1 = stabilize, 2 = land;
- * "/IARC/OrientationNet/pos/x"     std_msgs::Int16&        	true = retracts down, false = up;
- * "/IARC/OrientationNet/pos/y"		std_msgs::Int16&        	{p, i, d, min, max}
- * "/IARC/Obstacle/PitchPID"		std_msgs::Float32			{p, i, d, min, max}
- * "/IARC/Obstacle/RollPID"		    std_msgs::Float32			{p, i, d, min, max}
+ * Subscribed Topic:	        Data Type			Usage
+ * "/IARC/ai_reset"		        std_msgs::Bool	    resets state machine and pids for when manual override is turned off
+ * "/IARC/currentAltitude"	    std_msgs::Float32	current altitude using the point lidar
+ * "/IARC/setAltitude"		    std_msgs::Float32	target Altitude
+ * "/IARC/YOLO/target/x"	    std_msgs::Int16&    x coordinate in pixels of the closest GR in the forward cam
+ * "/IARC/YOLO/target/y"	    std_msgs::Int16&    y coordinate in pixels of the closest GR in the forward cam
+ * "/IARC/OrientationNet/pos/x" std_msgs::Int16&    delta x of the distance in pixels of the GR to the center of the down cam
+ * "/IARC/OrientationNet/pos/y"	std_msgs::Int16&    delta y of the distance in pixels of the GR to the center of the down cam
+ * "/IARC/Obstacle/PitchPID"	std_msgs::Float32	y component of a vector that points in the opposite direction of the closest obstacle from the Hokuyo
+ * "/IARC/Obstacle/RollPID"		std_msgs::Float32	x component of a vector that points in the opposite direction of the closest obstacle from the Hokuyo
  * 
  * MSG CONSTANCES:
  * MSG.CHAN_RELEASE = 0
@@ -50,7 +50,8 @@
 #include "mavros_handler.h"
 
 /// robot_controller class
-/// 
+/// Handles messages to the pixhawk
+/// Holds the PID loops
 class robot_controller 
 {
 private:
@@ -146,7 +147,6 @@ public:
 	double get_pitch_control();
 
 	double get_yaw_control();
-
 
 	//***************************** custom ros loop ***********************
 	void start_nav(bool rosOK);
