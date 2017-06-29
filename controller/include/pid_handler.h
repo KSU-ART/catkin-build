@@ -34,6 +34,8 @@ private:
 	mode_enum pitch_mode = Yolo;
 	mode_enum roll_mode = DownCam;
 
+    bool DEBUG = true;
+
 public:
     //constuctors
     pid_handler(){

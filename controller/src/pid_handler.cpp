@@ -128,6 +128,7 @@ std::vector<std::string> pid_handler::parse_calibrations(std::string input, std:
         params.push_back(token);
         input.erase(0, pos + delimiter.length());
     }
+    params.push_back(input);
     return params;
 }
 
@@ -138,25 +139,30 @@ void pid_handler::load_PID_calibrations(std::string file){
         while(std::getline(calibration_file, line)){
             std::vector<std::string> params;
             params = parse_calibrations(line, ",");
-            if(params[0] == "altitudePID"){
+            std::string key = params[0];
+            if(DEBUG){
+                std::cout << params[0] << " " << params.size() << std::endl;
+                std::cout << params[1] << " " << params[2] << " " << params[3] << " " << params[4] << " " << params[5] << std::endl;            
+            }
+            if(key == "altitudePID"){
                 altitudePID     = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
-            else if(params[0] == "yawYoloPID"){
+            else if(key == "yawYoloPID"){
                 yawYoloPID      = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
-            else if(params[0] == "pitchYoloPID"){
+            else if(key == "pitchYoloPID"){
                 pitchYoloPID    = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
-            else if(params[0] == "pitchDownCamPID"){
+            else if(key == "pitchDownCamPID"){
                 pitchDownCamPID = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
-            else if(params[0] == "rollDownCamPID"){
+            else if(key == "rollDownCamPID"){
                 rollDownCamPID  = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
-            else if(params[0] == "pitchObstaclePID"){
+            else if(key == "pitchObstaclePID"){
                 pitchObstaclePID= new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
-            else if(params[0] == "rollObstaclePID"){
+            else if(key == "rollObstaclePID"){
                 rollObstaclePID = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
             }
         }
