@@ -19,7 +19,7 @@ int main( int argc, char** argv ){
 	if (!cap.isOpened()){
 		return -1;
 	}
-	Mat color,labcs,labThresh,Thresh1,Thresh2;
+	Mat color, labcs, labThresh, Thresh1, Thresh2;
 	//Define color of blobs to track
 	Color blob1('r');
 	Color blob2('g');
@@ -27,14 +27,14 @@ int main( int argc, char** argv ){
 	{
 		std_msgs::Int32MultiArray msg;
 		//Passing video footage
-		cap>>color;
+		cap >> color;
 		//Define CIE Lab img and smooth it
 		cvtColor(color, labcs, COLOR_BGR2Lab);
 		medianBlur(labcs,labcs,11);
 		//Std Altitude Threshold
 		inRange(labcs, Scalar(blob1.lMin, blob1.aMin, blob1.bMin), Scalar(blob1.lMax, blob1.aMax, blob1.bMax), Thresh1);
 		//Low Altitude Threshold
-		inRange(labcs, Scalar(blob2.lMin, blob2.aMin, blob2.bMin), Scalar(blob2.lMax, blob2.aMax, blob2.bMax),Thresh2);
+		inRange(labcs, Scalar(blob2.lMin, blob2.aMin, blob2.bMin), Scalar(blob2.lMax, blob2.aMax, blob2.bMax), Thresh2);
 		////Noise reduction
 		//Mat erodeElement2 = getStructuringElement(MORPH_RECT, Size(21, 21));
 		//Mat dilateElement2 = getStructuringElement(MORPH_RECT, Size(9, 9));
@@ -43,7 +43,7 @@ int main( int argc, char** argv ){
 		////Combine the two Thresholds
 		labThresh = Thresh1|Thresh2;
 		//Blob detection and center point generation 
-		vector<vector<Point> > contours;
+		vector< vector<Point> > contours;
 		findContours(labThresh, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
 		vector<float> areas;
 		vector<Point> contoursPoints;
