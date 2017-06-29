@@ -40,8 +40,8 @@ class FindGR(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['RandomTraversal', 'FocusTarget'], output_keys=['enableCheckDownCamLoop', 'targetYolo'])
         rospy.Subscriber("/IARC/YOLO", String, callback=self.callback)
-        XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
-        YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
+        self.XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
+        self.YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
         self.emptyYOLO = False
         self.minYolo = None
 
@@ -65,8 +65,8 @@ class FindGR(smach.State):
             if DEBUG:
                 # print minargs
                 print self.minYolo
-            XtargetYoloPub.publish(Int16(self.minYolo[0]))
-            YtargetYoloPub.publish(Int16(self.minYolo[1]))
+            self.XtargetYoloPub.publish(Int16(self.minYolo[0]))
+            self.YtargetYoloPub.publish(Int16(self.minYolo[1]))
 
     def execute(self, userdata):
         userdata.enableCheckDownCamLoop = True
