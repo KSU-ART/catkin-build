@@ -7,6 +7,7 @@ from keras.engine.topology import get_source_inputs
 from keras.utils import get_file
 from keras.utils import layer_utils
 from keras.preprocessing import image
+from keras.layers.core import Lambda
 
 sq1x1 = "squeeze1x1"
 exp1x1 = "expand1x1"
@@ -40,19 +41,29 @@ def fire_module(x, fire_id, squeeze=16, expand=64):
 
 # Original SqueezeNet from paper.
 
+def lambda_normalize_shape(x):
+    return (x.shape[0], 2)
+
+def lambda_normalize(x):
+    return K.l2_normalize(x, axis=1)
+
+
 def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
 
     if weights not in {'orientations', None}:
         raise ValueError('The `weights` argument should be either '
                          '`None` (random initialization) or `orientations` '
                          '(pre-training on orientations).')
-
+    
     # if weights == 'orientations' and classes != 2:
     #     raise ValueError('If using `weights` as orientations with `include_top`'
     #                      ' as true, `classes` should be 2')
 
     if input_tensor is None:
-        img_input = Input(shape=input_shape)
+        if(input_shape == None):
+            img_input = Input(shape=(480, 640, 3))
+        else:
+            img_input = Input(shape=input_shape)
     else:
         if not K.is_keras_tensor(input_tensor):
             img_input = Input(tensor=input_tensor, shape=input_shape)
@@ -81,7 +92,9 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
     x = Convolution2D(2, (1, 1), padding='valid', name='conv10')(x)
     x = Activation('tanh', name='act10')(x)
     x = GlobalAveragePooling2D()(x)
-    out = K.l2_normalize(x, axis=1)
+    print(lambda_normalize_shape(x))
+    
+    out = Lambda(lambda_normalize(x), output_shape=lambda_normalize_shape(x))(x)
 
     # Ensure that the model takes into account any potential predecessors of `input_tensor`.
     if input_tensor is not None:

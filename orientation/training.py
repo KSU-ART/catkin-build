@@ -2,6 +2,7 @@ import os
 import json
 import numpy as np
 import PIL
+import random
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 from orieNet import SqueezeNet
@@ -17,7 +18,9 @@ from keras.preprocessing import image
 
 def load_X_train_data():
     # Chose path to the folder containing the training data in .jpg format:
-    train_data_path = '/media/mat/Seagate Backup Plus Drive/img_train'
+    # train_data_path = '/media/mat/Seagate\ Backup\ Plus\ Drive/img_train'
+
+    train_data_path = os.path.join(os.getcwd(), 'img_train')
     x_tot = len([name for name in os.listdir(train_data_path) if os.path.isfile(os.path.join(train_data_path, name))])
     print 'The dataset contains ', x_tot, 'images'
 
@@ -26,7 +29,7 @@ def load_X_train_data():
     X_train = np.array(X_train)
 
     print('Shape of train images array: ', X_train.shape)
-    return X_train, X_name_of_each_train, num_x
+    return X_train, X_name_of_each_train, x_tot
 
 def load_Y_data(num_x):
     fname = 'units.txt'
@@ -49,7 +52,7 @@ def load_jpg_images(folder, n):
     images = []
     filenames = []
     for i in range(n):
-        img = np.array(PIL.Image.open(os.path.join(folder, i)))/255
+        img = np.array(PIL.Image.open(os.path.join(folder, str(i)+".jpg")))/255
         if img is not None:
             images.append(img)
             filenames.append(i)
@@ -59,11 +62,23 @@ def train(run=0):
     #datagen = ImageDataGenerator(rotation_range=45,width_shift_range=0.2, height_shift_range=0.2)
     #datagen.fit(X_train)
 
-    X_train, X_name_of_each_train, num_x = load_X_train_data()
-    # X_test, X_name_of_each_test = load_X_test_data()
-    Y_train = load_Y_data(num_x)
+    x, x_name, num_x = load_X_train_data()
+    y = load_Y_data(num_x)
+    # np.random.shuffle(X_name_of_each_train)
 
-    np.random.shuffle(arr)
+    c = list(zip(x, y, x_name))
+
+    random.shuffle(c)
+    x_data, y_data, indeces = zip(*c)
+
+    X_train = x_data[:1166]
+    Y_train = y_data[:1166]
+    X_test = x_data[1166:]
+    Y_test = y_data[1166:]
+
+    # print y
+    # print y[0]
+    # print y[0][0]
 
     model = SqueezeNet()
     nb_epoch = 100
@@ -90,11 +105,6 @@ def train(run=0):
 def evaluate_ensemble(Best=True):
     
     ###loads and evaluates an ensemle from the models in the model folder.
-    
-    X_test = X_test.reshape(10000, 784)
-    X_test = X_test.astype('float32')
-    X_test /= 255
-    Y_test = np_utils.to_categorical(y_test, 10)
 
     model_dirs = []
     for i in os.listdir('weights'):
@@ -106,7 +116,7 @@ def evaluate_ensemble(Best=True):
                     model_dirs.append(i)
 
     preds = []
-    model = create_model()
+    model = SqueezeNet()
     for mfile in model_dirs:
         print(os.path.join('weights',mfile))
         model.load_weights(os.path.join('weights',mfile))
@@ -140,14 +150,6 @@ def evaluate(eval_all=False):
     ###evaluate models in the weights directory,
     ###defaults to only models with 'best'
 
-    (X_train, y_train), (X_test, y_test) = mnist.load_data()
-    X_test = X_test.reshape(10000, 784)
-    X_test = X_test.astype('float32')
-    X_test /= 255
-    Y_test = np_utils.to_categorical(y_test, 10)
-    evaluations = []
-
-
     for i in os.listdir('weights'):
         if '.h5' in i:
             if eval_all:
@@ -174,7 +176,7 @@ def evaluate(eval_all=False):
 
 
 # To train:
-# run = 0
-# while True:
-#    train(run)
-# run += 1
+run = 0
+while True:
+   train(run)
+run += 1
