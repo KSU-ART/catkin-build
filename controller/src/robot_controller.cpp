@@ -5,53 +5,53 @@
 
 // Ros Subscribers
 void robot_controller::ai_reset_cb(const std_msgs::Bool& msg){
-	if(msg->data){
+	if(msg.data){
 		pids.reset_all();
 	}
 }
 
 void robot_controller::current_altitude_cb(const std_msgs::Float32& msg){
-	current_altitude = msg->data;
+	current_altitude = msg.data;
 }
 
 void robot_controller::target_altitude_cb(const std_msgs::Float32& msg){
-	pids.getThrorrlePID().targetSetpoint(msg->data);
+	pids.getThrorrlePID().targetSetpoint(msg.data);
 }
 
 void robot_controller::yolo_x_cb(const std_msgs::Int16& msg){
 	// update mode
 	state_mode = Yolo;
-	current_yolo_yaw = msg->data - camera_width/2;
+	current_yolo_yaw = msg.data - camera_width/2;
 }
 
 void robot_controller::yolo_y_cb(const std_msgs::Int16& msg){
 	// update mode
 	state_mode = Yolo;
-	current_yolo_pitch = msg->data - camera_height;
+	current_yolo_pitch = msg.data - camera_height;
 }
 
 void robot_controller::delta_down_cam_x_cb(const std_msgs::Int16& msg){
 	// update mode
 	state_mode = DownCam;
-	current_down_cam_roll = msg->data;
+	current_down_cam_roll = msg.data;
 }
 
 void robot_controller::delta_down_cam_y_cb(const std_msgs::Int16& msg){
 	//update mode
 	state_mode = DownCam;
-	current_down_cam_pitch = msg->data;
+	current_down_cam_pitch = msg.data;
 }
 
 void robot_controller::obstacle_pitch_cb(const std_msgs::Float32& msg){
 	// update mode
 	state_mode = Obstacle;
-	current_obstacle_pitch = msg->data;
+	current_obstacle_pitch = msg.data;
 }
 
 void robot_controller::obstacle_roll_cb(const std_msgs::Float32& msg){
 	// update mode
 	state_mode = Obstacle;
-	current_obstacle_roll = msg->data;
+	current_obstacle_roll = msg.data;
 }
 
 //******************** applying pid controls **************************
@@ -133,7 +133,7 @@ void robot_controller::start_nav(bool rosOK){
 		yaw = MID_PWM - get_yaw_control(); 
 		throttle = MID_PWM + get_throttle_control();
 
-		mav.update_loop();
+		mav.update_loop(roll, pitch, yaw, throttle);
 		
 		ros::spinOnce();
 		fcuCommRate.sleep();

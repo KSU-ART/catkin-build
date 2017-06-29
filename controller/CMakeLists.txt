@@ -151,20 +151,16 @@ set_target_properties(pid-controller PROPERTIES
 # add_dependencies(controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(controller_node src/robot_controller.cpp)
-add_executable(disable_overrides src/disable_rc_overrides.cpp)
+add_executable(controller_node src/main.cpp src/robot_controller.cpp src/pid_handler.cpp src/mavros_handler.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(controller_node
 	${catkin_LIBRARIES}
 	pid-controller
-)
-target_link_libraries(disable_overrides
-	${catkin_LIBRARIES}
 )
 
 #############

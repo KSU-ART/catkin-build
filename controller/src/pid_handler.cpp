@@ -88,35 +88,35 @@ std::string pid_handler::get_roll_mode(){
 }
 
 PIDController& pid_handler::getThrorrlePID(){
-    return altitudePID;
+    return *altitudePID;
 }
 
 PIDController& pid_handler::getPitchPID(){
     switch(pitch_mode){
     case DownCam:
-        return pitchDownCamPID;
+        return *pitchDownCamPID;
     case Obstacle:
-        return pitchObstaclePID;
+        return *pitchObstaclePID;
     case Yolo:
-        return pitchYoloPID;
+        return *pitchYoloPID;
     default:
-        return new PIDController;
+        return *(new PIDController);
     }
 }
 
 PIDController& pid_handler::getRollPID(){
     switch(roll_mode){
     case DownCam:
-        return rollDownCamPID;
+        return *rollDownCamPID;
     case Obstacle:
-        return rollObstaclePID;
+        return *rollObstaclePID;
     default:
-        return new PIDController;
+        return *(new PIDController);
     }
 }
 
 PIDController& pid_handler::getYawPID(){
-    return yawYoloPID;
+    return *yawYoloPID;
 }
 
 std::vector<std::string> pid_handler::parse_calibrations(std::string input, std::string delimiter){
@@ -128,7 +128,7 @@ std::vector<std::string> pid_handler::parse_calibrations(std::string input, std:
         params.push_back(token);
         input.erase(0, pos + delimiter.length());
     }
-    return params
+    return params;
 }
 
 void pid_handler::load_PID_calibrations(std::string file){
@@ -137,34 +137,32 @@ void pid_handler::load_PID_calibrations(std::string file){
     if(calibration_file.is_open()){
         while(std::getline(calibration_file, line)){
             std::vector<std::string> params;
-            params = parse_calibrations(line, ',');
-            switch(params[0]){
-            case "altitudePID":
+            params = parse_calibrations(line, ",");
+            if(params[0] == "altitudePID"){
                 altitudePID     = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
-            case "yawYoloPID":
+            }
+            else if(params[0] == "yawYoloPID"){
                 yawYoloPID      = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
-            case "pitchYoloPID":
+            }
+            else if(params[0] == "pitchYoloPID"){
                 pitchYoloPID    = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
-            case "pitchDownCamPID":
+            }
+            else if(params[0] == "pitchDownCamPID"){
                 pitchDownCamPID = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
-            case "rollDownCamPID":
+            }
+            else if(params[0] == "rollDownCamPID"){
                 rollDownCamPID  = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
-            case "pitchObstaclePID":
+            }
+            else if(params[0] == "pitchObstaclePID"){
                 pitchObstaclePID= new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
-            case "rollObstaclePID":
+            }
+            else if(params[0] == "rollObstaclePID"){
                 rollObstaclePID = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
-                break;
             }
         }
         calibration_file.close();
     }
     else{
-        std::cout << "ERROR: NO PID CALIBRATION FILE FOUND" << std::end;
+        std::cout << "ERROR: NO PID CALIBRATION FILE FOUND" << std::endl;
     }
 }

@@ -12,6 +12,8 @@
 #define MAVROS_HANDLER_H
 #include <iostream>
 #include "ros/ros.h"
+#include <termios.h>
+#include "flight_definitions.h"
 #include <mavros_msgs/OverrideRCIn.h>
 #include <mavros_msgs/Mavlink.h>
 #include <mavros_msgs/RCIn.h>

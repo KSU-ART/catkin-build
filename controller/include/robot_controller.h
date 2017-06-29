@@ -57,7 +57,7 @@ class robot_controller
 private:
 	ros::NodeHandle n;
 	
-	short throttle, roll, pitch, yaw;
+	int throttle, roll, pitch, yaw;
 
 	enum mode_enum{
 		DownCam 	= 0,
@@ -79,16 +79,16 @@ private:
 		   current_obstacle_roll;
 
 	// loads pid calibration file
-	pid_handler pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt");
+	pid_handler pids;
 	// pid_handler pids;
 
 	mavros_handler mav;
 	
 public:
 	//contructor
-	robot_controller(){
-		debug = true;
-		
+	robot_controller()
+	:pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt")
+	{
 		//initial values
 		/// camera dimentions
 		camera_width 			= 640;
