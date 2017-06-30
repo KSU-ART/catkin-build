@@ -3,6 +3,7 @@
 #include "pid_handler.h"
 
 void pid_handler::initialize_zero_target(){
+    reset_all();
     altitudePID->targetSetpoint(0);
     yawYoloPID->targetSetpoint(0);
     pitchYoloPID->targetSetpoint(0);
