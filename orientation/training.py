@@ -71,10 +71,10 @@ def train(run=0):
     random.shuffle(c)
     x_data, y_data, indeces = zip(*c)
 
-    X_train = x_data[:1166]
-    Y_train = y_data[:1166]
-    X_test = x_data[1166:]
-    Y_test = y_data[1166:]
+    X_train = np.array(x_data[:1166])
+    Y_train = np.array(y_data[:1166])
+    X_test = np.array(x_data[1166:])
+    Y_test = np.array(y_data[1166:])
 
     # print y
     # print y[0]

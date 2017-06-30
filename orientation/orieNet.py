@@ -1,4 +1,5 @@
 import os
+import h5py
 from keras import backend as K
 from keras.layers import Input, Convolution2D, MaxPooling2D, Activation, concatenate, Dropout, GlobalAveragePooling2D, \
     warnings
@@ -89,12 +90,14 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
     x = fire_module(x, fire_id=9, squeeze=64, expand=256)
     x = Dropout(0.5, name='drop9')(x)
 
-    x = Convolution2D(2, (1, 1), padding='valid', name='conv10')(x)
+    x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
     x = Activation('tanh', name='act10')(x)
     x = GlobalAveragePooling2D()(x)
-    print(lambda_normalize_shape(x))
+    # print(lambda_normalize_shape(x))
     
-    out = Lambda(lambda_normalize(x), output_shape=lambda_normalize_shape(x))(x)
+    out = Activation('softmax', name='loss')(x)
+    # out = Lambda(lambda_normalize(x), output_shape=lambda_normalize_shape(x))(x)
+    # out = x
 
     # Ensure that the model takes into account any potential predecessors of `input_tensor`.
     if input_tensor is not None:
@@ -107,10 +110,7 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
     # load weights
     if weights == 'orientations':
 
-        weights_path = get_file('orieNet_weights.h5',
-                                    WEIGHTS_PATH,
-                                    cache_subdir='models')
-        model.load_weights(weights_path)
+        model.load_weights(WEIGHTS_PATH)
         if K.backend() == 'theano':
             layer_utils.convert_all_kernels_in_model(model)
 
@@ -125,4 +125,20 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
                               '`image_data_format="channels_last"` in '
                               'your Keras config '
                               'at ~/.keras/keras.json.')
-    return model
+
+    # modify model
+    model.layers.pop()
+    model.layers.pop()
+    model.layers.pop()
+    model.layers.pop()
+    model.summary()
+
+    x = Convolution2D(2, (1, 1), padding='valid', name='conv2')(model.layers[-1].output)
+    x = GlobalAveragePooling2D()(x)
+    x = Activation("tanh", name="nuLoss")(x)
+    x = Lambda(lambda_normalize, name='unit_vector_normalization')(x)
+
+    model2 = Model(input=inputs, output=[x])
+
+
+    return model2
