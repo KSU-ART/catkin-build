@@ -9,19 +9,10 @@
 #include <string>
 #include <fstream>
 
-
-Point points[2] = {Point(0,0),Point(1,1)};
-int clicks = 0;
-
-void calibration_click_cb(int event, int x, int y, int flags, void* userdata){
-	if  ( event == EVENT_LBUTTONDOWN ){
-		clicks++;
-		points[clicks]=(Point(x,y));
-	}
-}
-
 class Color{
 private:
+	char color_type;
+
 	int lMin;
 	int aMin;
 	int bMin;
@@ -31,11 +22,12 @@ private:
 
 	std::string calibration_file;
 
-	float percentage = 0.2;
-	string calibration_file;
+	cv::Point points[2];
+	int clicks;
 
 public:
 	Color(){
+		color_type = ' ';
 		set_calibration_file("");
 		lMin = 0;
 		aMin = 0;
@@ -53,11 +45,17 @@ public:
 		set_color(inColor);
 	}
 
+	static void onMouse(int event, int x, int y, int flags, void* userdata);
+	void onMouse(int event, int x, int y);
+
+	cv::Scalar get_min_scalar();
+	cv::Scalar get_max_scalar();
+
 	void set_color(char inColor);
 
 	void set_calibration_file(std::string file);
 
-	void calibrate_colors();
+	void calibrate_colors(float deviation_percentage);
 
 };
 

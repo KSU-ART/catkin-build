@@ -15,7 +15,7 @@ int main( int argc, char** argv ){
 	ros::init(argc, argv,"roomba_pose");
 	ros::NodeHandle nh;
 	ros::Publisher pubCenter=nh.advertise<std_msgs::Int32MultiArray>("std_msgs/Int32MultiArray", 1000);
-	VideoCapture cap(1);
+	VideoCapture cap(0);
 	if (!cap.isOpened()){
 		return -1;
 	}
@@ -23,7 +23,7 @@ int main( int argc, char** argv ){
 	//Define color of blobs to track
 	Color blob1('r');
 	Color blob2('g');
-	while(1)
+	while(ros::ok())
 	{
 		std_msgs::Int32MultiArray msg;
 		//Passing video footage
@@ -32,9 +32,9 @@ int main( int argc, char** argv ){
 		cvtColor(color, labcs, COLOR_BGR2Lab);
 		medianBlur(labcs,labcs,11);
 		//Std Altitude Threshold
-		inRange(labcs, Scalar(blob1.lMin, blob1.aMin, blob1.bMin), Scalar(blob1.lMax, blob1.aMax, blob1.bMax), Thresh1);
+		inRange(labcs, blob1.get_min_scalar(), blob1.get_max_scalar(), Thresh1);
 		//Low Altitude Threshold
-		inRange(labcs, Scalar(blob2.lMin, blob2.aMin, blob2.bMin), Scalar(blob2.lMax, blob2.aMax, blob2.bMax), Thresh2);
+		inRange(labcs, blob2.get_min_scalar(), blob2.get_max_scalar(), Thresh2);
 		////Noise reduction
 		//Mat erodeElement2 = getStructuringElement(MORPH_RECT, Size(21, 21));
 		//Mat dilateElement2 = getStructuringElement(MORPH_RECT, Size(9, 9));
