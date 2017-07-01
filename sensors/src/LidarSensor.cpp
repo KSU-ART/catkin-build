@@ -68,7 +68,9 @@ void LidarSensor::LidarCallback1(const sensor_msgs::Range::ConstPtr& msg)
 	// publish altitude
 	float value = msg->range;
 	// any calibrations are done to value here
-
+	double offset = 0.17876921059;
+	value = value - offset;
+	
 	std_msgs::Float32 alt;
 	alt.data = value;
 	_LidarPubs[0].publish(alt);
