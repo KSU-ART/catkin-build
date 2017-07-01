@@ -1,7 +1,7 @@
 #include "ros/ros.h"
 #include "opencv2/imgproc.hpp"
 #include <opencv2/highgui/highgui.hpp>
-#include <std_msgs/Int32.h>
+#include <std_msgs/Int16.h>
 #include <math.h>
 #include "color.h"
 #include <iostream>
@@ -13,11 +13,12 @@ using namespace cv;
 int main( int argc, char** argv ){
 	int cam_width = 640;
 	int cam_height = 480;
+	bool DEBUG = true;
 
 	ros::init(argc, argv,"roomba_pose");
 	ros::NodeHandle nh;
-	ros::Publisher pubx = nh.advertise<std_msgs::Int32>("/IARC/OrientationNet/pos/x", 1);
-	ros::Publisher puby = nh.advertise<std_msgs::Int32>("/IARC/OrientationNet/pos/y", 1);
+	ros::Publisher pubx = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/x", 1);
+	ros::Publisher puby = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/y", 1);
 	VideoCapture cap(0);
 	if (!cap.isOpened()){
 		return -1;
@@ -66,7 +67,7 @@ int main( int argc, char** argv ){
 			}
 			center = Point(xSum/contoursPoints.size(), ySum/contoursPoints.size());
 			Point delta = center - Point(cam_width/2, cam_height/2);
-			std_msgs::Int32 msg;
+			std_msgs::Int16 msg;
 			msg.data = delta.x;
 			pubx.publish(msg);
 			msg.data = delta.y;
@@ -76,9 +77,11 @@ int main( int argc, char** argv ){
 			drawContours(color, contours, lrgContour, Scalar(0, 255, 255), 3, 8, vector<Vec4i>(), 0, Point());
 			circle(color, center, 5, Scalar(255, 255, 0), FILLED, LINE_8);
 		}
-		imshow("Thresh",labThresh);
-		//imshow("Labcs",labcs);
-		imshow("Original",color);
+		if(DEBUG){
+			imshow("Thresh",labThresh);
+			//imshow("Labcs",labcs);
+			imshow("Original",color);
+		}
 		waitKey(5);
 	}
 }

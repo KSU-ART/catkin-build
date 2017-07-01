@@ -69,7 +69,7 @@ void Color::set_calibration_file(std::string file){
 	points[0] = cv::Point(0,0);
 	points[1] = cv::Point(1,1);
 	if (file.compare("") == 0){
-		calibration_file = "/home/stoplime/catkin_ws/src/catkin-build/plate_detect/include";
+		calibration_file = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
 	}
 	else{
 		calibration_file = file;
@@ -84,7 +84,7 @@ void Color::calibrate_colors(float deviation_percentage){
 	}
 	cv::Mat img_rgb,img_lab;
 	cv::namedWindow("Img_RGB", cv::WINDOW_AUTOSIZE);
-	cv::setMouseCallback("Img_RGB", onMouse, this);
+	//cv::setMouseCallback("Img_RGB", onMouse, this);
 	if(color_type == 'r'|| color_type == 'g'){
 		while(1){
 			cap>>img_rgb;

@@ -1,0 +1,3 @@
+<launch>
+	<node name="calibration" pkg="plate_detect" type="calibrate" launch-prefix="valgrind -v --leak-check=full --track-origins=yes" />
+</launch>
