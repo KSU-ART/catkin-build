@@ -1,3 +1,4 @@
 <launch>
-	<node name="controller_node" pkg="controller" type="controller_node" output="screen"/>
+	<!-- For debuging: launch-prefix="valgrind -v --track-origins=yes" -->
+	<node name="controller_node" pkg="controller" type="controller_node" output="screen" />
 </launch>

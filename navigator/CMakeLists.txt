@@ -130,25 +130,25 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(navigator_node src/navigator_node.cpp)
-add_executable (
-	navigator_node 
-	src/main.cpp 
-	src/ai_nav.cpp 
-	src/arena.cpp 
-	src/ground_robot.cpp 
-	src/herdable_ground_robot.cpp 
-	src/obstacle_ground_robot.cpp
-	src/uav.cpp
-)
+# add_executable (
+# 	navigator_node 
+# 	src/main.cpp 
+# 	src/ai_nav.cpp 
+# 	src/arena.cpp 
+# 	src/ground_robot.cpp 
+# 	src/herdable_ground_robot.cpp 
+# 	src/obstacle_ground_robot.cpp
+# 	src/uav.cpp
+# )
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(navigator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(navigator_node
-	${catkin_LIBRARIES}
-)
+# target_link_libraries(navigator_node
+# 	${catkin_LIBRARIES}
+# )
 
 #############
 ## Install ##

@@ -1,0 +1,7 @@
+altitudePID,        200,    0,  0,  -250,   250
+yawYoloPID,         80,     0,  0,  -250,   250
+pitchYoloPID,       80,     0,  0,  -250,   250
+pitchDownCamPID,    80,     0,  0,  -250,   250
+rollDownCamPID,     80,     0,  0,  -250,   250
+pitchObstaclePID,   80,     0,  0,  -250,   250
+rollObstaclePID,    80,     0,  0,  -250,   250

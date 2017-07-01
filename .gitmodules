@@ -1,0 +1,3 @@
+[submodule "terarangerone-ros"]
+	path = terarangerone-ros
+	url = https://github.com/Terabee/terarangerone-ros.git
