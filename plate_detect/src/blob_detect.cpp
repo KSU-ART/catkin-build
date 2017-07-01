@@ -67,9 +67,9 @@ int main( int argc, char** argv ){
 			center = Point(xSum/contoursPoints.size(), ySum/contoursPoints.size());
 			Point delta = center - Point(cam_width/2, cam_height/2);
 			std_msgs::Int32 msg;
-			msg.data.push_back(delta.x);
+			msg.data = delta.x;
 			pubx.publish(msg);
-			msg.data.push_back(delta.y);
+			msg.data = delta.y;
 			puby.publish(msg);
 
 			//cout <<"< " <<center.x <<" , " <<center.y <<" >" <<endl;
