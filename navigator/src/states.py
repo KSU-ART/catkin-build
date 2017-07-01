@@ -229,11 +229,12 @@ class CheckObstacles(smach.State):
 
 class ObstacleAvoidence(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['CheckObstacles'], input_keys=['enableTakeOffLoop', 'enableCheckDownCamLoop', 'enableStartInteractLoop'])
+        smach.State.__init__(self, outcomes=['CheckObstacles'], input_keys=['enableTakeOffLoop', 'enableCheckDownCamLoop', 'enableStartInteractLoop', 'obstacleThreshDist'])
         rospy.Subscriber("/IARC/Obstacle/angle", Float32, callback=self.callbackAngle)
         rospy.Subscriber("/IARC/Obstacle/dist", Float32, callback=self.callbackDist)
         self.angle = 0
         self.dist = 2
+        self.opposite_dist = 0
         self.pubPitchPID = rospy.Publisher('/IARC/Obstacle/PitchPID', Float32, queue_size=1)
         self.pubRollPID = rospy.Publisher('/IARC/Obstacle/RollPID', Float32, queue_size=1)
 
@@ -248,12 +249,15 @@ class ObstacleAvoidence(smach.State):
         userdata.enableCheckDownCamLoop = False
         userdata.enableStartInteractLoop = False
 
-        oppositeVec = (self.dist * -math.cos(self.angle), self.dist * -math.sin(self.angle))
+        self.opposite_dist = userdata.obstacleThreshDist - self.dist
+
+        oppositeVec = (self.opposite_dist * -math.cos(self.angle), self.opposite_dist * -math.sin(self.angle))
         if DEBUG:
             print(oppositeVec)
         
-        self.pubRollPID.publish(oppositeVec[0])
-        self.pubPitchPID.publish(oppositeVec[1])
+        if self.opposite_dist > 0:
+            self.pubRollPID.publish(oppositeVec[1])
+            self.pubPitchPID.publish(oppositeVec[0])
 
         return 'CheckObstacles'
         

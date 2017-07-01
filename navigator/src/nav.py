@@ -158,7 +158,8 @@ def state_machine_handler():
                                     transitions={'CheckObstacles':'CheckObstacles'},
                                     remapping={'enableTakeOffLoop':'enableTakeOffLoop',
                                                'enableCheckDownCamLoop':'enableCheckDownCamLoop',
-                                               'enableStartInteractLoop':'enableStartInteractLoop'})
+                                               'enableStartInteractLoop':'enableStartInteractLoop',
+                                               'obstacleThreshDist':'obstacleThreshDist'})
 
             smach.Concurrence.add('sm_TakeOff', sm_TakeOff)
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)
