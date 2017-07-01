@@ -1,8 +1,7 @@
 #include "ros/ros.h"
 #include "opencv2/imgproc.hpp"
 #include <opencv2/highgui/highgui.hpp>
-#include <std_msgs/Int32MultiArray.h>
-#include <std_msgs/MultiArrayDimension.h>
+#include <std_msgs/Int32.h>
 #include <math.h>
 #include "color.h"
 #include <iostream>
@@ -12,9 +11,13 @@ using namespace cv;
 
 
 int main( int argc, char** argv ){
+	int cam_width = 640;
+	int cam_height = 480;
+
 	ros::init(argc, argv,"roomba_pose");
 	ros::NodeHandle nh;
-	ros::Publisher pubCenter=nh.advertise<std_msgs::Int32MultiArray>("std_msgs/Int32MultiArray", 1000);
+	ros::Publisher pubx = nh.advertise<std_msgs::Int32>("/IARC/OrientationNet/pos/x", 1);
+	ros::Publisher puby = nh.advertise<std_msgs::Int32>("/IARC/OrientationNet/pos/y", 1);
 	VideoCapture cap(0);
 	if (!cap.isOpened()){
 		return -1;
@@ -25,7 +28,6 @@ int main( int argc, char** argv ){
 	Color blob2('g');
 	while(ros::ok())
 	{
-		std_msgs::Int32MultiArray msg;
 		//Passing video footage
 		cap >> color;
 		//Define CIE Lab img and smooth it
@@ -62,10 +64,14 @@ int main( int argc, char** argv ){
 				xSum += contoursPoints[i].x;
 				ySum += contoursPoints[i].y; 
 			}
-			center = Point(xSum/contoursPoints.size(),ySum/contoursPoints.size());
-			msg.data.push_back(center.x);
-			msg.data.push_back(center.y);
-			pubCenter.publish(msg);
+			center = Point(xSum/contoursPoints.size(), ySum/contoursPoints.size());
+			Point delta = center - Point(cam_width/2, cam_height/2);
+			std_msgs::Int32 msg;
+			msg.data.push_back(delta.x);
+			pubx.publish(msg);
+			msg.data.push_back(delta.y);
+			puby.publish(msg);
+
 			//cout <<"< " <<center.x <<" , " <<center.y <<" >" <<endl;
 			drawContours(color, contours, lrgContour, Scalar(0, 255, 255), 3, 8, vector<Vec4i>(), 0, Point());
 			circle(color, center, 5, Scalar(255, 255, 0), FILLED, LINE_8);

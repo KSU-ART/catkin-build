@@ -26,13 +26,13 @@ LidarSensor::~LidarSensor()
 
 void LidarSensor::obstaclePublishers()
 {
-	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/iarc/obstacle/closest", 1) );
-	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/iarc/obstacle/angle", 1) );
+	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/IARC/Obstacle/dist", 1) );
+	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/IARC/Obstacle/angle", 1) );
 }
 
 void LidarSensor::altitudePublishers()
 {
-	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/iarc/altitude/lidar", 1) );
+	_LidarPubs.push_back( nh.advertise<std_msgs::Float32>("/IARC/currentAltitude", 1) );
 }
 
 void LidarSensor::LidarCallback0(const sensor_msgs::LaserScan::ConstPtr& msg)
