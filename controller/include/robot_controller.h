@@ -78,6 +78,9 @@ private:
 		   current_obstacle_pitch,
 		   current_obstacle_roll;
 
+	//speed of dx9 controller:
+	ros::Rate fcuCommRate;
+
 	// loads pid calibration file
 	pid_handler pids;
 	// pid_handler pids;
@@ -87,7 +90,8 @@ private:
 public:
 	//contructor
 	robot_controller()
-	:pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt")
+	:pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
+	fcuCommRate(45)
 	{
 		//initial values
 		/// camera dimentions
@@ -149,8 +153,11 @@ public:
 	double get_yaw_control();
 
 	//***************************** custom ros loop ***********************
-	void start_nav(bool rosOK);
+	void init_loop();
+
+	void nav_loop();
 	
+	void end_loop();
 };
 
 #endif
