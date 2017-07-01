@@ -1,6 +1,0 @@
-<launch>
-	<remap from="/guidance/left_image" to="/usb_cam_0/image_rect_color"/>
-	
-	<node name="grid_track" pkg="observer" type="grid_tracker" />
-	
-</launch>
