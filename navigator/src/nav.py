@@ -55,8 +55,7 @@ def state_machine_handler():
 
                 smach.StateMachine.add('TakeOff', TakeOff(),
                                     transitions={'FindGR':'FindGR',
-                                                 'TakeOff':'TakeOff',
-                                                 'Null':'Null'},
+                                                 'TakeOff':'TakeOff'},
                                     remapping={'enableTakeOffLoop':'enableTakeOffLoop',
                                                'normHeight':'normHeight',
                                                'altitudeDeviation':'altitudeDeviation'})
@@ -89,8 +88,7 @@ def state_machine_handler():
 
                 smach.StateMachine.add('CheckDownCam', CheckDownCam(),
                                     transitions={'CheckDownCam':'CheckDownCam',
-                                                 'FollowGR':'FollowGR',
-                                                 'Null':'Null'},
+                                                 'FollowGR':'FollowGR'},
                                     remapping={'enableCheckDownCamLoop':'enableCheckDownCamLoop',
                                                'enableTakeOffLoop':'enableTakeOffLoop',
                                                'GRdist':'GRdist',
@@ -117,8 +115,7 @@ def state_machine_handler():
 
                 smach.StateMachine.add('StartInteract', StartInteract(),
                                     transitions={'TouchDown':'TouchDown',
-                                                 'StartInteract':'StartInteract',
-                                                 'Null':'Null'},
+                                                 'StartInteract':'StartInteract'},
                                     remapping={'lowHeight':'lowHeight',
                                                'altitudeDeviation':'altitudeDeviation',
                                                'TouchDownTimerMAX':'TouchDownTimerMAX',

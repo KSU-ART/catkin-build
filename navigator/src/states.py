@@ -13,7 +13,7 @@ DEBUG = True
 
 class TakeOff(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['FindGR', 'TakeOff', 'Null'], input_keys=['enableTakeOffLoop', 'normHeight', 'altitudeDeviation'])
+        smach.State.__init__(self, outcomes=['FindGR', 'TakeOff'], input_keys=['enableTakeOffLoop', 'normHeight', 'altitudeDeviation'])
         self.pubTargetAltitude = rospy.Publisher('/IARC/setAltitude', Float32, queue_size=1)
         rospy.Subscriber("/IARC/currentAltitude", Float32, callback=self.callback)
         self.altitude = 0
@@ -27,14 +27,14 @@ class TakeOff(smach.State):
             self.pubTargetAltitude.publish(Float32(userdata.normHeight))
             # check current altitude
             if DEBUG:
-                print(self.altitude)
+                print("Altitude:", self.altitude)
             if abs(self.altitude - userdata.normHeight) < userdata.altitudeDeviation:
                 # reaches target +- 0.1 meters
                 return 'FindGR'
             else:
                 return 'TakeOff'
         else:
-            return 'Null'
+            return 'TakeOff'
         
 class FindGR(smach.State):
     def __init__(self):
@@ -48,7 +48,7 @@ class FindGR(smach.State):
     def callback(self, msg):
         stringData = msg.data
         if DEBUG:
-            print("yolo string: ",stringData)
+            print("yolo string:",stringData)
         data = json.loads(stringData)
         # check if yolo message is empty (aka no ground robot detected)
         if len(data) == 0:
@@ -64,7 +64,7 @@ class FindGR(smach.State):
             # debug
             if DEBUG:
                 # print minargs
-                print self.minYolo
+                print("minYolo:", self.minYolo)
             self.XtargetYoloPub.publish(Int16(self.minYolo[0]))
             self.YtargetYoloPub.publish(Int16(self.minYolo[1]))
 
@@ -106,7 +106,7 @@ class RandomTraversal(smach.State):
 ####################### Down Cam Node ###########################
 class CheckDownCam(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['CheckDownCam', 'FollowGR', 'Null'], input_keys=['enableCheckDownCamLoop'], output_keys=['enableTakeOffLoop', 'GRdist', 'GRangle'])
+        smach.State.__init__(self, outcomes=['CheckDownCam', 'FollowGR'], input_keys=['enableCheckDownCamLoop'], output_keys=['enableTakeOffLoop', 'GRdist', 'GRangle'])
         rospy.Subscriber("/IARC/OrientationNet/angle", Float32, callback=self.callbackOrientation)
         rospy.Subscriber("/IARC/OrientationNet/pos/x", Int16, callback=self.callbackPosX)
         rospy.Subscriber("/IARC/OrientationNet/pos/y", Int16, callback=self.callbackPosY)
@@ -140,7 +140,7 @@ class CheckDownCam(smach.State):
                 userdata.enableTakeOffLoop = False
                 return 'FollowGR'
         else:
-            return 'Null'
+            return 'CheckDownCam'
     
 class FollowGR(smach.State):
     def __init__(self):
@@ -158,7 +158,7 @@ class FollowGR(smach.State):
 ############################## Interact Node ###############################
 class StartInteract(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['TouchDown', 'StartInteract', 'Null'], input_keys=['lowHeight', 'altitudeDeviation', 'TouchDownTimerMAX', 'enableStartInteractLoop'], output_keys=['enableCheckDownCamLoop', 'TouchDownTimer'])
+        smach.State.__init__(self, outcomes=['TouchDown', 'StartInteract'], input_keys=['lowHeight', 'altitudeDeviation', 'TouchDownTimerMAX', 'enableStartInteractLoop'], output_keys=['enableCheckDownCamLoop', 'TouchDownTimer'])
         self.pubTargetAltitude = rospy.Publisher('/IARC/setAltitude', Float32, queue_size=1)
         rospy.Subscriber("/IARC/currentAltitude", Float32, callback=self.callback)
         self.altitude = 0
@@ -176,7 +176,7 @@ class StartInteract(smach.State):
             else:
                 return 'StartInteract'
         else:
-            return 'Null'
+            return 'StartInteract'
 
 class TouchDown(smach.State):
     def __init__(self):
@@ -253,7 +253,7 @@ class ObstacleAvoidence(smach.State):
 
         oppositeVec = (self.opposite_dist * -math.cos(self.angle), self.opposite_dist * -math.sin(self.angle))
         if DEBUG:
-            print(oppositeVec)
+            print("Obstacle opposite vector:", oppositeVec)
         
         if self.opposite_dist > 0:
             self.pubRollPID.publish(oppositeVec[1])
