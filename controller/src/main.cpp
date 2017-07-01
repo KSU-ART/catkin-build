@@ -38,7 +38,13 @@ int main(int argc, char **argv)
     ros::XMLRPCManager::instance()->bind("shutdown", shutdownCallback);
 
 	robot_controller c_1;
-	c_1.start_nav(!g_request_shutdown);
+	c_1.init_loop();
+
+    while(!g_request_shutdown){
+        c_1.nav_loop();
+    }
+
+    c_1.end_loop();
 
     ros::shutdown();
 }
