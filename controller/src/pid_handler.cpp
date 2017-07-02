@@ -4,7 +4,7 @@
 
 void pid_handler::initialize_zero_target(){
     reset_all();
-    altitudePID->targetSetpoint(0);
+    altitudePID->targetSetpoint(1);
     yawYoloPID->targetSetpoint(0);
     pitchYoloPID->targetSetpoint(0);
     pitchDownCamPID->targetSetpoint(0);
@@ -88,7 +88,7 @@ std::string pid_handler::get_roll_mode(){
     }
 }
 
-PIDController& pid_handler::getThrorrlePID(){
+PIDController& pid_handler::getThrottlePID(){
     return *altitudePID;
 }
 
@@ -146,25 +146,25 @@ void pid_handler::load_PID_calibrations(std::string file){
                 std::cout << params[1] << " " << params[2] << " " << params[3] << " " << params[4] << " " << params[5] << std::endl;            
             }
             if(key == "altitudePID"){
-                altitudePID     = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                altitudePID     = new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
             else if(key == "yawYoloPID"){
-                yawYoloPID      = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                yawYoloPID      = new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
             else if(key == "pitchYoloPID"){
-                pitchYoloPID    = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                pitchYoloPID    = new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
             else if(key == "pitchDownCamPID"){
-                pitchDownCamPID = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                pitchDownCamPID = new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
             else if(key == "rollDownCamPID"){
-                rollDownCamPID  = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                rollDownCamPID  = new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
             else if(key == "pitchObstaclePID"){
-                pitchObstaclePID= new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                pitchObstaclePID= new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
             else if(key == "rollObstaclePID"){
-                rollObstaclePID = new PIDController(std::stoi(params[1]), std::stoi(params[2]), std::stoi(params[3]), std::stoi(params[4]), std::stoi(params[5]));
+                rollObstaclePID = new PIDController(std::stod(params[1]), std::stod(params[2]), std::stod(params[3]), std::stod(params[4]), std::stod(params[5]));
             }
         }
         calibration_file.close();

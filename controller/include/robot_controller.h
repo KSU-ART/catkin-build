@@ -56,6 +56,15 @@ class robot_controller
 {
 private:
 	ros::NodeHandle n;
+	ros::Subscriber sub_reset,
+					sub_altitude,
+					sub_set_altitude,
+					sub_yolo_x,
+					sub_yolo_y,
+					sub_orien_x,
+					sub_orien_y,
+					sub_obst_pitch,
+					sub_obst_roll;
 	
 	int throttle, roll, pitch, yaw;
 
@@ -83,14 +92,13 @@ private:
 
 	// loads pid calibration file
 	pid_handler pids;
-	// pid_handler pids;
 
 	mavros_handler mav;
 	
 public:
 	//contructor
 	robot_controller()
-	:pids("/home/odroid/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
+	:pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
 	fcuCommRate(45)
 	{
 		//initial values
@@ -113,15 +121,15 @@ public:
 		current_obstacle_roll	= 0;
 		
 		//subs:
-		n.subscribe("/IARC/ai_reset", 1, &robot_controller::ai_reset_cb, this);
-		n.subscribe("/IARC/currentAltitude", 1, &robot_controller::current_altitude_cb, this);
-		n.subscribe("/IARC/setAltitude", 1, &robot_controller::target_altitude_cb, this);
-		n.subscribe("/IARC/YOLO/target/x", 1, &robot_controller::yolo_x_cb, this);
-		n.subscribe("/IARC/YOLO/target/y", 1, &robot_controller::yolo_y_cb, this);
-		n.subscribe("/IARC/OrientationNet/pos/x", 1, &robot_controller::delta_down_cam_x_cb, this);
-		n.subscribe("/IARC/OrientationNet/pos/y", 1, &robot_controller::delta_down_cam_y_cb, this);
-		n.subscribe("/IARC/Obstacle/PitchPID", 1, &robot_controller::obstacle_pitch_cb, this);
-		n.subscribe("/IARC/Obstacle/RollPID", 1, &robot_controller::obstacle_roll_cb, this);
+		sub_reset 			= n.subscribe("/IARC/ai_reset", 1, &robot_controller::ai_reset_cb, this);
+		sub_altitude 		= n.subscribe("/IARC/currentAltitude", 1, &robot_controller::current_altitude_cb, this);
+		sub_set_altitude 	= n.subscribe("/IARC/setAltitude", 1, &robot_controller::target_altitude_cb, this);
+		sub_yolo_x 			= n.subscribe("/IARC/YOLO/target/x", 1, &robot_controller::yolo_x_cb, this);
+		sub_yolo_y 			= n.subscribe("/IARC/YOLO/target/y", 1, &robot_controller::yolo_y_cb, this);
+		sub_orien_x 		= n.subscribe("/IARC/OrientationNet/pos/x", 1, &robot_controller::delta_down_cam_x_cb, this);
+		sub_orien_y 		= n.subscribe("/IARC/OrientationNet/pos/y", 1, &robot_controller::delta_down_cam_y_cb, this);
+		sub_obst_pitch 		= n.subscribe("/IARC/Obstacle/PitchPID", 1, &robot_controller::obstacle_pitch_cb, this);
+		sub_obst_roll 		= n.subscribe("/IARC/Obstacle/RollPID", 1, &robot_controller::obstacle_roll_cb, this);
 	}
 
 	//********************** callbacks *************************

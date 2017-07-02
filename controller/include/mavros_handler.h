@@ -49,7 +49,7 @@ public:
 		rc_pub = n.advertise<mavros_msgs::OverrideRCIn>("/mavros/rc/override", 1);
 		ai_reset_pub = n.advertise<std_msgs::Bool>("/IARC/ai_reset", 1);
 
-		n.subscribe("/mavros/rc/in", 1, &mavros_handler::RCIn_callback, this);
+		ros::Subscriber sub = n.subscribe("/mavros/rc/in", 1, &mavros_handler::RCIn_callback, this);
 	}
 
 	void release_msg_channels();

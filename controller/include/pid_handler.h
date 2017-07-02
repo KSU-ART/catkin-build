@@ -68,7 +68,7 @@ public:
     std::string get_roll_mode();
 
     // returns the current pid bsed on the state mode
-	PIDController& getThrorrlePID();
+	PIDController& getThrottlePID();
 
 	PIDController& getPitchPID();
 

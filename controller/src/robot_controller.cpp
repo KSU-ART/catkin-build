@@ -15,7 +15,7 @@ void robot_controller::current_altitude_cb(const std_msgs::Float32& msg){
 }
 
 void robot_controller::target_altitude_cb(const std_msgs::Float32& msg){
-	pids.getThrorrlePID().targetSetpoint(msg.data);
+	pids.getThrottlePID().targetSetpoint(msg.data);
 }
 
 void robot_controller::yolo_x_cb(const std_msgs::Int16& msg){
@@ -60,7 +60,8 @@ double robot_controller::get_throttle_control(){
 	case DownCam:
 	case Obstacle:
 	case Yolo:
-		return pids.getThrorrlePID().calc(current_altitude);
+		// std::cout << "*******current altitude: " << current_altitude << std::endl;
+		return pids.getThrottlePID().calc(current_altitude);
 	default:
 		return 0;
 	}
@@ -93,6 +94,7 @@ double robot_controller::get_pitch_control(){
 double robot_controller::get_yaw_control(){
 	switch(state_mode){
 	case Yolo:
+		std::cout << "*******yolo_yaw: " << current_yolo_yaw << std::endl;
 		return pids.getYawPID().calc(current_yolo_yaw);
 	default:
 		return 0;
