@@ -15,7 +15,8 @@ exp1x1 = "expand1x1"
 exp3x3 = "expand3x3"
 relu = "relu_"
 cwd = os.getcwd()
-WEIGHTS_PATH = os.path.join(cwd, 'squeezenet_weights_tf_dim_ordering_tf_kernels.h5')
+# WEIGHTS_PATH = os.path.join(cwd, 'squeezenet_weights_tf_dim_ordering_tf_kernels.h5')
+WEIGHTS_PATH = os.path.join(cwd, 'partly_trained.h5')
 
 # Modular function for Fire Node
 
@@ -90,14 +91,20 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
     x = fire_module(x, fire_id=9, squeeze=64, expand=256)
     x = Dropout(0.5, name='drop9')(x)
 
-    x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
-    x = Activation('tanh', name='act10')(x)
-    x = GlobalAveragePooling2D()(x)
-    # print(lambda_normalize_shape(x))
+    # x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
+    # x = Activation('tanh', name='act10')(x)
+    # x = GlobalAveragePooling2D()(x)
     
-    out = Activation('softmax', name='loss')(x)
+    # out = Activation('softmax', name='loss')(x)
     # out = Lambda(lambda_normalize(x), output_shape=lambda_normalize_shape(x))(x)
     # out = x
+
+    x = Convolution2D(2, (1, 1), padding='valid', name='conv2')(x)
+    x = GlobalAveragePooling2D()(x)
+    x = Activation("tanh", name="nuLoss")(x)
+    out = Lambda(lambda_normalize, name='unit_vector_normalization')(x)
+
+
 
     # Ensure that the model takes into account any potential predecessors of `input_tensor`.
     if input_tensor is not None:
@@ -106,7 +113,7 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
         inputs = img_input
 
     model = Model(inputs, out, name='orieNet')
-
+    model.save('partly_trained.h5')
     # load weights
     if weights == 'orientations':
 
@@ -127,18 +134,18 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
                               'at ~/.keras/keras.json.')
 
     # modify model
-    model.layers.pop()
-    model.layers.pop()
-    model.layers.pop()
-    model.layers.pop()
-    model.summary()
+    # model.layers.pop()
+    # model.layers.pop()
+    # model.layers.pop()
+    # model.layers.pop()
+    # model.summary()
 
-    x = Convolution2D(2, (1, 1), padding='valid', name='conv2')(model.layers[-1].output)
-    x = GlobalAveragePooling2D()(x)
-    x = Activation("tanh", name="nuLoss")(x)
-    x = Lambda(lambda_normalize, name='unit_vector_normalization')(x)
+    # x = Convolution2D(2, (1, 1), padding='valid', name='conv2')(model.layers[-1].output)
+    # x = GlobalAveragePooling2D()(x)
+    # x = Activation("tanh", name="nuLoss")(x)
+    # x = Lambda(lambda_normalize, name='unit_vector_normalization')(x)
 
-    model2 = Model(input=inputs, output=[x])
+    # model2 = Model(input=inputs, output=[x])
+    # model2.save('partly_trained.h5')
 
-
-    return model2
+    return model
