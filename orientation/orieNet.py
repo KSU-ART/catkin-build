@@ -29,13 +29,13 @@ def fire_module(x, fire_id, squeeze=16, expand=64):
         channel_axis = 3
     
     x = Convolution2D(squeeze, (1, 1), padding='valid', name=s_id + sq1x1)(x)
-    x = Activation('relu', name=s_id + relu + sq1x1)(x)
+    x = Activation('tanh', name=s_id + relu + sq1x1)(x)
 
     left = Convolution2D(expand, (1, 1), padding='valid', name=s_id + exp1x1)(x)
-    left = Activation('relu', name=s_id + relu + exp1x1)(left)
+    left = Activation('tanh', name=s_id + relu + exp1x1)(left)
 
     right = Convolution2D(expand, (3, 3), padding='same', name=s_id + exp3x3)(x)
-    right = Activation('relu', name=s_id + relu + exp3x3)(right)
+    right = Activation('tanh', name=s_id + relu + exp3x3)(right)
 
     x = concatenate([left, right], axis=channel_axis, name=s_id + 'concat')
     return x
@@ -50,11 +50,11 @@ def lambda_normalize(x):
     return K.l2_normalize(x, axis=1)
 
 
-def SqueezeNet(input_tensor=None, input_shape=None, weights=None): # 'orientations'):
+def SqueezeNet(input_tensor=None, input_shape=None, weights=False):
 
-    if weights not in {'orientations', None}:
+    if weights not in {True, False}:
         raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization) or `orientations` '
+                         '`False` (random initialization) or `True` '
                          '(pre-training on orientations).')
     
     # if weights == 'orientations' and classes != 2:
@@ -74,7 +74,7 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=None): # 'orientatio
 
 
     x = Convolution2D(64, (3, 3), strides=(2, 2), padding='valid', name='conv1', input_shape=(None, None, 3))(img_input)
-    x = Activation('relu', name='act1')(x)
+    x = Activation('tanh', name='act1')(x)
     x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool1')(x)
 
     x = fire_module(x, fire_id=2, squeeze=16, expand=64)
@@ -91,8 +91,8 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=None): # 'orientatio
     x = fire_module(x, fire_id=9, squeeze=64, expand=256)
     x = Dropout(0.5, name='drop9')(x)
 
-    x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
-    x = Activation('tanh', name='act10')(x)
+    # x = Convolution2D(100, (1, 1), padding='valid', name='conv10')(x)
+    # x = Activation('tanh', name='act10')(x)
     # x = GlobalAveragePooling2D()(x)
     
     # out = Activation('softmax', name='loss')(x)
@@ -114,7 +114,7 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=None): # 'orientatio
 
     model = Model(inputs, out, name='orieNet')
     # load weights
-    if weights == 'orientations':
+    if weights:
 
         model.load_weights(WEIGHTS_PATH)
         if K.backend() == 'theano':
