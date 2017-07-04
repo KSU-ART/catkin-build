@@ -91,8 +91,8 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=None): # 'orientatio
     x = fire_module(x, fire_id=9, squeeze=64, expand=256)
     x = Dropout(0.5, name='drop9')(x)
 
-    # x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
-    # x = Activation('tanh', name='act10')(x)
+    x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
+    x = Activation('tanh', name='act10')(x)
     # x = GlobalAveragePooling2D()(x)
     
     # out = Activation('softmax', name='loss')(x)
