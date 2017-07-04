@@ -50,7 +50,7 @@ def lambda_normalize(x):
     return K.l2_normalize(x, axis=1)
 
 
-def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
+def SqueezeNet(input_tensor=None, input_shape=None, weights=None): # 'orientations'):
 
     if weights not in {'orientations', None}:
         raise ValueError('The `weights` argument should be either '
@@ -113,7 +113,6 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights='orientations'):
         inputs = img_input
 
     model = Model(inputs, out, name='orieNet')
-    model.save('partly_trained.h5')
     # load weights
     if weights == 'orientations':
 

@@ -6,7 +6,6 @@ import random
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.optimizers import Adam
 from orieNet import SqueezeNet
-from snapshot import SnapshotCallbackBuilder
 from keras.applications.imagenet_utils import _obtain_input_shape
 from keras import backend as K
 from keras.layers import Input, Convolution2D, MaxPooling2D, Activation, concatenate, Dropout, GlobalAveragePooling2D, warnings
@@ -58,47 +57,31 @@ def load_jpg_images(folder, n):
             filenames.append(i)
     return images, filenames
 
-def train(run=0):
+def train(X_train, Y_train, X_test, Y_test):
     #datagen = ImageDataGenerator(rotation_range=45,width_shift_range=0.2, height_shift_range=0.2)
     #datagen.fit(X_train)
-
-    x, x_name, num_x = load_X_train_data()
-    y = load_Y_data(num_x)
-    # np.random.shuffle(X_name_of_each_train)
-
-    c = list(zip(x, y, x_name))
-
-    random.shuffle(c)
-    x_data, y_data, indeces = zip(*c)
-
-    X_train = np.array(x_data[:1166])
-    Y_train = np.array(y_data[:1166])
-    X_test = np.array(x_data[1166:])
-    Y_test = np.array(y_data[1166:])
 
     # print y
     # print y[0]
     # print y[0][0]
 
     model = SqueezeNet()
-    nb_epoch = 100
-    nb_musicians = 5
+    nb_epoch = 5
 
-    # model.load_weights("orieNet_weights.h5" % ('snap-model'+str(run)))
-    model.compile(loss='mean_squared_error', optimizer='adam', metrics=['mean_squared_error'])
+    model.load_weights('partly_trained.h5')
+    model.compile(loss='mean_squared_error', optimizer='nadam', metrics=['mean_squared_error'])
 
-    snapshot = SnapshotCallbackBuilder(nb_epoch, nb_musicians, init_lr=0.01)
     #model.fit_generator(datagen.flow(X_train, Y_train, batch_size=32),
     #                samples_per_epoch=len(X_train), nb_epoch=nb_epoch)
-    model.fit(X_train, Y_train, batch_size=2, epochs=nb_epoch, verbose=1,
-            # validation_data=(X_test, Y_test),
-            callbacks=snapshot.get_callbacks('snap-model'+str(run)))
+    model.fit(X_train, Y_train, batch_size=2, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
+    
+    model.save('partly_trained.h5')
 
     score = model.evaluate(X_test, Y_test,verbose=0)
-    print('___________________________________________')
-    print('model'+str(run)+':')
-    print('Test loss:', score[0])
-    print('error:', str((1.-score[1])*100)+'%')
+    # print('___________________________________________')
+    # print('model'+str(run)+':')
+    # print('Test loss:', score[0])
+    # print('error:', str((1.-score[1])*100)+'%')
 
     return score
 
@@ -145,7 +128,7 @@ def evaluate_ensemble(Best=True):
     print('error:', str((1.-acc.eval(session=sess))*100)+'%')
     print('--------------------------------------')
 
-def evaluate(eval_all=False):
+def evaluate(X_train, Y_train, X_test, Y_test, eval_all=False):
 
     ###evaluate models in the weights directory,
     ###defaults to only models with 'best'
@@ -163,20 +146,58 @@ def evaluate(eval_all=False):
         model.load_weights(os.path.join('weights',i))
         model.compile(loss='categorical_crossentropy', optimizer='adam',
                     metrics=['categorical_accuracy'])
-        score = model.evaluate(X_test, Y_test,
-                            verbose=0)
+        score = model.evaluate(X_test, Y_test,verbose=0)
         print('--------------------------------------')
         print('model'+str(run)+':')
         print('Test loss:', score[0])
         print('error:', str((1.-score[1])*100)+'%')
 
-#evaluate_ensemble(True)
-#evaluate(eval_all=False)
-#test_model()
+
+# To load:
+n_test = 200
+
+x, x_name, num_x = load_X_train_data()
+y = load_Y_data(num_x)
+
+X_train = np.empty((num_x-n_test,480, 640, 3))
+Y_train = np.empty((num_x-n_test,2))
+X_test = np.empty((n_test,480, 640, 3))
+Y_test = np.empty((n_test,2))
+
+shuffled_indeces = np.random.shuffle(x_name)
+
+# training_idx, test_idx = shuffled_indeces[:num_x-n_test], shuffled_indeces[n_test:]
+# X_train, X_test = x[training_idx,:], x[test_idx,:]
+# Y_train, Y_test = y[training_idx,:], y[test_idx,:]
+
+for i in range(num_x-n_test):
+    X_train[i] = x[x_name[i]]
+    Y_train[i] = y[x_name[i]]
+for i in range(num_x-n_test,n_test):
+    X_test[i] = x[x_name[i]]
+    Y_test[i] = y[x_name[i]]
+
+print'Shape of train images array: ', X_train.shape
+print'Shape of train labels: ', Y_train.shape
+print'Shape of test images array: ', X_test.shape
+print'Shape of test labels: ', Y_test.shape
+del x
+del y
+
+# # # #
+
+# c = list(zip(x, y, x_name))
+# random.shuffle(c)
+# x_data, y_data, indeces = zip(*c)
+# X_train = np.array(x_data[:1166])
+# Y_train = np.array(y_data[:1166])
+# X_test = np.array(x_data[1166:])
+# Y_test = np.array(y_data[1166:])
 
 
 # To train:
-run = 0
-while True:
-   train(run)
-run += 1
+train(X_train, Y_train, X_test, Y_test)
+
+# evaluate_ensemble(True)
+evaluate(X_train, Y_train, X_test, Y_test, eval_all=False)
+# test_model()
