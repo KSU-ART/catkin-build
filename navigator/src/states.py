@@ -309,7 +309,7 @@ class ObstacleAvoidence(smach.State):
 
         if self.opposite_dist > 0:
             self.pubRollPID.publish(oppositeVec[1])
-            self.pubPitchPID.publish(oppositeVec[0])
+            self.pubPitchPID.publish(-oppositeVec[0])
 
         return 'CheckObstacles'
         

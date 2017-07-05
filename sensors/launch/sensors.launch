@@ -10,5 +10,5 @@
 		<!-- The Port needs to change on the Odroid -->
 		<param name="_portname" value="/dev/ttyUSB0" />
 	</node>
-	<node name="sensors_start" pkg="sensors" type="start" />
+	<node name="start" pkg="sensors" type="start" />
 </launch>
