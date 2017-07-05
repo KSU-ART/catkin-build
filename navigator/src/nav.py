@@ -25,7 +25,7 @@ def state_machine_handler():
     sm_top.userdata.TouchDownTimer = 0
     sm_top.userdata.groundHeight = 0
 
-    sm_top.userdata.obstacleThreshDist = 1.5   
+    sm_top.userdata.obstacleThreshDist = 1.5
 
     # Open the container
     with sm_top:
@@ -46,7 +46,7 @@ def state_machine_handler():
                                                  'TakeOff':'TakeOff'},
                                     remapping={'normHeight':'normHeight',
                                                'altitudeDeviation':'altitudeDeviation'})
-                
+
                 smach.StateMachine.add('FindGR', FindGR(),
                                     transitions={'RandomTraversal':'RandomTraversal',
                                                  'FindGR':'FindGR',
@@ -56,9 +56,9 @@ def state_machine_handler():
                 smach.StateMachine.add('RandomTraversal', RandomTraversal(),
                                     transitions={'FindGR':'FindGR',
                                                  'TakeOff':'TakeOff'})
-            
+
             sm_CheckDownCam = smach.StateMachine(outcomes=['Obstacle', 'Null'])
-            
+
             with sm_CheckDownCam:
                 sm_CheckDownCam.userdata.GRdist = sm_top.userdata.GRdist
                 sm_CheckDownCam.userdata.GRangle = sm_top.userdata.GRangle
@@ -77,7 +77,7 @@ def state_machine_handler():
                                                'GRangle':'GRangle',
                                                'minGoalAngle':'minGoalAngle',
                                                'maxGoalAngle':'maxGoalAngle'})
-            
+
             sm_StartInteract = smach.StateMachine(outcomes=['Obstacle', 'Null'])
 
             with sm_StartInteract:
@@ -86,7 +86,7 @@ def state_machine_handler():
                 sm_StartInteract.userdata.TouchDownTimerMAX = sm_top.userdata.TouchDownTimerMAX
                 sm_StartInteract.userdata.TouchDownTimer = sm_top.userdata.TouchDownTimer
                 sm_StartInteract.userdata.groundHeight = sm_top.userdata.groundHeight
-                sm_StartInteract.userdata.normHeight = sm_top.userdata.normHeight             
+                sm_StartInteract.userdata.normHeight = sm_top.userdata.normHeight
 
                 smach.StateMachine.add('StartInteract', StartInteract(),
                                     transitions={'TouchDown':'TouchDown',
@@ -110,7 +110,7 @@ def state_machine_handler():
                                                'altitudeDeviation':'altitudeDeviation'})
 
             sm_CheckObstacles = smach.StateMachine(outcomes=['Null'])
-            
+
             with sm_CheckObstacles:
                 sm_CheckObstacles.userdata.obstacleThreshDist = sm_top.userdata.obstacleThreshDist
 
@@ -118,7 +118,7 @@ def state_machine_handler():
                                     transitions={'CheckObstacles':'CheckObstacles',
                                                  'ObstacleAvoidence':'ObstacleAvoidence'},
                                     remapping={'obstacleThreshDist':'obstacleThreshDist'})
-                
+
                 smach.StateMachine.add('ObstacleAvoidence', ObstacleAvoidence(),
                                     transitions={'CheckObstacles':'CheckObstacles'},
                                     remapping={'obstacleThreshDist':'obstacleThreshDist'})
@@ -127,7 +127,7 @@ def state_machine_handler():
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)
             smach.Concurrence.add('sm_StartInteract', sm_StartInteract)
             smach.Concurrence.add('sm_CheckObstacles', sm_CheckObstacles)
-        
+
         smach.StateMachine.add('CON', sm_con,
                                transitions={'Null':'CON',
                                             'Obstacle':'Done'})

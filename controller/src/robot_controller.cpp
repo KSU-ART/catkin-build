@@ -81,10 +81,13 @@ double robot_controller::get_roll_control(){
 double robot_controller::get_pitch_control(){
 	switch(state_mode){
 	case DownCam:
+		std::cout << "*******DownCam_pitch: " << current_down_cam_pitch << std::endl;
 		return pids.getPitchPID().calc(current_down_cam_pitch);
 	case Obstacle:
+		std::cout << "*******Obstacle_pitch: " << current_obstacle_pitch << std::endl;
 		return pids.getPitchPID().calc(current_obstacle_pitch);
 	case Yolo:
+		std::cout << "*******Yolo_pitch: " << current_yolo_pitch << std::endl;
 		return pids.getPitchPID().calc(current_yolo_pitch);
 	default:
 		return 0;
@@ -94,7 +97,6 @@ double robot_controller::get_pitch_control(){
 double robot_controller::get_yaw_control(){
 	switch(state_mode){
 	case Yolo:
-		std::cout << "*******yolo_yaw: " << current_yolo_yaw << std::endl;
 		return pids.getYawPID().calc(current_yolo_yaw);
 	default:
 		return 0;
@@ -104,6 +106,7 @@ double robot_controller::get_yaw_control(){
 void robot_controller::init_loop(){
 	// initialize target pids
 	pids.initialize_zero_target();
+	state_mode = DownCam;
 }
 
 void robot_controller::nav_loop(){
@@ -111,6 +114,7 @@ void robot_controller::nav_loop(){
 	if(state_mode != pre_state_mode){
 		switch(state_mode){
 		case DownCam:
+			// std::cout << "*************************************************" << std::endl;
 			pids.set_pitch_mode("DownCam");
 			pids.set_roll_mode("DownCam");
 			break;

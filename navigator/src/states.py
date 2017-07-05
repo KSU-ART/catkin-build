@@ -306,7 +306,7 @@ class ObstacleAvoidence(smach.State):
         oppositeVec = (self.opposite_dist * -math.cos(self.angle), self.opposite_dist * -math.sin(self.angle))
         if DEBUG:
             print("Obstacle opposite vector:", oppositeVec)
-        
+
         if self.opposite_dist > 0:
             self.pubRollPID.publish(oppositeVec[1])
             self.pubPitchPID.publish(oppositeVec[0])
