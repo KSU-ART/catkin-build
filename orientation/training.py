@@ -146,7 +146,7 @@ def train(X_train, Y_train, X_test, Y_test, b):
     #datagen.fit(X_train)
 
     model = SqueezeNet()
-    nb_epoch = 20
+    nb_epoch = 10
 
     model.load_weights('partly_trained.h5')
     model.compile(loss='mean_absolute_error', optimizer='nadam') #, metrics=['hinge'])
@@ -166,12 +166,11 @@ def train(X_train, Y_train, X_test, Y_test, b):
     for r in range(10):
         print r+1,': ', Y_train[r]
 
-    model.fit(X_train, Y_train, batch_size=(b+1)*30, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
+    model.fit(X_train, Y_train, batch_size=30, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
     
     model.save('partly_trained.h5')
 
     score = model.evaluate(X_test, Y_test)
-    print('___________________________________________')
     print('model'+str(b+1)+':')
     print 'shape of score: ', score.shape
     # print('Test loss:', score[0])
@@ -224,7 +223,7 @@ n_test = int(percentage_test*batch_size)
 print 'validation data size: ', n_test
 
 while (b+1)*batch_size < x_tot:
-    print 'Phase ', b
+    print 'b = ', b
     X_train, X_test = load_X_train_data(n_test, shuffled_indices, x_tot, batch_size, b, remaining=False)
     print 'First 10 values in array of shuffled indeces: ', shuffled_indices[0:9]
 
@@ -234,8 +233,8 @@ while (b+1)*batch_size < x_tot:
     score = train(X_train, Y_train, X_test, Y_test, b)
     b = b+1
 b=b-1
-n_test = int(percentage*(x_tot- (b)*batch_size))
-print 'Last phase ', b+1
+n_test = int(percentage_test*(x_tot- (b)*batch_size))
+print 'Last phase, b+1 = ', b+1
 print 'Mini-batch size: ', x_tot - (b)*batch_size
 print 'validation data size: ', n_test
 X_train, X_test = load_X_train_data(n_test, shuffled_indices, x_tot, (x_tot - (b)*batch_size), b, remaining=True)
