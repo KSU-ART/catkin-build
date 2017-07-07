@@ -14,6 +14,7 @@ sq1x1 = "squeeze1x1"
 exp1x1 = "expand1x1"
 exp3x3 = "expand3x3"
 relu = "relu_"
+tanh = "tanh_"
 cwd = os.getcwd()
 # WEIGHTS_PATH = os.path.join(cwd, 'squeezenet_weights_tf_dim_ordering_tf_kernels.h5')
 WEIGHTS_PATH = os.path.join(cwd, 'partly_trained.h5')
@@ -42,9 +43,8 @@ def fire_module(x, fire_id, squeeze=16, expand=64):
 
 
 # Original SqueezeNet from paper.
-
 def lambda_normalize_shape(x):
-    return (x.shape[0], 2)
+    return K.variable([x.shape[0], 2])
 
 def lambda_normalize(x):
     return K.l2_normalize(x, axis=1)
@@ -91,7 +91,7 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=False):
     x = fire_module(x, fire_id=9, squeeze=64, expand=256)
     x = Dropout(0.5, name='drop9')(x)
 
-    # x = Convolution2D(100, (1, 1), padding='valid', name='conv10')(x)
+    # x = Convolution2D(1000, (1, 1), padding='valid', name='conv10')(x)
     # x = Activation('tanh', name='act10')(x)
     # x = GlobalAveragePooling2D()(x)
     
@@ -101,7 +101,7 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=False):
 
     x = Convolution2D(2, (1, 1), padding='valid', name='conv2')(x)
     x = GlobalAveragePooling2D()(x)
-    x = Activation("tanh", name="nuLoss")(x)
+    # x = Activation("tanh", name="nuLoss")(x)
     out = Lambda(lambda_normalize, name='unit_vector_normalization')(x)
 
 
@@ -115,13 +115,11 @@ def SqueezeNet(input_tensor=None, input_shape=None, weights=False):
     model = Model(inputs, out, name='orieNet')
     # load weights
     if weights:
-
         model.load_weights(WEIGHTS_PATH)
         if K.backend() == 'theano':
             layer_utils.convert_all_kernels_in_model(model)
 
         if K.image_data_format() == 'channels_first':
-
             if K.backend() == 'tensorflow':
                 warnings.warn('You are using the TensorFlow backend, yet you '
                               'are using the Theano '

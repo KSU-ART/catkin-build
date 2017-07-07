@@ -15,32 +15,25 @@ from keras.utils import get_file
 from keras.utils import layer_utils
 from keras.preprocessing import image
 
-def load_X_train_data(n_test):
+def load_X_train_data(n_test, shuffled_indeces, x_tot, batch_size, b, remaining):
     # Chose path to the folder containing the training data in .jpg format:
     # train_data_path = '/media/mat/Seagate\ Backup\ Plus\ Drive/img_train'
 
-    train_data_path = os.path.join(os.getcwd(), 'img_train')
-    x_tot = len([name for name in os.listdir(train_data_path) if os.path.isfile(os.path.join(train_data_path, name))])
-    print 'The dataset contains ', x_tot, 'images'
-
-    shuffled_indeces = np.arange(x_tot)
-    np.random.shuffle(shuffled_indeces)
-
     print 'Loading Train Data...'
-    X_train, X_test = load_jpg_images(train_data_path, shuffled_indeces, x_tot, n_test)
+    X_train, X_test = load_jpg_images(train_data_path, shuffled_indeces, x_tot, n_test, batch_size, b, remaining)
 
     print 'Shape of train images array: ', X_train.shape
     print 'Shape of test images array: ', X_test.shape
-    return X_train, X_test, shuffled_indeces, x_tot
+    return X_train, X_test
 
-def load_Y_data(shuffled_indeces, num_x, n_test):
+def load_Y_data(shuffled_indeces, num_x, n_test, batch_size, b, remaining):
     fname = 'units.txt'
     # json_path = '/media/mat/Seagate Backup Plus Drive'
-
-    with open(fname) as outfile:
-        units = json.load(outfile)
-        entries = len(units)
-        print 'The json file contains ', entries, 'entries'
+    if b == 0:
+        with open(fname) as outfile:
+            units = json.load(outfile)
+            entries = len(units)
+            print 'The json file contains ', entries, 'entries'
     # print units['0'][0]
     if num_x != entries:
         if num_x > entries:
@@ -50,43 +43,80 @@ def load_Y_data(shuffled_indeces, num_x, n_test):
             print 'Error: There are ', num_x,' pictures in the dataset, but only ', entries, ' entries in the json file'
             return
     if num_x == entries:
-        Y_train = np.empty((num_x-n_test,2))
-        Y_test = np.empty((n_test,2))
+        if remaining:
+            Y_train = np.empty((batch_size-n_test,2))
+            Y_test = np.empty((n_test,2))
 
-        for i in range(x_tot-n_test):
-            entry = units[str(shuffled_indeces[i])]
-            if entry is not None:
-                Y_train[i] = entry
-            else:
-                print 'while loading train labels, found a None at position ', shuffled_indeces[i], 'in the units.txt file'
-                return
-        for i in range(x_tot-n_test,n_test):
-            entry = units[str(shuffled_indeces[i])]
-            if entry is not None:
-                Y_test[i] = entry
-            else:
-                print 'while loading test labels, found a None at position ', shuffled_indeces[i], 'in the units.txt file'
-                return
-        print'Shape of train labels: ', Y_train.shape
-        print'Shape of test labels: ', Y_test.shape
+            for i in range(b*500, batch_size-n_test):
+                entry = units[str(shuffled_indeces[i])]
+                if entry is not None:
+                    Y_train[i] = entry
+                else:
+                    print 'while loading train labels, found a None at position ', shuffled_indeces[i], 'in the units.txt file'
+                    return
+            for i in range(b*500 + batch_size - n_test, n_test):
+                entry = units[str(shuffled_indeces[i])]
+                if entry is not None:
+                    Y_test[i] = entry
+                else:
+                    print 'while loading test labels, found a None at position ', shuffled_indeces[i], 'in the units.txt file'
+                    return
+            print'Shape of train labels: ', Y_train.shape
+            print'Shape of test labels: ', Y_test.shape
+
+        else:
+            Y_train = np.empty((batch_size-n_test,2))
+            Y_test = np.empty((n_test,2))
+
+            for i in range(b*batch_size, batch_size-n_test):
+                entry = units[str(shuffled_indeces[i])]
+                if entry is not None:
+                    Y_train[i] = entry
+                else:
+                    print 'while loading train labels, found a None at position ', shuffled_indeces[i], 'in the units.txt file'
+                    return
+            for i in range(b*batch_size + batch_size - n_test, n_test):
+                entry = units[str(shuffled_indeces[i])]
+                if entry is not None:
+                    Y_test[i] = entry
+                else:
+                    print 'while loading test labels, found a None at position ', shuffled_indeces[i], 'in the units.txt file'
+                    return
+            print'Shape of train labels: ', Y_train.shape
+            print'Shape of test labels: ', Y_test.shape
     return Y_train, Y_test
 
-def load_jpg_images(folder, shuffled_indeces, x_tot, n_test):
-    X_train = np.empty((x_tot-n_test,480, 640, 3))
+def load_jpg_images(folder, shuffled_indeces, x_tot, n_test, batch_size, b, remaining):
+    X_train = np.empty((batch_size-n_test,480, 640, 3))
     X_test = np.empty((n_test,480, 640, 3))
 
-    for i in range(x_tot-n_test):
-        img = np.array(PIL.Image.open(os.path.join(folder, str(shuffled_indeces[i])+".jpg")))/255
-        if img is not None:
-            X_train[i] = img
-        else:
-            print 'while loading test images, found a None'
-    for i in range(x_tot-n_test,n_test):
-        img = np.array(PIL.Image.open(os.path.join(folder, str(shuffled_indeces[i])+".jpg")))/255
-        if img is not None:
-            X_test[i] = img
-        else:
-            print 'while loading test images, found a None'
+    if remaining:
+        for i in range(b*500, batch_size-n_test):
+            img = np.array(PIL.Image.open(os.path.join(folder, str(shuffled_indeces[i])+".jpg")))/255
+            if img is not None:
+                X_train[i] = img
+            else:
+                print 'while loading test images, found a None'
+        for i in range(b*500 + batch_size - n_test, n_test):
+            img = np.array(PIL.Image.open(os.path.join(folder, str(shuffled_indeces[i])+".jpg")))/255
+            if img is not None:
+                X_test[i] = img
+            else:
+                print 'while loading test images, found a None'
+    else:
+        for i in range(b*batch_size, batch_size-n_test):
+            img = np.array(PIL.Image.open(os.path.join(folder, str(shuffled_indeces[i])+".jpg")))/255
+            if img is not None:
+                X_train[i] = img
+            else:
+                print 'while loading test images, found a None'
+        for i in range(b*batch_size + batch_size - n_test, n_test):
+            img = np.array(PIL.Image.open(os.path.join(folder, str(shuffled_indeces[i])+".jpg")))/255
+            if img is not None:
+                X_test[i] = img
+            else:
+                print 'while loading test images, found a None'
+    
     return X_train, X_test
 
 def train(X_train, Y_train, X_test, Y_test):
@@ -96,14 +126,15 @@ def train(X_train, Y_train, X_test, Y_test):
     model = SqueezeNet()
     nb_epoch = 5
 
-    # model.load_weights('partly_trained.h5')
+    model.load_weights('partly_trained.h5')
     model.compile(loss='mean_absolute_error', optimizer='nadam') #, metrics=['hinge'])
 
     #model.fit_generator(datagen.flow(X_train, Y_train, batch_size=32),
     #                samples_per_epoch=len(X_train), nb_epoch=nb_epoch)
-    model.fit(X_train, Y_train, batch_size=2, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
+    print(Y_train.shape)
+    model.fit(X_train, Y_train, batch_size=20, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
     
-    model.save('partly_trained_1.h5')
+    model.save('partly_trained.h5')
 
     score = model.evaluate(X_test, Y_test)
     print('___________________________________________')
@@ -112,6 +143,67 @@ def train(X_train, Y_train, X_test, Y_test):
     print('error:', str((1.-score[1])*100)+'%')
 
     return score
+
+def evaluate(X_train, Y_train, X_test, Y_test, eval_all=False):
+
+    ###evaluate models in the weights directory,
+    ###defaults to only models with 'best'
+
+    # for i in os.listdir('weights'):
+    #     if '.h5' in i:
+    #         if eval_all:
+    #             evaluations.append(i)
+    #         else:
+    #             if 'Best' in i:
+    #                 evaluations.append(i)
+    # print(evaluations)
+    model = SqueezeNet()
+    # for run, i in enumerate(evaluations):
+    model.load_weights(os.path.join('weights',i))
+    model.compile(loss='categorical_crossentropy', optimizer='adam',
+                metrics=['categorical_accuracy'])
+    score = model.evaluate(X_test, Y_test,verbose=0)
+    print('--------------------------------------')
+    print('model'+str(run)+':')
+    print('Test loss:', score[0])
+    print('error:', str((1.-score[1])*100)+'%')
+
+
+# To load:
+percentage_test = 0.1
+train_data_path = os.path.join(os.getcwd(), 'img_train')
+x_tot = len([name for name in os.listdir(train_data_path) if os.path.isfile(os.path.join(train_data_path, name))])
+print 'The dataset contains ', x_tot, 'images'
+
+shuffled_indeces = np.arange(x_tot)
+np.random.shuffle(shuffled_indeces)
+
+b = 0
+batch_size = 300
+n_test = int(percentage_test*batch_size)
+while (b+1)*batch_size < x_tot:
+    X_train, X_test = load_X_train_data(n_test, shuffled_indeces, x_tot, batch_size, b, remaining=False)
+    print 'First 100 values in array of shuffled indeces: ', shuffled_indeces[0:99]
+
+    Y_train, Y_test = load_Y_data(shuffled_indeces, x_tot, n_test, batch_size, b, remaining=False)
+
+    # To train:
+    score = train(X_train, Y_train, X_test, Y_test)
+    b = b+1
+b=b-1
+n_test = int(percentage*(x_tot- (b)*batch_size))
+X_train, X_test = load_X_train_data(n_test, shuffled_indeces, x_tot, (x_tot - (b)*batch_size), b, remaining=True)
+print 'First 100 values in array of shuffled indeces: ', shuffled_indeces[0:99]
+
+Y_train, Y_test = load_Y_data(shuffled_indeces, x_tot, n_test, batch_size, b, remaining=True)
+
+# To train:
+score = train(X_train, Y_train, X_test, Y_test)
+# evaluate_ensemble(True)
+evaluate(X_train, Y_train, X_test, Y_test, eval_all=False)
+# test_model()
+
+
 
 # def evaluate_ensemble(Best=True):
     
@@ -155,43 +247,3 @@ def train(X_train, Y_train, X_test, Y_test):
 #     print('Test loss:', loss.eval(session=sess))
 #     print('error:', str((1.-acc.eval(session=sess))*100)+'%')
 #     print('--------------------------------------')
-
-def evaluate(X_train, Y_train, X_test, Y_test, eval_all=False):
-
-    ###evaluate models in the weights directory,
-    ###defaults to only models with 'best'
-
-    # for i in os.listdir('weights'):
-    #     if '.h5' in i:
-    #         if eval_all:
-    #             evaluations.append(i)
-    #         else:
-    #             if 'Best' in i:
-    #                 evaluations.append(i)
-    # print(evaluations)
-    model = SqueezeNet()
-    # for run, i in enumerate(evaluations):
-    model.load_weights(os.path.join('weights',i))
-    model.compile(loss='categorical_crossentropy', optimizer='adam',
-                metrics=['categorical_accuracy'])
-    score = model.evaluate(X_test, Y_test,verbose=0)
-    print('--------------------------------------')
-    print('model'+str(run)+':')
-    print('Test loss:', score[0])
-    print('error:', str((1.-score[1])*100)+'%')
-
-
-# To load:
-n_test = 200
-
-X_train, X_test, shuffled_indeces, x_tot = load_X_train_data(n_test)
-print 'First 100 values in array of shuffled indeces: ', shuffled_indeces[0:99]
-
-Y_train, Y_test = load_Y_data(shuffled_indeces, x_tot, n_test)
-
-# To train:
-score = train(X_train, Y_train, X_test, Y_test)
-
-# evaluate_ensemble(True)
-evaluate(X_train, Y_train, X_test, Y_test, eval_all=False)
-# test_model()

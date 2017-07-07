@@ -110,7 +110,7 @@ coords = [(0,0),(0,0)]
 
 dirname_read = os.getcwd() + "/videos_train"
 dirname_write = os.getcwd() + "/img_train"
-video_name = 'video7.mp4'
+video_name = 'video12.mp4'
 
 tot_pics = len([name for name in os.listdir(dirname_write) if os.path.isfile(os.path.join(dirname_write, name))])
 print ('the current number of  pictures in the dataset is ', tot_pics)
@@ -129,14 +129,18 @@ if vidcap.isOpened():
 else:
     print(video_name, ' not loaded')
 
-# vid_frames = number_of_frames(vidcap)
-# video_to_frames(vidcap, dirname_write, vid_frames, tot_pics, run)
-# vidcap.release()
 
-# tot_new_pics = len([name for name in os.listdir(dirname_write) if os.path.isfile(os.path.join(dirname_write, name))])
-# print 'the current number of pictures in the dataset after processing', video_name, 'is ', tot_new_pics
 
-# manipulate_images_from_folder(dirname_write, width, height, tot_new_pics, start)
+# # # uncomment here to label # # #
 
-# with open('units.txt', 'w') as outfile:
-#     json.dump(units, outfile, indent = 4)
+vid_frames = number_of_frames(vidcap)
+video_to_frames(vidcap, dirname_write, vid_frames, tot_pics, run)
+vidcap.release()
+
+tot_new_pics = len([name for name in os.listdir(dirname_write) if os.path.isfile(os.path.join(dirname_write, name))])
+print 'the current number of pictures in the dataset after processing', video_name, 'is ', tot_new_pics
+
+manipulate_images_from_folder(dirname_write, width, height, tot_new_pics, start)
+
+with open('units.txt', 'w') as outfile:
+    json.dump(units, outfile, indent = 4)
