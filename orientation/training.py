@@ -120,7 +120,7 @@ def load_jpg_images(folder, shuffled_indices, x_tot, n_test, batch_size, b, rema
                 print 'while loading test images, found a None'
                 return
     else:
-        pcount = 0
+        p_count = 0
         for i in range(x_tot - batch_size, x_tot - n_test):
             img = cv2.imread(os.path.join(folder, str(shuffled_indices[i])+".jpg"))
             if img is not None:
@@ -156,17 +156,15 @@ def train(X_train, Y_train, X_test, Y_test, b):
     print 'Info: '
     print 'Shape of test image array: ', X_test.shape
     print 'Shape of test label array: ', Y_test.shape
-    print 'first 10 values of test labels: '
-    for r in range(10):
-        print r+1,': ', Y_test[r]
+    print 'first 10 values of test labels: ', Y_test[:9]
+    print 'last 10 values of test labels: ', Y_test[-9:]
 
     print 'Shape of train image array: ', X_train.shape
     print 'Shape of train label array: ', Y_train.shape
-    print 'first 10 values of test labels: '
-    for r in range(10):
-        print r+1,': ', Y_train[r]
+    print 'first 10 values of train labels: ', Y_train[:9]
+    print 'last 10 values of train labels: ', Y_test[-9:]
 
-    model.fit(X_train, Y_train, batch_size=30, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
+    model.fit(X_train, Y_train, batch_size=40, epochs=nb_epoch, verbose=1,validation_data=(X_test, Y_test))
     
     model.save('partly_trained.h5')
 
@@ -217,7 +215,7 @@ for r in range(10):
 
 
 b = 0
-batch_size = 300
+batch_size = 400
 print 'Mini-batch size: ', batch_size
 n_test = int(percentage_test*batch_size)
 print 'validation data size: ', n_test

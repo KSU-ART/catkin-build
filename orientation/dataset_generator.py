@@ -110,10 +110,10 @@ coords = [(0,0),(0,0)]
 
 dirname_read = os.getcwd() + "/videos_train"
 dirname_write = os.getcwd() + "/img_train"
-video_name = 'video12.mp4'
+video_name = 'video16.mp4'
 
 tot_pics = len([name for name in os.listdir(dirname_write) if os.path.isfile(os.path.join(dirname_write, name))])
-print ('the current number of  pictures in the dataset is ', tot_pics)
+print 'the current number of  pictures in the dataset is ', tot_pics
 # print (os.path.join(dirname_read,str(video_name)))
 
 vidcap = cv2.VideoCapture(os.path.join(dirname_read,str(video_name)))
@@ -127,8 +127,7 @@ if vidcap.isOpened():
     print 'height: ', height
     # (720, 960, 3)
 else:
-    print(video_name, ' not loaded')
-
+    print video_name, ' not loaded'
 
 
 # # # uncomment here to label # # #
