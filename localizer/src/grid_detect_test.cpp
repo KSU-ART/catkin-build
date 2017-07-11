@@ -30,7 +30,7 @@ string corners_window = "Corners detected";
 /// Function header
 void cornerHarris_demo( int, void* );
 
-void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
+void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255), int thickness = 1)
 {
     if(line[1]!=0)
     {
@@ -38,11 +38,11 @@ void drawLine(Vec2f line, Mat &img, Scalar rgb = CV_RGB(0,0,255))
 
         float c = line[0]/sin(line[1]);
 
-        cv::line(img, Point(0, c), Point(img.size().width, m*img.size().width+c), rgb);
+        cv::line(img, Point(0, c), Point(img.size().width, m*img.size().width+c), rgb, thickness);
     }
     else
     {
-        cv::line(img, Point(line[0], 0), Point(line[0], img.size().height), rgb);
+        cv::line(img, Point(line[0], 0), Point(line[0], img.size().height), rgb, thickness);
     }
 
 }
@@ -191,14 +191,71 @@ void findIntersectLines(vector<Vec2f> *lines, int angle, vector<Vec2f> *intersec
 	}
 }
 
+/// counts the number of grid pixels on either side of each line
+/// if num of pixels is less thean maxOverhangThresh, then it is considered an edge line
+/// These lines will also take a buffer from the edge of the image by calculating the area of either side of the line
+/// if the area is larger than the minBufferArea, then it will be eligable for an edge line
+/// lineOffset is the offset on either side the area and counting of grid pixels will start
+void findEdges(vector<Vec2f> *lines, Mat &img, vector<Vec3f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset)
+{
+	vector<Vec2f>::iterator current;
+    for(current=lines->begin();current!=lines->end();current++)
+	{
+		float p = (*current)[0];
+		float theta = (*current)[1];
+
+		float negArea = 0;
+		float posArea = 0;
+
+		float negGridArea = 0;
+		float posGridArea = 0;
+
+		for(int y=0;y<img.size().height;y++)
+		{
+			uchar *row = img.ptr(y);
+			for(int x=0;x<img.size().width;x++)
+			{
+				// row[x] is the element value
+
+				// find if the current coordinate is in the positive delta area
+				if(x*cos(theta)+y*sin(theta) > p + lineOffset){
+					posArea++;
+					if(row[x] >= 128){
+						posGridArea++;
+					}
+				}
+
+				// find if the current coordinate is in the negative delta area
+				if(x*cos(theta)+y*sin(theta) < p - lineOffset){
+					negArea++;
+					if(row[x] >= 128){
+						negGridArea++;
+					}
+				}
+			}
+		}
+		// check for minBufferArea
+		if(negArea > minBufferArea && posArea > minBufferArea){
+			if(posGridArea < maxOverhangThresh){
+				edges->push_back(Vec3f(p, theta, 1));
+			}
+			else if(negGridArea < maxOverhangThresh){
+				edges->push_back(Vec3f(p, theta, 0));
+			}
+		}
+	}
+}
+
 /// pre: lines of theta ond rho
 /// post: merges the parallel lines together
 void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
 {
+	// double angleThresh = 10;
+	double mergeThresh = 64;
 	vector<Vec2f>::iterator current;
     for(current=lines->begin();current!=lines->end();current++)
     {
-		if((*current)[0]==0 && (*current)[1]==-100) 
+		if((*current)[0]<-99 && (*current)[1]<-99)
 			continue;
 		float p1 = (*current)[0];
         float theta1 = (*current)[1];
@@ -206,61 +263,65 @@ void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
         Point pt1current, pt2current;
         if(theta1>CV_PI*45/180 && theta1<CV_PI*135/180)
         {
-            pt1current.x=0;
-
+            pt1current.x = 0;
             pt1current.y = p1/sin(theta1);
 
-            pt2current.x=img.size().width;
-            pt2current.y=-pt2current.x/tan(theta1) + p1/sin(theta1);
+            pt2current.x = img.size().width;
+            pt2current.y = -pt2current.x/tan(theta1) + p1/sin(theta1);
         }
         else
         {
-            pt1current.y=0;
+            pt1current.y = 0;
+            pt1current.x = p1/cos(theta1);
 
-            pt1current.x=p1/cos(theta1);
-
-            pt2current.y=img.size().height;
-            pt2current.x=-pt2current.y/tan(theta1) + p1/cos(theta1);
+            pt2current.y = img.size().height;
+            pt2current.x = -(pt2current.y-p1/sin(theta1))*tan(theta1);
 
         }
         
         vector<Vec2f>::iterator pos;
-        for(pos=lines->begin();pos!=lines->end();pos++)
-        {
+        for(pos=lines->begin();pos!=lines->end();pos++){
+			if((*pos)[0]<-99 && (*pos)[1]<-99) 
+				continue;
             if(*current==*pos) 
 				continue;
-			if(fabs((*pos)[0]-(*current)[0])<20 && fabs((*pos)[1]-(*current)[1])<CV_PI*10/180)
-            {
-                float p = (*pos)[0];
-                float theta = (*pos)[1];
-                
-                Point pt1, pt2;
-                if((*pos)[1]>CV_PI*45/180 && (*pos)[1]<CV_PI*135/180)
-                {
-                    pt1.x=0;
-                    pt1.y = p/sin(theta);
-                    pt2.x=img.size().width;
-                    pt2.y=-pt2.x/tan(theta) + p/sin(theta);
-                }
-                else
-                {
-                    pt1.y=0;
-                    pt1.x=p/cos(theta);
-                    pt2.y=img.size().height;
-                    pt2.x=-pt2.y/tan(theta) + p/cos(theta);
-                }
-                if( ((double)(pt1.x-pt1current.x)*(pt1.x-pt1current.x) + (pt1.y-pt1current.y)*(pt1.y-pt1current.y)<64*64) &&
-					((double)(pt2.x-pt2current.x)*(pt2.x-pt2current.x) + (pt2.y-pt2current.y)*(pt2.y-pt2current.y)<64*64) )
-                {
-                    // Merge the two
-                    (*current)[0] = ((*current)[0]+(*pos)[0])/2;
+			
+			float p = (*pos)[0];
+			float theta = (*pos)[1];
+			
+			Point pt1, pt2;
+			if((*pos)[1]>CV_PI*45/180 && (*pos)[1]<CV_PI*135/180)
+			{
+				pt1.x = 0;
+				pt1.y = p/sin(theta);
 
-                    (*current)[1] = ((*current)[1]+(*pos)[1])/2;
-
-                    (*pos)[0]=0;
-                    (*pos)[1]=-100;
-                }
+				pt2.x = img.size().width;
+				pt2.y = -pt2.x/tan(theta) + p/sin(theta);
 			}
+			else
+			{
+				pt1.y = 0;
+				pt1.x = p/cos(theta);
+
+				pt2.y = img.size().height;
+				pt2.x = -(pt2.y-p/sin(theta))*tan(theta);
+			}
+			if( ((double)(pt1.x-pt1current.x)*(pt1.x-pt1current.x) + (pt1.y-pt1current.y)*(pt1.y-pt1current.y)<mergeThresh*mergeThresh) &&
+				((double)(pt2.x-pt2current.x)*(pt2.x-pt2current.x) + (pt2.y-pt2current.y)*(pt2.y-pt2current.y)<mergeThresh*mergeThresh) )
+			{
+				// Merge the two
+				(*current)[0] = ((*current)[0]+(*pos)[0])/2;
+				(*current)[1] = ((*current)[1]+(*pos)[1])/2;
+
+				(*pos)[0]=-100;
+				(*pos)[1]=-100;
+			}
+		}
+	}
+	// remove unwanted lines
+	for(int i = lines->size()-1; i >= 0; i--){
+		if((*lines)[i][0] < -99 && (*lines)[i][1] < -99){
+			lines->erase(lines->begin()+i);
 		}
 	}
 }
@@ -281,13 +342,14 @@ void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 		return;
 	}
 
-	src = cv_ptr->image; 
+	src = cv_ptr->image;
 	
-	Rect croping(18, 36, src.size().width- 58, src.size().height- 85);
-	src = src(croping);
+	// Rect croping(18, 36, src.size().width- 58, src.size().height- 85);
+	// src = src(croping);
 	
 	//imshow( source_window, src );
 	cvtColor( src, src, CV_BGR2GRAY );
+	// imshow( source_window, src );
 	cornerHarris_demo( 0, 0 );
 
 	waitKey(10);
@@ -301,7 +363,7 @@ int main( int argc, char** argv )
 
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("/usb_cam/image_rect_color", 1, chatterCallback);
+	ros::Subscriber sub = n.subscribe("/usb_cam_1/image_rect_color", 1, chatterCallback);
 	
 	velocity[0] = 0;
 	velocity[1] = 0;
@@ -315,8 +377,9 @@ int main( int argc, char** argv )
 	namedWindow( corners_window );
 	createTrackbar( "Threshold: ", source_window, &thresh, max_thresh, cornerHarris_demo );
 
-	ros::MultiThreadedSpinner spinner(6);
-	spinner.spin();
+	// ros::MultiThreadedSpinner spinner(6);
+	// spinner.spin();
+	ros::spin();
 
 	return(0);
 }
@@ -338,7 +401,7 @@ void cornerHarris_demo( int, void* )
 	/// Detecting corners
 	GaussianBlur(src, dst, Size(11,11), 0);
 	bitwise_not(dst, dst);
-	adaptiveThreshold(dst, dst, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, blockSize, 2);
+	adaptiveThreshold(dst, dst, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, blockSize, 2);
 	bitwise_not(dst, dst);
 	Mat kernel = (Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     dilate(dst, dst2, kernel);
@@ -380,10 +443,13 @@ void cornerHarris_demo( int, void* )
             }
         }
 	}
-    
+	
     vector<Vec2f> lines;
-    HoughLines(dst2, lines, 1, CV_PI/180, 200);
+    HoughLines(dst2, lines, 1, CV_PI/180, 210);
 	mergeRelatedLines(&lines, dst2);
+
+	vector<Vec3f> edges;
+	findEdges(&lines, dst2, &edges, 200, 6400, 20);
 	
 	// count intersections
 	vector<Vec2f> intersections;
@@ -399,6 +465,11 @@ void cornerHarris_demo( int, void* )
     {
         drawLine(lines[i], dst2, CV_RGB(0,0,128));
     }
+	// for edges
+	for(int i=0;i<edges.size();i++)
+    {
+        drawLine(Vec2f(edges[i][0], edges[i][1]), dst2, CV_RGB(0,0,128), 3);
+    }
     
     for (int i = 0; i < intersections.size(); i++)
 	{
@@ -412,15 +483,6 @@ void cornerHarris_demo( int, void* )
 		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
 		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 100, Scalar(alpha, alpha, alpha));
 	}
-    
-	//cornerHarris( dst, dst, blockSize, apertureSize, (double)k/100, BORDER_DEFAULT );
-
-	/// Normalizing
-	//normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
-	//convertScaleAbs( dst_norm, dst_norm_scaled );
-	
-	///inrage thresholding
-	//inRange(dst_norm, Scalar(thresh, thresh, thresh), Scalar(255, 255, 255), dst_norm_scaled);
 	
 	/// Post Operations
 	preIntersects->clear();
@@ -429,10 +491,14 @@ void cornerHarris_demo( int, void* )
 		preIntersects->push_back((*curIntersects)[i]);
 	}
 	/// Showing the result
+	// cout << "result " << countNonZero(src) << endl;
 	
 	imshow( source_window, src );
+	// cout << "result2 " << countNonZero(src) << endl;
 	imshow( corners_window, dst2 );
-	waitKey(10);
+
+	// cout << "waitkey" << endl;
+	waitKey(30);
 }
 
 

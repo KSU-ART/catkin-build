@@ -5,7 +5,8 @@
 		<param name="pixel_format" value="yuyv" />
 		<param name="camera_frame_id" value="cam_1_frame" />
 		<param name="io_method" value="mmap"/> 
-		
+		<param name="camera_info_url" value="file://$(find sensors)/cam_data/cam_1.yml"/>
+	
 		<param name="framerate" value="30"/>
 		<param name="contrast" value="32"/>
 		<param name="brightness" value="10"/>
