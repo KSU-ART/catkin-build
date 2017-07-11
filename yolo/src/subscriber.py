@@ -23,7 +23,7 @@ class videosub():
         cv2.imshow('frame', self.image)
         cv2.waitKey(33)
 
-    def getImage(self):
+    def getProcessedImage(self):
         self.newImgAvailable = False
         return np.expand_dims(np.array(cv2.resize(self.image, (416, 416)), dtype='float32')*0.003921568, axis=0)
 
