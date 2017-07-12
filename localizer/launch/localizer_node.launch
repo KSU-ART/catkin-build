@@ -1,3 +1,0 @@
-<launch>
-	<node name="localizer_node" pkg="localizer" type="localizer_node" />
-</launch>	

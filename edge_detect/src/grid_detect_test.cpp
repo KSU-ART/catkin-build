@@ -8,10 +8,12 @@
 #include <cv_bridge/cv_bridge.h>
 #include <string>
 #include <vector>
+#include <math.h>
+
+#define PI 3.14159265
 
 using namespace cv;
 using namespace std;
-namespace enc = sensor_msgs::image_encodings;
 
 /// Global variables
 Mat src;
@@ -280,6 +282,8 @@ void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
         }
         
         vector<Vec2f>::iterator pos;
+        vector<Vec4f> merges;
+		merges.push_back(Vec4f(pt1current.x, pt1current.y, pt2current.x, pt2current.y));
         for(pos=lines->begin();pos!=lines->end();pos++){
 			if((*pos)[0]<-99 && (*pos)[1]<-99) 
 				continue;
@@ -310,13 +314,42 @@ void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
 				((double)(pt2.x-pt2current.x)*(pt2.x-pt2current.x) + (pt2.y-pt2current.y)*(pt2.y-pt2current.y)<mergeThresh*mergeThresh) )
 			{
 				// Merge the two
-				(*current)[0] = ((*current)[0]+(*pos)[0])/2;
-				(*current)[1] = ((*current)[1]+(*pos)[1])/2;
+				merges.push_back(Vec4f(pt1.x, pt1.y, pt2.x, pt2.y));
+				// (*current)[0] = ((*current)[0]+(*pos)[0])/2;
+				// (*current)[1] = ((*current)[1]+(*pos)[1])/2;
 
 				(*pos)[0]=-100;
 				(*pos)[1]=-100;
 			}
 		}
+		// merge lines
+		float count = 0;
+		Point average1(0,0);
+		Point average2(0,0);
+        for(vector<Vec4f>::iterator i=merges.begin(); i!=merges.end(); i++){
+			average1.x += (*i)[0];
+			average1.y += (*i)[1];
+
+			average2.x += (*i)[2];
+			average2.y += (*i)[3];
+			
+			count++;
+		}
+		average1.x /= count;
+		average1.y /= count;
+		average2.x /= count;
+		average2.y /= count;
+
+		float newP, newTheta;
+		if(average2.y - average1.y < 0.000001){
+			newTheta = PI/2;
+		}
+		else{
+			newTheta = atan2((average1.x - average2.x), (average2.y - average1.y));
+		}
+		newP = average1.x*cos(newTheta) + average1.y*sin(newTheta);
+		(*current)[0] = newP;
+		(*current)[1] = newTheta;
 	}
 	// remove unwanted lines
 	for(int i = lines->size()-1; i >= 0; i--){
@@ -334,7 +367,7 @@ void chatterCallback(const sensor_msgs::ImageConstPtr& msg)
 	cv_bridge::CvImagePtr cv_ptr;
 	try
 	{
-		cv_ptr = cv_bridge::toCvCopy(msg, enc::BGR8);
+		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
 	}
 	catch (cv_bridge::Exception& e)
 	{
@@ -449,17 +482,17 @@ void cornerHarris_demo( int, void* )
 	mergeRelatedLines(&lines, dst2);
 
 	vector<Vec3f> edges;
-	findEdges(&lines, dst2, &edges, 200, 6400, 20);
+	findEdges(&lines, dst2, &edges, 150, 32000, 20);
 	
 	// count intersections
-	vector<Vec2f> intersections;
-	findIntersectLines(&lines, intersectAngle, &intersections);
+	// vector<Vec2f> intersections;
+	// findIntersectLines(&lines, intersectAngle, &intersections);
 	
-	curIntersects->clear();
-	avaragePoint(&intersections, thresh, 0, curIntersects);
+	// curIntersects->clear();
+	// avaragePoint(&intersections, thresh, 0, curIntersects);
 	
-	distanceTraveled(preIntersects, curIntersects, current_time.toSec()-prev_time.toSec());
-	cout << "pos in pixels/sec:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
+	// distanceTraveled(preIntersects, curIntersects, current_time.toSec()-prev_time.toSec());
+	// cout << "pos in pixels/sec:\nX:" << pos[0] << "\nY:" << pos[1] << endl; 
 	
     for(int i=0;i<lines.size();i++)
     {
@@ -471,25 +504,25 @@ void cornerHarris_demo( int, void* )
         drawLine(Vec2f(edges[i][0], edges[i][1]), dst2, CV_RGB(0,0,128), 3);
     }
     
-    for (int i = 0; i < intersections.size(); i++)
-	{
-		int alpha = 128;
-		circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(alpha, alpha, alpha));
-	}
+    // for (int i = 0; i < intersections.size(); i++)
+	// {
+	// 	int alpha = 128;
+	// 	circle(dst2, Point(intersections[i][0],intersections[i][1]), 10, Scalar(alpha, alpha, alpha));
+	// }
 	
-    for (int i = 0; i < curIntersects->size(); i++)
-	{
-		int alpha = 0;
-		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
-		circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 100, Scalar(alpha, alpha, alpha));
-	}
+    // for (int i = 0; i < curIntersects->size(); i++)
+	// {
+	// 	int alpha = 0;
+	// 	circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 3, Scalar(alpha, alpha, alpha), 5);
+	// 	circle(src, Point((*curIntersects)[i][0],(*curIntersects)[i][1]), 100, Scalar(alpha, alpha, alpha));
+	// }
 	
 	/// Post Operations
-	preIntersects->clear();
-	for (int i = 0; i < curIntersects->size(); i++)
-	{
-		preIntersects->push_back((*curIntersects)[i]);
-	}
+	// preIntersects->clear();
+	// for (int i = 0; i < curIntersects->size(); i++)
+	// {
+	// 	preIntersects->push_back((*curIntersects)[i]);
+	// }
 	/// Showing the result
 	// cout << "result " << countNonZero(src) << endl;
 	
