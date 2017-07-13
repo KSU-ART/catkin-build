@@ -198,11 +198,9 @@ void findIntersectLines(vector<Vec2f> *lines, int angle, vector<Vec2f> *intersec
 /// These lines will also take a buffer from the edge of the image by calculating the area of either side of the line
 /// if the area is larger than the minBufferArea, then it will be eligable for an edge line
 /// lineOffset is the offset on either side the area and counting of grid pixels will start
-void findEdges(vector<Vec2f> *lines, Mat &img, vector<Vec3f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset)
-{
+void findEdges(vector<Vec2f> *lines, Mat &img, vector<Vec3f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
 	vector<Vec2f>::iterator current;
-    for(current=lines->begin();current!=lines->end();current++)
-	{
+    for(current=lines->begin();current!=lines->end();current++){
 		float p = (*current)[0];
 		float theta = (*current)[1];
 
@@ -212,11 +210,9 @@ void findEdges(vector<Vec2f> *lines, Mat &img, vector<Vec3f> *edges, int maxOver
 		float negGridArea = 0;
 		float posGridArea = 0;
 
-		for(int y=0;y<img.size().height;y++)
-		{
+		for(int y=0;y<img.size().height;y++){
 			uchar *row = img.ptr(y);
-			for(int x=0;x<img.size().width;x++)
-			{
+			for(int x=0;x<img.size().width;x++){
 				// row[x] is the element value
 
 				// find if the current coordinate is in the positive delta area
@@ -250,8 +246,7 @@ void findEdges(vector<Vec2f> *lines, Mat &img, vector<Vec3f> *edges, int maxOver
 
 /// pre: lines of theta ond rho
 /// post: merges the parallel lines together
-void mergeRelatedLines(vector<Vec2f> *lines, Mat &img)
-{
+void mergeRelatedLines(vector<Vec2f> *lines, Mat &img){
 	// double angleThresh = 10;
 	double mergeThresh = 64;
 	vector<Vec2f>::iterator current;
@@ -418,9 +413,7 @@ int main( int argc, char** argv )
 }
 
 /** @function cornerHarris_demo */
-void cornerHarris_demo( int, void* )
-{
-	
+void cornerHarris_demo( int, void* ){
 	/// cornerHarris_demo
 	Mat dst, dst2, dst3;
 	dst = Mat::zeros( src.size(), CV_32FC1 );

@@ -117,7 +117,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -150,6 +150,9 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(edge_detect_node src/main.cpp src/edge_detect.cpp)
+target_link_libraries(edge_detect_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(grid_detect_test src/grid_detect_test.cpp)
 target_link_libraries(grid_detect_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
