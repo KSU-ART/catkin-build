@@ -1,11 +1,4 @@
 <launch>
-	<!-- Restate launch for mavros -->
-	<include file="$(find mavros)/launch/apm2.launch">
-		<arg name="fcu_url" default="/dev/ttyACM0:115200" />
-	</include>
-	<!-- setting up the settings.sh for mavros override -->
-    <node name="settings_sh" pkg="spsuart" type="settings.sh" />
-	
 	<!-- For debuging: launch-prefix="valgrind -v --track-origins=yes" -->
 	<node name="controller_node" pkg="controller" type="controller_node" output="screen" />
 </launch>

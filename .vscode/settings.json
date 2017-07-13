@@ -47,7 +47,6 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp",
-        "algorithm": "cpp",
         "*.ipp": "cpp"
     }
 }

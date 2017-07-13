@@ -132,9 +132,9 @@ void robot_controller::nav_loop(){
 	}
 
 	// update the control values
-	roll = MID_PWM - get_roll_control(); // Roll value for Left is negative
-	pitch = MID_PWM - get_pitch_control(); // Pitch value for Forward is negative
-	yaw = MID_PWM - get_yaw_control();
+	roll = MID_PWM - get_roll_control() + ROLL_TRIM; // Roll value for Left is negative
+	pitch = MID_PWM - get_pitch_control() - PITCH_TRIM; // Pitch value for Forward is negative
+	yaw = MID_PWM - get_yaw_control() + YAW_TRIM;
 	throttle = MID_PWM + get_throttle_control();
 
 	mav.update_loop(roll, pitch, yaw, throttle);
