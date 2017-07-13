@@ -12,7 +12,7 @@
 using namespace std;
 using namespace cv;
 
-string path = "/home/stoplime/catkin_ws/src/catkin-build/plate_detect/include";
+string path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
 
 bool sortFunc (int i, int j) { return (i>j); }
 
@@ -64,15 +64,19 @@ int main( int argc, char** argv ){
 			inRange(labcs, blob1.get_min_scalar(), blob1.get_max_scalar(), Thresh1);
 			//Low Altitude Threshold
 			inRange(labcs, blob2.get_min_scalar(), blob2.get_max_scalar(), Thresh2);
-			
-			/// Noise reduction
-			// Mat erodeElement2 = getStructuringElement(MORPH_RECT, Size(21, 21));
-			// Mat dilateElement2 = getStructuringElement(MORPH_RECT, Size(9, 9));
-			// erode(Thresh2, Thresh2, erodeElement2);
-			// dilate(Thresh2, Thresh2, dilateElement2);
 
 			///Combine the two Thresholds
 			labThresh = Thresh1|Thresh2;
+
+			/// Noise reduction
+			Mat erodeElement1 = getStructuringElement(MORPH_RECT, Size(11, 11));
+			Mat dilateElement1 = getStructuringElement(MORPH_RECT, Size(9, 9));
+			Mat dilateElement2 = getStructuringElement(MORPH_RECT, Size(15, 15));
+			
+			dilate(labThresh, labThresh, dilateElement1);
+			erode(labThresh, labThresh, erodeElement1);
+			dilate(labThresh, labThresh, dilateElement1);
+
 			//Blob detection and center point generation 
 			vector< vector<Point> > contours;
 			findContours(labThresh, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
