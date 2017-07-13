@@ -32,7 +32,7 @@ public:
 		lMin = 0;
 		aMin = 0;
 		bMin = 0;
-		lMax = 180;
+		lMax = 255;
 		aMax = 255;
 		bMax = 255;
 	}
@@ -55,7 +55,7 @@ public:
 
 	void set_calibration_file(std::string file);
 
-	void calibrate_colors(float deviation_percentage);
+	void calibrate_colors(int camera, float deviation_percentage);
 
 };
 

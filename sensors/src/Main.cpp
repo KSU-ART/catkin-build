@@ -11,6 +11,7 @@ int main(int argc, char** argv)
 	LidarSensor sensorHokuyo(0, "/scan");
 	LidarSensor sensorAltitudeLidar(1, "/terarangerone");
 	imageEncoder forwardCam(1, "/sensor/forwardCam");
+	// imageEncoder forwardCam(2, "/sensor/downCam");
 
 	ros::Rate loop_rate(120);
 	while (ros::ok())
