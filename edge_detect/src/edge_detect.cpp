@@ -11,7 +11,7 @@ void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int th
     }
 }
 
-void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec3f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
+void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
     std::vector<cv::Vec2f>::iterator current;
     for(current=lines->begin();current!=lines->end();current++){
         float p = (*current)[0];
@@ -48,10 +48,10 @@ void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::v
         // check for minBufferArea
         if(negArea > minBufferArea && posArea > minBufferArea){
             if(posGridArea < maxOverhangThresh){
-                edges->push_back(cv::Vec3f(p, theta, 1));
+                edges->push_back(cv::Vec2f(p, theta));
             }
             else if(negGridArea < maxOverhangThresh){
-                edges->push_back(cv::Vec3f(p, theta, 0));
+                edges->push_back(cv::Vec2f(-p, theta));
             }
         }
     }
@@ -158,6 +158,23 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
     }
 }
 
+// returns a vector in x component and y component of the average edges
+cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
+    std::vector<cv::Vec2f>::iterator current;
+    cv::Vec2f average;
+    average[0] = 0;
+    average[1] = 0;
+    float count = 0;
+    for(current=edges->begin(); current!=edges->end(); current++){
+        average[0] += (*current)[0]*cos((*current)[1]);
+        average[1] += (*current)[0]*sin((*current)[1]);
+        count++;
+    }
+    average[0] /= count;
+    average[1] /= count;
+    return average;
+}
+
 void edgeDetector::runGridProcOnce(){
     src = im.get_image();
     if(src.empty()){
@@ -208,8 +225,27 @@ void edgeDetector::runGridProcOnce(){
     cv::HoughLines(dst2, lines, 1, CV_PI/180, 210);
     mergeRelatedLines(&lines, dst2);
 
-    std::vector<cv::Vec3f> edges;
+    std::vector<cv::Vec2f> edges;
     findEdges(&lines, dst2, &edges, 150, 32000, 20);
+
+    std_msgs::Bool detected;
+    if(edges.size() > 0){
+        detected.data = true;
+        detectPub.publish(detected);
+
+        cv::Vec2f arenaVector;
+        arenaVector = averageEdge(&edges);
+
+        std_msgs::Float32 msg;
+        msg.data = arenaVector[0];
+        pubx.publish(msg);
+        msg.data = arenaVector[1];
+        puby.publish(msg);
+    }
+    else{
+        detected.data = false;
+        detectPub.publish(detected);
+    }
 
     if(DEBUG){
         // for lines
@@ -218,7 +254,7 @@ void edgeDetector::runGridProcOnce(){
         }
         // for edges
         for(int i=0;i<edges.size();i++){
-            drawLine(cv::Vec2f(edges[i][0], edges[i][1]), dst2, CV_RGB(0,0,128), 3);
+            drawLine(edges[i], dst2, CV_RGB(0,0,128), 3);
         }
         std::cout << "display image" << std::endl;
         imshow( source_window, src );

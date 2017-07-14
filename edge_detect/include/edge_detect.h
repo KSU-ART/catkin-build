@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include "ros/ros.h"
 #include <sensor_msgs/image_encodings.h>
+#include <std_msgs/Float32.h>
+#include <std_msgs/Bool.h>
 #include <cv_bridge/cv_bridge.h>
 #include <string>
 #include <vector>
@@ -19,6 +21,10 @@
 class edgeDetector{
 private:
 	ros::NodeHandle n;
+
+    ros::Publisher pubx;
+	ros::Publisher puby;
+	ros::Publisher detectPub;
     
     cv::Mat src;
     cv::Mat dst, dst2, dst3;
@@ -38,6 +44,9 @@ public:
     edgeDetector()
     :im("/sensor/forwardCam")
     {
+        pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
+        puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
+        detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
         source_window = "Source image";
         corners_window = "Corners detected";
         blockSize = 21;
@@ -52,11 +61,13 @@ public:
     /// These lines will also take a buffer from the edge of the image by calculating the area of either side of the line
     /// if the area is larger than the minBufferArea, then it will be eligable for an edge line
     /// lineOffset is the offset on either side the area and counting of grid pixels will start
-    void findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec3f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset);
+    void findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset);
 
     /// pre: lines of theta ond rho
     /// post: merges the parallel lines together
     void mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img);
+
+    cv::Vec2f averageEdge(std::vector<cv::Vec2f> *edges);
 
     // void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
