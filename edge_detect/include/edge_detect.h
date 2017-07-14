@@ -12,18 +12,18 @@
 #include <string>
 #include <vector>
 #include <math.h>
+#include "imageDecoder.h"
 
 #define PI 3.14159265
 
 class edgeDetector{
 private:
 	ros::NodeHandle n;
-
-	ros::Subscriber sub;
     
     cv::Mat src;
     cv::Mat dst, dst2, dst3;
 
+    imageDecoder im;
 
     std::string source_window;
     std::string corners_window;
@@ -35,8 +35,9 @@ private:
 
 public:
     // constructor
-    edgeDetector(){
-        sub = n.subscribe("/usb_cam_1/image_rect_color", 1, &edgeDetector::imageCallback, this);
+    edgeDetector()
+    :im("/sensor/forwardCam")
+    {
         source_window = "Source image";
         corners_window = "Corners detected";
         blockSize = 21;
@@ -57,9 +58,9 @@ public:
     /// post: merges the parallel lines together
     void mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img);
 
-    void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+    // void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
-    void runGridProc();
+    void runGridProcOnce();
 
 };
 

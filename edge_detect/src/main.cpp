@@ -4,6 +4,12 @@ int main( int argc, char** argv )
 {
 	ros::init(argc, argv, "listener");
     edgeDetector ed;
+    ros::Rate loopRate(30);
 
-	ros::spin();
+    while(ros::ok()){
+        ed.runGridProcOnce();
+
+        loopRate.sleep();
+	    ros::spinOnce();
+    }
 }

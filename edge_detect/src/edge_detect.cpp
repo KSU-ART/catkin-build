@@ -1,24 +1,5 @@
 #include "edge_detect.h"
 
-void edgeDetector::imageCallback(const sensor_msgs::ImageConstPtr& msg){
-    /// Load source image and convert it to gray
-    cv_bridge::CvImagePtr cv_ptr;
-    try{
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e){
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    src = cv_ptr->image;
-
-    cv::cvtColor( src, src, CV_BGR2GRAY );
-    runGridProc();
-
-    cv::waitKey(10);
-}
-
 void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int thickness){
     if(line[1]!=0){
         float m = -1/tan(line[1]);
@@ -177,8 +158,15 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
     }
 }
 
-void edgeDetector::runGridProc(){
-    dst = cv::Mat::zeros( src.size(), CV_32FC1 );
+void edgeDetector::runGridProcOnce(){
+    src = im.get_image();
+    if(src.empty()){
+        std::cout << "no image" << std::endl;
+        return;
+    }
+    cv::cvtColor(src, src, CV_BGR2GRAY);
+
+    // dst = cv::Mat::zeros( src.size(), CV_32FC1 );
 
     /// Detecting corners
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
@@ -232,10 +220,10 @@ void edgeDetector::runGridProc(){
         for(int i=0;i<edges.size();i++){
             drawLine(cv::Vec2f(edges[i][0], edges[i][1]), dst2, CV_RGB(0,0,128), 3);
         }
-        
+        std::cout << "display image" << std::endl;
         imshow( source_window, src );
         imshow( corners_window, dst2 );
     }
-    cv::waitKey(30);
+    cv::waitKey(5);
 }
 
