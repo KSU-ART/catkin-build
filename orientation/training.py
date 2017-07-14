@@ -21,11 +21,12 @@ def load_X_train_data():
 
     train_data_path = os.path.join(os.getcwd(), 'img_train')
     x_tot = len([name for name in os.listdir(train_data_path) if os.path.isfile(os.path.join(train_data_path, name))])
-    print 'The dataset contains ', x_tot, 'images'
+    print ('The dataset contains ', x_tot, 'images')
 
     print('Loading Train Data: ')
     X_train, X_name_of_each_train = load_jpg_images(train_data_path, x_tot)
-    X_train = np.array(X_train)
+    print(len(X_train))
+    X_train = np.array(X_train, dtype=np.float16)
 
     print('Shape of train images array: ', X_train.shape)
     return X_train, X_name_of_each_train, x_tot
@@ -36,10 +37,10 @@ def load_Y_data(num_x):
     with open(fname) as outfile:
         units = json.load(outfile)
         entries = len(units)
-        print 'The json file contains ', entries, 'entries'
+        print ('The json file contains ', entries, 'entries')
     # print units['0'][0]
     if num_x != entries:
-        print 'The number of entries in the json file do not match the number of pictures in the dataset'
+        print ('The number of entries in the json file do not match the number of pictures in the dataset')
         return
     if num_x == entries:
         vec = np.zeros([entries, 2])
@@ -177,10 +178,10 @@ for i in range(num_x-n_test,n_test):
     X_test[i] = x[x_name[i]]
     Y_test[i] = y[x_name[i]]
 
-print'Shape of train images array: ', X_train.shape
-print'Shape of train labels: ', Y_train.shape
-print'Shape of test images array: ', X_test.shape
-print'Shape of test labels: ', Y_test.shape
+print('Shape of train images array: ', X_train.shape)
+print('Shape of train labels: ', Y_train.shape)
+print('Shape of test images array: ', X_test.shape)
+print('Shape of test labels: ', Y_test.shape)
 del x
 del y
 
