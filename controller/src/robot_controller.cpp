@@ -15,6 +15,7 @@ void robot_controller::current_altitude_cb(const std_msgs::Float32& msg){
 }
 
 void robot_controller::target_altitude_cb(const std_msgs::Float32& msg){
+	std::cout << "set Altitude " << msg.data << std::endl; 
 	pids.getThrottlePID().targetSetpoint(msg.data);
 }
 
