@@ -27,6 +27,9 @@ def state_machine_handler():
 
     sm_top.userdata.obstacleThreshDist = 1.5
 
+    sm_top.userdata.EdgeDetectTimerMAX = 5
+    sm_top.userdata.EdgeDetectTimer = 0
+
     # Open the container
     with sm_top:
 
@@ -104,7 +107,8 @@ def state_machine_handler():
                                                'groundHeight':'groundHeight'})
 
                 smach.StateMachine.add('AccendingCraft', AccendingCraft(),
-                                    transitions={'AccendingCraft':'AccendingCraft'},
+                                    transitions={'AccendingCraft':'AccendingCraft',
+                                                 'StartInteract':'StartInteract'},
                                     remapping={'lowHeight':'lowHeight',
                                                'normHeight':'normHeight',
                                                'altitudeDeviation':'altitudeDeviation'})
@@ -123,10 +127,33 @@ def state_machine_handler():
                                     transitions={'CheckObstacles':'CheckObstacles'},
                                     remapping={'obstacleThreshDist':'obstacleThreshDist'})
 
+            sm_EdgeDetect = smach.StateMachine(outcomes=['Obstacle', 'Null'])
+
+            with sm_EdgeDetect:
+                sm_EdgeDetect.userdata.EdgeDetectTimer = sm_top.userdata.EdgeDetectTimer
+                sm_EdgeDetect.userdata.EdgeDetectTimerMAX = sm_top.userdata.EdgeDetectTimerMAX
+
+                smach.StateMachine.add('StartInteract', StartInteract(),
+                                    transitions={'TouchDown':'TouchDown',
+                                                 'StartInteract':'StartInteract'},
+                                    remapping={'EdgeDetectTimerMAX':'EdgeDetectTimerMAX',
+                                               'EdgeDetectTimer':'EdgeDetectTimer'})
+
+                smach.StateMachine.add('TouchDown', TouchDown(),
+                                    transitions={'AccendingCraft':'AccendingCraft',
+                                                 'TouchDown':'TouchDown',
+                                                 'StartInteract':'StartInteract'},
+                                    remapping={'EdgeDetectTimer':'EdgeDetectTimer'})
+
+                smach.StateMachine.add('AccendingCraft', AccendingCraft(),
+                                    transitions={'AccendingCraft':'AccendingCraft',
+                                                 'StartInteract':'StartInteract'})
+
             smach.Concurrence.add('sm_TakeOff', sm_TakeOff)
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)
             smach.Concurrence.add('sm_StartInteract', sm_StartInteract)
             smach.Concurrence.add('sm_CheckObstacles', sm_CheckObstacles)
+            smach.Concurrence.add('sm_EdgeDetect', sm_EdgeDetect)
 
         smach.StateMachine.add('CON', sm_con,
                                transitions={'Null':'CON',
