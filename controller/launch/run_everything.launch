@@ -1,0 +1,27 @@
+<launch>
+	<!-- Run everything in sequence here -->
+    
+    <!-- run preflight launch -->
+    <include file="$(find controller)/launch/preFlight.launch" />
+
+    <!-- run sensors to get lidars and camera feeds -->
+    <node name="sensors_start" pkg="sensors" type="start" />
+
+    <!-- plate_detect for downward facing cam -->
+    <node name="plate_detect" pkg="plate_detect" type="plate_detect_node" />
+
+    <!-- boundary detection for finding the edge of the arena -->
+    <!--<node name="boundry_detect" pkg="edge_detect" type="edge_detect_node" />-->
+
+    <!-- yolo initialization -->
+    <!--<node name="yolo" pkg="yolo" type="yolo.py" />-->
+
+    <!-- OrientationNet for getting the angle of the ground robots -->
+    <!--<node name="OrientationNet" pkg="OrientationNet" type="OrienNet.py" />-->
+
+    <!-- state machine -->
+    <node name="navigator" pkg="navigator" type="nav.py">
+
+    <!-- controller node is going to be outside the scope of this launch -->
+    <!-- This is so that it runs once everything else has been loaded properly -->
+</launch>

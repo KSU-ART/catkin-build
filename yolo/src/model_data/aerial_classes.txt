@@ -1,0 +1,4 @@
+red_bot
+green_bot
+obstacle
+drone
