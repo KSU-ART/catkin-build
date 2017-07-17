@@ -156,6 +156,8 @@ PIDController& pid_handler::getPitchPID(){
         return *pitchObstaclePID;
     case Yolo:
         return *pitchYoloPID;
+    case EdgeDetect:
+        return *pitchEdgeDetectPID;
     default:
         return *(new PIDController);
     }
@@ -167,6 +169,8 @@ PIDController& pid_handler::getRollPID(){
         return *rollDownCamPID;
     case Obstacle:
         return *rollObstaclePID;
+    case EdgeDetect:
+        return *rollEdgeDetectPID;
     default:
         return *(new PIDController);
     }
