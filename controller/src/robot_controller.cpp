@@ -55,12 +55,32 @@ void robot_controller::obstacle_roll_cb(const std_msgs::Float32& msg){
 	current_obstacle_roll = msg.data;
 }
 
+void robot_controller::random_traversal_cb(const std_msgs::Float32& msg){
+	// update mode
+	state_mode = RandomTraversal;
+	current_traversal_yaw = msg.data;
+}
+
+void robot_controller::edge_detect_x_cb(const std_msgs::Float32& msg){
+	// update mode
+	state_mode = EdgeDetect;
+	current_edge_detect_roll = msg.data;
+}
+
+void robot_controller::edge_detect_y_cb(const std_msgs::Float32& msg){
+	// update mode
+	state_mode = EdgeDetect;
+	current_edge_detect_pitch = msg.data;
+}
+
 //******************** applying pid controls **************************
 double robot_controller::get_throttle_control(){
 	switch(state_mode){
 	case DownCam:
 	case Obstacle:
 	case Yolo:
+	case EdgeDetect:
+	case RandomTraversal:
 		// std::cout << "*******current altitude: " << current_altitude << std::endl;
 		return pids.getThrottlePID().calc(current_altitude);
 	default:
@@ -74,6 +94,8 @@ double robot_controller::get_roll_control(){
 		return pids.getRollPID().calc(current_down_cam_roll);
 	case Obstacle:
 		return pids.getRollPID().calc(current_obstacle_roll);
+	case EdgeDetect:
+		return pids.getRollPID().calc(current_edge_detect_roll);
 	default:
 		return 0;
 	}
@@ -82,14 +104,25 @@ double robot_controller::get_roll_control(){
 double robot_controller::get_pitch_control(){
 	switch(state_mode){
 	case DownCam:
-		std::cout << "*******DownCam_pitch: " << current_down_cam_pitch << std::endl;
+		if(DEBUG){
+			std::cout << "*******DownCam_pitch: " << current_down_cam_pitch << std::endl;
+		}
 		return pids.getPitchPID().calc(current_down_cam_pitch);
 	case Obstacle:
-		std::cout << "*******Obstacle_pitch: " << current_obstacle_pitch << std::endl;
+		if(DEBUG){
+			std::cout << "*******Obstacle_pitch: " << current_obstacle_pitch << std::endl;
+		}
 		return pids.getPitchPID().calc(current_obstacle_pitch);
 	case Yolo:
-		std::cout << "*******Yolo_pitch: " << current_yolo_pitch << std::endl;
+		if(DEBUG){
+			std::cout << "*******Yolo_pitch: " << current_yolo_pitch << std::endl;
+		}
 		return pids.getPitchPID().calc(current_yolo_pitch);
+	case EdgeDetect:
+		if(DEBUG){
+			std::cout << "*******Edge_pitch: " << current_edge_detect_pitch << std::endl;
+		}
+		return pids.getPitchPID().calc(current_edge_detect_pitch);
 	default:
 		return 0;
 	}
@@ -99,6 +132,8 @@ double robot_controller::get_yaw_control(){
 	switch(state_mode){
 	case Yolo:
 		return pids.getYawPID().calc(current_yolo_yaw);
+	case RandomTraversal:
+		return pids.getYawPID().calc(current_traversal_yaw);
 	default:
 		return 0;
 	}
@@ -107,7 +142,7 @@ double robot_controller::get_yaw_control(){
 void robot_controller::init_loop(){
 	// initialize target pids
 	pids.initialize_zero_target();
-	state_mode = DownCam;
+	state_mode = Yolo;
 }
 
 void robot_controller::nav_loop(){
@@ -125,6 +160,14 @@ void robot_controller::nav_loop(){
 			break;
 		case Yolo:
 			pids.set_pitch_mode("Yolo");
+			pids.set_yaw_mode("Yolo");
+			break;
+		case EdgeDetect:
+			pids.set_pitch_mode("EdgeDetect");
+			pids.set_roll_mode("EdgeDetect");
+			break;
+		case RandomTraversal:
+			pids.set_yaw_mode("RandomTraversal");
 			break;
 		default:
 			break;

@@ -64,15 +64,20 @@ private:
 					sub_orien_x,
 					sub_orien_y,
 					sub_obst_pitch,
-					sub_obst_roll;
+					sub_obst_roll,
+					sub_traversal_angle,
+					sub_edge_x,
+					sub_edge_y;
 	
 	int throttle, roll, pitch, yaw;
 
 	enum mode_enum{
-		DownCam 	= 0,
-		Obstacle 	= 1,
-		Yolo 		= 2,
-		Null		= 3
+		DownCam 		= 0,
+		Obstacle 		= 1,
+		Yolo 			= 2
+        EdgeDetect      = 3,
+        RandomTraversal = 4,
+		Undefined		= 5
 	};
 
 	mode_enum state_mode = Yolo;
@@ -85,7 +90,10 @@ private:
 		   current_down_cam_pitch,
 		   current_down_cam_roll,
 		   current_obstacle_pitch,
-		   current_obstacle_roll;
+		   current_obstacle_roll,
+		   current_traversal_yaw,
+		   current_edge_detect_pitch,
+		   current_edge_detect_roll;
 
 	//speed of dx9 controller:
 	ros::Rate fcuCommRate;
@@ -119,6 +127,12 @@ public:
 		current_obstacle_pitch	= 0;
 		/// obstacle pitch is the x component of the obstacle avoidence vector, NOT the actual obstacle vector
 		current_obstacle_roll	= 0;
+		/// targeted angle for the random traversal, a delta of the current to target
+		current_traversal_yaw	= 0;
+		/// vector towards the arena when an edge is detected in the y component
+		current_edge_detect_pitch	= 0;
+		/// vector towards the arena when an edge is detected in the x component
+		current_edge_detect_roll	= 0;
 		
 		//subs:
 		sub_reset 			= n.subscribe("/IARC/ai_reset", 1, &robot_controller::ai_reset_cb, this);
@@ -130,6 +144,9 @@ public:
 		sub_orien_y 		= n.subscribe("/IARC/OrientationNet/pos/y", 1, &robot_controller::delta_down_cam_y_cb, this);
 		sub_obst_pitch 		= n.subscribe("/IARC/Obstacle/PitchPID", 1, &robot_controller::obstacle_pitch_cb, this);
 		sub_obst_roll 		= n.subscribe("/IARC/Obstacle/RollPID", 1, &robot_controller::obstacle_roll_cb, this);
+		sub_traversal_angle	= n.subscribe("/IARC/randomTraversal/deltaAngle", 1, &robot_controller::random_traversal_cb, this);
+		sub_edge_x 			= n.subscribe("/IARC/edgeDetect/xPID", 1, &robot_controller::edge_detect_x_cb, this);
+		sub_edge_y	 		= n.subscribe("/IARC/edgeDetect/yPID", 1, &robot_controller::edge_detect_y_cb, this);
 	}
 
 	//********************** callbacks *************************
@@ -150,6 +167,12 @@ public:
 	void obstacle_pitch_cb(const std_msgs::Float32& msg);
 
 	void obstacle_roll_cb(const std_msgs::Float32& msg);
+
+	void random_traversal_cb(const std_msgs::Float32& msg);
+
+	void edge_detect_x_cb(const std_msgs::Float32& msg);
+
+	void edge_detect_y_cb(const std_msgs::Float32& msg);
 
 	//**************************** applying current values to pids *******************************
 	double get_throttle_control();

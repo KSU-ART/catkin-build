@@ -102,7 +102,7 @@ class RandomTraversal(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], input_keys=['randomTraversalAngleThresh'])
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
-        self.YawPIDrt = rospy.Publisher('/IARC/randomTraversal/yawPID', Float32, queue_size=1)
+        self.YawPIDrt = rospy.Publisher('/IARC/randomTraversal/deltaAngle', Float32, queue_size=1)
         self.targetAngle = 0
 
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
@@ -122,7 +122,7 @@ class RandomTraversal(smach.State):
             self.targetAngle = random.uniform(-math.pi, math.pi)
             return 'FindGR'
         else:
-            self.YawPIDrt.publish(Float32(self.targetAngle))
+            self.YawPIDrt.publish(Float32(self.angle - self.targetAngle))
             return 'RandomTraversal'
 
 
