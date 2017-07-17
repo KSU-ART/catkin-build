@@ -1,6 +1,5 @@
 #include "ros/ros.h"
 #include "sensors.h"
-#include "imageEncoder.h"
 
 using namespace std;
 

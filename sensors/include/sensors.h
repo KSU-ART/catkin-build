@@ -3,5 +3,6 @@
 
 #include "LidarSensor.h"
 #include "IMUSensor.h"
+#include "imageEncoder.h"
 
 #endif
