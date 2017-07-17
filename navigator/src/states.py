@@ -8,6 +8,7 @@ import numpy as np
 import json
 import time
 import math
+import random
 
 DEBUG = True
 
@@ -97,11 +98,12 @@ class FindGR(smach.State):
                 userdata.targetYolo = self.minYolo
             return 'FindGR'
 
-###################### TODO: Needs more planing ########################
 class RandomTraversal(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['FindGR', 'TakeOff'])
+        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], input_keys=['randomTraversalAngleThresh'])
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
+        self.YawPIDrt = rospy.Publisher('/IARC/randomTraversal/yawPID', Float32, queue_size=1)
+        self.targetAngle = 0
 
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         self.enableTakeOffLoop = True
@@ -113,9 +115,15 @@ class RandomTraversal(smach.State):
         self.enableTakeOffLoop = msg.data
 
     def execute(self, userdata):
-        if not enableTakeOffLoop:
+        if not self.enableTakeOffLoop:
             return 'TakeOff'
-        return 'FindGR'
+
+        if abs(self.angle - self.targetAngle) < userdata.randomTraversalAngleThresh:
+            self.targetAngle = random.uniform(-math.pi, math.pi)
+            return 'FindGR'
+        else:
+            self.YawPIDrt.publish(Float32(self.targetAngle))
+            return 'RandomTraversal'
 
 
 ####################### Down Cam Node ###########################
