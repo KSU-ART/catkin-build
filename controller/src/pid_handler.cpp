@@ -58,6 +58,7 @@ void pid_handler::set_pitch_mode(std::string value){
         pitchObstaclePID->off();
         pitchYoloPID->off();
         pitchEdgeDetectPID->on();
+    }
     else{
         std::cout << "pitch_mode: " << value << " does not exist" << std::endl;
     }

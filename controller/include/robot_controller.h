@@ -74,7 +74,7 @@ private:
 	enum mode_enum{
 		DownCam 		= 0,
 		Obstacle 		= 1,
-		Yolo 			= 2
+		Yolo 			= 2,
         EdgeDetect      = 3,
         RandomTraversal = 4,
 		Undefined		= 5
@@ -102,6 +102,8 @@ private:
 	pid_handler pids;
 
 	mavros_handler mav;
+
+	bool DEBUG;
 	
 public:
 	//contructor
@@ -109,6 +111,7 @@ public:
 	:pids("/home/odroid/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
 	fcuCommRate(45)
 	{
+		DEBUG = true;
 		//initial values
 		/// camera dimentions
 		camera_width 			= 640;
