@@ -311,7 +311,7 @@ class ObstacleAvoidence(smach.State):
 
         self.opposite_dist = userdata.obstacleThreshDist - self.dist
 
-        oppositeVec = (self.opposite_dist * math.cos(self.angle/2+math.pi), self.opposite_dist * math.sin(self.angle/2+math.pi))
+        oppositeVec = (self.opposite_dist * math.cos(self.angle+math.pi), self.opposite_dist * math.sin(self.angle+math.pi))
         if DEBUG:
             print("Obstacle opposite vector:", oppositeVec)
 

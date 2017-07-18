@@ -93,7 +93,7 @@ double robot_controller::get_roll_control(){
 	case DownCam:
 		return pids.getRollPID().calc(current_down_cam_roll);
 	case Obstacle:
-		return pids.getRollPID().calc(current_obstacle_roll);
+		return pids.getRollPID().calc(-current_obstacle_roll);
 	case EdgeDetect:
 		return pids.getRollPID().calc(current_edge_detect_roll);
 	default:
@@ -112,7 +112,7 @@ double robot_controller::get_pitch_control(){
 		if(DEBUG){
 			std::cout << "*******Obstacle_pitch: " << current_obstacle_pitch << std::endl;
 		}
-		return pids.getPitchPID().calc(current_obstacle_pitch);
+		return pids.getPitchPID().calc(-current_obstacle_pitch);
 	case Yolo:
 		if(DEBUG){
 			std::cout << "*******Yolo_pitch: " << current_yolo_pitch << std::endl;
