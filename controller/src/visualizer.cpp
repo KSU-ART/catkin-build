@@ -58,7 +58,7 @@ visualization_msgs::Marker create_marker(double x, double y){
 int main(int argc, char **argv){
     ros::init(argc, argv, "rviz_visualizer");
     ros::NodeHandle n;
-    vis_pub = n.advertise<visualization_msgs::Marker>( "visualization_marker", 0 );
+    vis_pub = n.advertise<visualization_msgs::Marker>( "visualization_marker", 100 );
 
     ros::Subscriber subX = n.subscribe("/IARC/Obstacle/RollPID", 1000, get_x_cb);
     ros::Subscriber subY = n.subscribe("/IARC/Obstacle/PitchPID", 1000, get_y_cb);

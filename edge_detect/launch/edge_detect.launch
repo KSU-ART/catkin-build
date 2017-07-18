@@ -1,0 +1,4 @@
+<launch>
+    <node name="edge_detect_node" pkg="edge_detect" type="edge_detect_node" launch-prefix="valgrind -v --track-origins=yes"/>
+
+</launch>

@@ -45,7 +45,7 @@ int main( int argc, char** argv ){
 	ros::Publisher puby = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/y", 1);
 	ros::Publisher detectPub = nh.advertise<std_msgs::Bool>("/IARC/OrientationNet/detected", 1);
 
-	imageDecoder cap("/sensor/forwardCam");
+	imageDecoder cap("/sensor/downCam");
 	Mat color, labcs, labThresh, Thresh1, Thresh2;
 	//Define color of blobs to track
 	Color blob1('r', path);
