@@ -8,6 +8,7 @@ import numpy as np
 import json
 import time
 import math
+import random
 
 DEBUG = True
 
@@ -97,11 +98,12 @@ class FindGR(smach.State):
                 userdata.targetYolo = self.minYolo
             return 'FindGR'
 
-###################### TODO: Needs more planing ########################
 class RandomTraversal(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['FindGR', 'TakeOff'])
+        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], input_keys=['randomTraversalAngleThresh'])
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
+        self.YawPIDrt = rospy.Publisher('/IARC/randomTraversal/deltaAngle', Float32, queue_size=1)
+        self.targetAngle = 0
 
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         self.enableTakeOffLoop = True
@@ -113,9 +115,15 @@ class RandomTraversal(smach.State):
         self.enableTakeOffLoop = msg.data
 
     def execute(self, userdata):
-        if not enableTakeOffLoop:
+        if not self.enableTakeOffLoop:
             return 'TakeOff'
-        return 'FindGR'
+
+        if abs(self.angle - self.targetAngle) < userdata.randomTraversalAngleThresh:
+            self.targetAngle = random.uniform(-math.pi, math.pi)
+            return 'FindGR'
+        else:
+            self.YawPIDrt.publish(Float32(self.angle - self.targetAngle))
+            return 'RandomTraversal'
 
 
 ####################### Down Cam Node ###########################
@@ -239,7 +247,7 @@ class TouchDown(smach.State):
 
 class AccendingCraft(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['AccendingCraft'], input_keys=['lowHeight', 'normHeight', 'altitudeDeviation'])
+        smach.State.__init__(self, outcomes=['AccendingCraft', 'StartInteract'], input_keys=['lowHeight', 'normHeight', 'altitudeDeviation'])
         self.pubTargetAltitude = rospy.Publisher('/IARC/setAltitude', Float32, queue_size=1)
         rospy.Subscriber("/IARC/currentAltitude", Float32, callback=self.callback)
         self.altitude = 0
@@ -303,13 +311,77 @@ class ObstacleAvoidence(smach.State):
 
         self.opposite_dist = userdata.obstacleThreshDist - self.dist
 
-        oppositeVec = (self.opposite_dist * -math.cos(self.angle), self.opposite_dist * -math.sin(self.angle))
+        oppositeVec = (self.opposite_dist * math.cos(self.angle+math.pi), self.opposite_dist * math.sin(self.angle+math.pi))
         if DEBUG:
             print("Obstacle opposite vector:", oppositeVec)
 
         if self.opposite_dist > 0:
             self.pubRollPID.publish(oppositeVec[1])
-            self.pubPitchPID.publish(-oppositeVec[0])
+            self.pubPitchPID.publish(oppositeVec[0])
 
         return 'CheckObstacles'
-        
+    
+############################### Check Edges ##################################
+class CheckEdges(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['CheckEdges', 'EdgeTimer'], input_keys=['EdgeDetectTimerMAX'], output_keys=['EdgeDetectTimer'])
+        rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
+        self.detected = False
+
+    def callback(self, msg):
+        self.detected = msg.data
+
+    def execute(self, userdata):
+        if self.detected:
+            userdata.EdgeDetectTimer = userdata.EdgeDetectTimerMAX + time.time()
+            return 'EdgeTimer'
+        else:
+            return 'CheckEdges'
+
+class EdgeTimer(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['CheckEdges', 'EdgeTimer', 'TowardsArena'], input_keys=['EdgeDetectTimer'])
+        rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
+        self.detected = False
+
+    def callback(self, msg):
+        self.detected = msg.data
+
+    def execute(self, userdata):
+        if not self.detected:
+            return 'CheckEdges'
+        if userdata.EdgeDetectTimer >= time.time():
+            return 'TowardsArena'
+        else:
+            return 'EdgeTimer'
+
+class TowardsArena(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['CheckEdges', 'TowardsArena'], input_keys=[])
+        rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
+        self.detected = False
+        rospy.Subscriber("/IARC/edgeDetect/arenaVector/x", Float32, callback=self.arenaX_cb)
+        rospy.Subscriber("/IARC/edgeDetect/arenaVector/y", Float32, callback=self.arenaY_cb)
+        self.arenaX = 0
+        self.arenaY = 0
+
+        self.pubArenaX = rospy.Publisher('/IARC/edgeDetect/xPID', Float32, queue_size=1)
+        self.pubArenaY = rospy.Publisher('/IARC/edgeDetect/yPID', Float32, queue_size=1)
+
+    def callback(self, msg):
+        self.detected = msg.data
+
+    def arenaX_cb(self, msg):   
+        self.arenaX = msg.data
+
+    def arenaY_cb(self, msg):
+        self.arenaY = msg.data
+
+    def execute(self, userdata):
+        self.pubArenaX.publish(Float32(self.arenaX))
+        self.pubArenaY.publish(Float32(self.arenaY))
+        if not self.detected:
+            return 'CheckEdges'
+        else:
+            return 'TowardsArena'
+

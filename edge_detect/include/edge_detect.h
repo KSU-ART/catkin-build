@@ -42,7 +42,7 @@ private:
 public:
     // constructor
     edgeDetector()
-    :im("/sensor/forwardCam")
+    :im("/sensor/downCam")
     {
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);

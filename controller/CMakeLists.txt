@@ -112,8 +112,8 @@ find_package(Boost REQUIRED COMPONENTS system chrono timer)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES controller
+# INCLUDE_DIRS include
+# LIBRARIES controller
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -163,9 +163,15 @@ target_link_libraries(controller_node
 	pid-controller
 )
 
-add_executable(test_node src/test_sub.cpp)
-add_dependencies(test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_node
+# add_executable(test_node src/test_sub.cpp)
+# add_dependencies(test_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_node
+# 	${catkin_LIBRARIES}
+# )
+
+add_executable(visualizer src/visualizer.cpp)
+add_dependencies(visualizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(visualizer
 	${catkin_LIBRARIES}
 )
 

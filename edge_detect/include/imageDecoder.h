@@ -20,7 +20,7 @@ private:
 public:
 	void downCamCB(const std_msgs::UInt8MultiArray::ConstPtr& msg){
 		/// Load source image and convert it to gray
-		// ROS_INFO("GOT: %lu", msg->data.size());
+		ROS_INFO("GOT: %lu", msg->data.size());
 		img = cv::imdecode(msg->data, 1);
 		// cv::imshow("Smile", img);
 		// cv::waitKey(33);
