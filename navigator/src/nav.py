@@ -3,7 +3,10 @@
 import rospy
 import smach
 import smach_ros
+import math
 from states import *
+import threading
+from multiprocessing.pool import ThreadPool
 
 from std_msgs.msg import Empty
 
@@ -17,8 +20,9 @@ def state_machine_handler():
 
     sm_top.userdata.GRdist = 0
     sm_top.userdata.GRangle = 0
-    sm_top.userdata.minGoalAngle = 20
-    sm_top.userdata.maxGoalAngle = 20
+    sm_top.userdata.minGoalAngle = 20 * math.pi /180
+    sm_top.userdata.maxGoalAngle = 20 * math.pi /180
+    sm_top.userdata.randomTraversalAngleThresh = 20 * math.pi /180
 
     sm_top.userdata.lowHeight = 0.2
     sm_top.userdata.TouchDownTimerMAX = 1
@@ -43,6 +47,7 @@ def state_machine_handler():
                 sm_TakeOff.userdata.normHeight = sm_top.userdata.normHeight
                 sm_TakeOff.userdata.altitudeDeviation = sm_top.userdata.altitudeDeviation
                 sm_TakeOff.userdata.targetYolo = sm_top.userdata.targetYolo
+                sm_TakeOff.userdata.randomTraversalAngleThresh = sm_top.userdata.randomTraversalAngleThresh
 
                 smach.StateMachine.add('TakeOff', TakeOff(),
                                     transitions={'FindGR':'FindGR',
@@ -57,8 +62,10 @@ def state_machine_handler():
                                     remapping={'targetYolo':'targetYolo'})
 
                 smach.StateMachine.add('RandomTraversal', RandomTraversal(),
-                                    transitions={'FindGR':'FindGR',
-                                                 'TakeOff':'TakeOff'})
+                                    transitions={'RandomTraversal':'RandomTraversal',
+                                                 'FindGR':'FindGR',
+                                                 'TakeOff':'TakeOff'},
+                                    remapping={'randomTraversalAngleThresh':'randomTraversalAngleThresh'})
 
             sm_CheckDownCam = smach.StateMachine(outcomes=['Obstacle', 'Null'])
 
@@ -161,8 +168,13 @@ def state_machine_handler():
 
     sis = smach_ros.IntrospectionServer('smach_server', sm_top, '/SM_ROOT')
     sis.start()
-    sm_top.execute()
+
+    # sm_top.execute()
+    pool = ThreadPool(processes=5)
+    async_result = pool.apply_async(sm_top.execute)
+
     rospy.spin()
+
     sis.stop()
 
 def main():

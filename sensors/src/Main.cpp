@@ -1,6 +1,5 @@
 #include "ros/ros.h"
 #include "sensors.h"
-#include "imageEncoder.h"
 
 using namespace std;
 
@@ -16,7 +15,7 @@ int main(int argc, char** argv)
 	ros::Rate loop_rate(120);
 	while (ros::ok())
 	{
-		forwardCam.runOnce();
+		// forwardCam.runOnce();
 
 		ros::spinOnce();
 		loop_rate.sleep();

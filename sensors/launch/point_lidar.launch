@@ -3,8 +3,8 @@
         >Node /terarangerone
 <-->
 <launch>
-<node name="point_lidar" pkg="terarangerone" type="terarangerone_node">
-    <!-- The Port needs to change on the Odroid -->
-    <param name="_portname" value="/dev/ttyUSB0" />
-</node>
+    <node name="point_lidar" pkg="terarangerone" type="terarangerone_node">
+        <!-- The Port needs to change on the Odroid -->
+        <param name="_portname" value="/dev/ttyUSB0" />
+    </node>
 </launch>

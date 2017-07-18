@@ -8,6 +8,7 @@ import numpy as np
 import json
 import time
 import math
+import random
 
 DEBUG = True
 
@@ -97,11 +98,12 @@ class FindGR(smach.State):
                 userdata.targetYolo = self.minYolo
             return 'FindGR'
 
-###################### TODO: Needs more planing ########################
 class RandomTraversal(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['FindGR', 'TakeOff'])
+        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], input_keys=['randomTraversalAngleThresh'])
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
+        self.YawPIDrt = rospy.Publisher('/IARC/randomTraversal/deltaAngle', Float32, queue_size=1)
+        self.targetAngle = 0
 
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         self.enableTakeOffLoop = True
@@ -113,9 +115,15 @@ class RandomTraversal(smach.State):
         self.enableTakeOffLoop = msg.data
 
     def execute(self, userdata):
-        if not enableTakeOffLoop:
+        if not self.enableTakeOffLoop:
             return 'TakeOff'
-        return 'FindGR'
+
+        if abs(self.angle - self.targetAngle) < userdata.randomTraversalAngleThresh:
+            self.targetAngle = random.uniform(-math.pi, math.pi)
+            return 'FindGR'
+        else:
+            self.YawPIDrt.publish(Float32(self.angle - self.targetAngle))
+            return 'RandomTraversal'
 
 
 ####################### Down Cam Node ###########################
@@ -303,13 +311,13 @@ class ObstacleAvoidence(smach.State):
 
         self.opposite_dist = userdata.obstacleThreshDist - self.dist
 
-        oppositeVec = (self.opposite_dist * -math.cos(self.angle), self.opposite_dist * -math.sin(self.angle))
+        oppositeVec = (self.opposite_dist * math.cos(self.angle/2+math.pi), self.opposite_dist * math.sin(self.angle/2+math.pi))
         if DEBUG:
             print("Obstacle opposite vector:", oppositeVec)
 
         if self.opposite_dist > 0:
             self.pubRollPID.publish(oppositeVec[1])
-            self.pubPitchPID.publish(-oppositeVec[0])
+            self.pubPitchPID.publish(oppositeVec[0])
 
         return 'CheckObstacles'
     
