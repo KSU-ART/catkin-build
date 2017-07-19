@@ -68,9 +68,9 @@ void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int th
     }
 }
 
-void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines0, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
+void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
     std::vector<cv::Vec2f>::iterator current;
-    std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
+    // std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
     for(current=lines->begin();current!=lines->end();current++){
         float p = (*current)[0];
         float theta = (*current)[1];
