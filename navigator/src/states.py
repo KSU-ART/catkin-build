@@ -45,7 +45,7 @@ class TakeOff(smach.State):
         
 class FindGR(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], output_keys=['targetYolo'])
+        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], output_keys=['targetYolo', 'imageWidth', 'imageHeight'])
         rospy.Subscriber("/IARC/YOLO", String, callback=self.callback)
         self.XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
         self.YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
@@ -63,22 +63,23 @@ class FindGR(smach.State):
             print("yolo string:",stringData)
         data = json.loads(stringData)
         # check if yolo message is empty (aka no ground robot detected)
-        if len(data) == 0:
             self.emptyYOLO = True
+        if len(data) == 0:
             if DEBUG:
                 print("yolo is empty")
         else:
+            ## TODO: unit test this
             # find the min(y) yolo coordinate and set to minYolo
             npData = np.array(data)
-            minargs = np.argmin(npData, axis=0)
+            minargs = np.argmax(npData, axis=0)
             minCoord = npData[minargs[-1]]
             self.minYolo = minCoord[1:]
             # debug
             if DEBUG:
                 # print minargs
                 print("minYolo:", self.minYolo)
-            self.XtargetYoloPub.publish(Int16(self.minYolo[0]))
-            self.YtargetYoloPub.publish(Int16(self.minYolo[1]))
+            self.XtargetYoloPub.publish(Int16(self.minYolo[0] * userdata.imageWidth))
+            self.YtargetYoloPub.publish(Int16(self.minYolo[1] * userdata.imageHeight))
 
         
     def enableTakeOffLoop_cb(self, msg):
