@@ -5,12 +5,20 @@ std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines
     // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
     // outputs a vector of 4 lines that should be at the extremes of the image
     // by Kyle Pawlowski 
+    if(lines == NULL){
+        std::vector<cv::Vec2f> *empty = new std::vector<cv::Vec2f>();
+        std::cout << "Null image encountered";
+        return empty;
+    }
+    if(lines->size() < 1){
+        return lines;
+    }
     float avgAngle = 0;
     float overlap = 0;
     float underlap = 0;
-    std::vector<cv::Vec2f> * groupA;
-    std::vector<cv::Vec2f> * groupB;
-    std::vector<cv::Vec2f> * finalists;
+    std::vector<cv::Vec2f> * groupA = new std::vector<cv::Vec2f>();
+    std::vector<cv::Vec2f> * groupB = new std::vector<cv::Vec2f>();
+    std::vector<cv::Vec2f> * finalists = new std::vector<cv::Vec2f>();
     for(std::vector<cv::Vec2f>::iterator line=lines->begin();line!=lines->end();line++){
         avgAngle+= (*line)[1];
     }
@@ -29,31 +37,34 @@ std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines
             groupB->push_back(*line);
         }
     }
-    cv::Vec2f max = (*groupA)[0];
-    cv::Vec2f min = (*groupA)[0];
-    for(std::vector<cv::Vec2f>::iterator line=groupA->begin();line!=groupA->end();line++){
-        if((*line)[0] > max[0]){
-            max = *line;
+    if(groupA->size() > 0){
+        cv::Vec2f max = (*groupA)[0];
+        cv::Vec2f min = (*groupA)[0];
+        for(std::vector<cv::Vec2f>::iterator line=groupA->begin();line!=groupA->end();line++){
+            if((*line)[0] > max[0]){
+                max = *line;
+            }
+            else if((*line)[0] < min[0]){
+                min = *line;
+            }
         }
-        else if((*line)[0] < max[0]){
-            min = *line;
-        }
+        finalists->push_back(max);
+        finalists->push_back(min);
     }
-    finalists->push_back(max);
-    finalists->push_back(min);
-
-    cv::Vec2f max2 = (*groupB)[0];
-    cv::Vec2f min2 = (*groupB)[0];
-    for(std::vector<cv::Vec2f>::iterator line=groupB->begin();line!=groupB->end();line++){
-        if((*line)[0] > max[0]){
-            max2 = *line;
+    if(groupB->size() > 0){
+        cv::Vec2f max2 = (*groupB)[0];
+        cv::Vec2f min2 = (*groupB)[0];
+        for(std::vector<cv::Vec2f>::iterator line=groupB->begin();line!=groupB->end();line++){
+            if((*line)[0] > max2[0]){
+                max2 = *line;
+            }
+            else if((*line)[0] < min2[0]){
+                min2 = *line;
+            }
         }
-        else if((*line)[0] < max[0]){
-            min2 = *line;
-        }
+        finalists->push_back(max2);
+        finalists->push_back(min2);
     }
-    finalists->push_back(max2);
-    finalists->push_back(min2);
     return finalists;
 }
 
