@@ -1,3 +1,6 @@
 [submodule "terarangerone-ros"]
 	path = terarangerone-ros
 	url = https://github.com/Terabee/terarangerone-ros.git
+[submodule "ros-yolo"]
+	path = ros-yolo
+	url = https://github.com/shadySource/ros-yolo.git
