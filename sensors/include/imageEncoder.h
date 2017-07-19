@@ -1,3 +1,6 @@
+#ifndef IMAGE_ENCODER_CLASS_H
+#define IMAGE_ENCODER_CLASS_H
+
 #include "ros/ros.h"
 #include "std_msgs/UInt8MultiArray.h"
 #include "std_msgs/MultiArrayDimension.h"
@@ -50,3 +53,5 @@ public:
 	}
 
 };
+
+#endif

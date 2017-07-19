@@ -1,9 +1,11 @@
 <launch>
-    <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
+	<node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node" respawn="false" output="screen">
 		<!-- Starts up faster, but timestamps will be inaccurate. --> 
 		<!--<param name="calibrate_time" type="bool" value="false"/> -->
 		<!-- Set the port to connect to here -->
-		<param name="port" type="string" value="/dev/ttyACM0"/> 
-		<param name="intensity" type="bool" value="false"/>
+		<param name="min_ang" type="double" value="-2.0862138271331787" />
+		<param name="max_ang" type="double" value="2.0923497676849365" />
+		<param name="port" type="string" value="/dev/ttyACM1" /> 
+		<param name="intensity" type="bool" value="false" />
 	</node>
 </launch>

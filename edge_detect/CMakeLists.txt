@@ -1,30 +1,20 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(plate_detect)
+project(edge_detect)
 
-## Add support for C++11, supported in ROS Kinetic and newer
-# add_definitions(-std=c++11)
+## Compile as C++11, supported in ROS Kinetic and newer
+# add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
+  geometry_msgs
   roscpp
   std_msgs
-  cv_bridge
 )
-find_package(OpenCV REQUIRED)
 
-# check c++11 / c++0x
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "-std=c++0x")
-else()
-    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+find_package(OpenCV 3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -83,7 +73,7 @@ endif()
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   geometry_msgs#   std_msgs
 # )
 
 ################################################
@@ -117,8 +107,8 @@ endif()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES plate_detect
-#  CATKIN_DEPENDS roscpp std_msgs
+#  LIBRARIES edge_detect
+#  CATKIN_DEPENDS cv_bridge geometry_msgs roscpp std_msgs
 #  DEPENDS system_lib
 )
 
@@ -128,15 +118,14 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
   include
+  ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/plate_detect.cpp
+#   src/${PROJECT_NAME}/edge_detect.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -147,7 +136,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/plate_detect_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/edge_detect_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -164,20 +153,11 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(plate_detect_node src/blob_detect.cpp src/color.cpp)
-add_dependencies(plate_detect_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(plate_detect_node
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-)
+add_executable(edge_detect_node src/main.cpp src/edge_detect.cpp)
+target_link_libraries(edge_detect_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(calibrate src/click_calibration.cpp src/color.cpp)
-add_dependencies(calibrate ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(calibrate
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-)
-
+add_executable(grid_detect_test src/grid_detect_test.cpp)
+target_link_libraries(grid_detect_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##
@@ -219,7 +199,7 @@ target_link_libraries(calibrate
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_plate_detect.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_edge_detect.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

@@ -77,14 +77,14 @@ void Color::set_calibration_file(std::string file){
 }
 
 
-void Color::calibrate_colors(float deviation_percentage){
-	cv::VideoCapture cap(0);
+void Color::calibrate_colors(int camera, float deviation_percentage){
+	cv::VideoCapture cap(camera);
 	if (!cap.isOpened()){
 		return;
 	}
-	cv::Mat img_rgb,img_lab;
+	cv::Mat img_rgb, img_lab;
 	cv::namedWindow("Img_RGB", cv::WINDOW_AUTOSIZE);
-	//cv::setMouseCallback("Img_RGB", onMouse, this);
+	cv::setMouseCallback("Img_RGB", onMouse, this);
 	if(color_type == 'r'|| color_type == 'g'){
 		while(1){
 			cap>>img_rgb;

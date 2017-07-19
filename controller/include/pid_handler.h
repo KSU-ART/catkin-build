@@ -25,14 +25,22 @@ private:
 	PIDController* pitchObstaclePID;
 	PIDController* rollObstaclePID;
 
+	PIDController* yawRTraversalPID;
+
+	PIDController* pitchEdgeDetectPID;
+	PIDController* rollEdgeDetectPID;
+
 	enum mode_enum{
-		DownCam 	= 0,
-		Obstacle 	= 1,
-		Yolo 		= 2
+		DownCam 	    = 0,
+		Obstacle 	    = 1,
+		Yolo 		    = 2,
+        EdgeDetect      = 3,
+        RandomTraversal = 4
 	};
 
 	mode_enum pitch_mode = Yolo;
 	mode_enum roll_mode = DownCam;
+    mode_enum yaw_mode = Yolo;
 
     bool DEBUG = true;
 
@@ -48,6 +56,9 @@ public:
         rollDownCamPID      = new PIDController(100, 0, 0, -250, 250);
         pitchObstaclePID    = new PIDController(100, 0, 0, -250, 250);
         rollObstaclePID     = new PIDController(100, 0, 0, -250, 250);
+        yawRTraversalPID    = new PIDController(100, 0, 0, -250, 250);
+        pitchEdgeDetectPID  = new PIDController(100, 0, 0, -250, 250);
+        rollEdgeDetectPID   = new PIDController(100, 0, 0, -250, 250);
     }
 
     pid_handler(std::string calibration_file){
@@ -66,6 +77,10 @@ public:
     void set_roll_mode(std::string value);
 
     std::string get_roll_mode();
+
+    void set_yaw_mode(std::string value);
+
+    std::string get_yaw_mode();
 
     // returns the current pid bsed on the state mode
 	PIDController& getThrottlePID();

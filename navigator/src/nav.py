@@ -3,7 +3,10 @@
 import rospy
 import smach
 import smach_ros
+import math
 from states import *
+import threading
+from multiprocessing.pool import ThreadPool
 
 from std_msgs.msg import Empty
 
@@ -17,8 +20,11 @@ def state_machine_handler():
 
     sm_top.userdata.GRdist = 0
     sm_top.userdata.GRangle = 0
-    sm_top.userdata.minGoalAngle = 20
-    sm_top.userdata.maxGoalAngle = 20
+    sm_top.userdata.minGoalAngle = 20 * math.pi /180
+    sm_top.userdata.maxGoalAngle = 20 * math.pi /180
+    sm_top.userdata.randomTraversalAngleThresh = 20 * math.pi /180
+    sm_top.userdata.imageWidth = 640
+    sm_top.userdata.imageHeight = 480
 
     sm_top.userdata.lowHeight = 0.2
     sm_top.userdata.TouchDownTimerMAX = 1
@@ -26,6 +32,9 @@ def state_machine_handler():
     sm_top.userdata.groundHeight = 0
 
     sm_top.userdata.obstacleThreshDist = 1.5
+
+    sm_top.userdata.EdgeDetectTimerMAX = 5
+    sm_top.userdata.EdgeDetectTimer = 0
 
     # Open the container
     with sm_top:
@@ -40,6 +49,9 @@ def state_machine_handler():
                 sm_TakeOff.userdata.normHeight = sm_top.userdata.normHeight
                 sm_TakeOff.userdata.altitudeDeviation = sm_top.userdata.altitudeDeviation
                 sm_TakeOff.userdata.targetYolo = sm_top.userdata.targetYolo
+                sm_TakeOff.userdata.randomTraversalAngleThresh = sm_top.userdata.randomTraversalAngleThresh
+                sm_TakeOff.userdata.imageWidth = sm_top.userdata.imageWidth
+                sm_TakeOff.userdata.imageHeight = sm_top.userdata.imageHeight
 
                 smach.StateMachine.add('TakeOff', TakeOff(),
                                     transitions={'FindGR':'FindGR',
@@ -54,8 +66,10 @@ def state_machine_handler():
                                     remapping={'targetYolo':'targetYolo'})
 
                 smach.StateMachine.add('RandomTraversal', RandomTraversal(),
-                                    transitions={'FindGR':'FindGR',
-                                                 'TakeOff':'TakeOff'})
+                                    transitions={'RandomTraversal':'RandomTraversal',
+                                                 'FindGR':'FindGR',
+                                                 'TakeOff':'TakeOff'},
+                                    remapping={'randomTraversalAngleThresh':'randomTraversalAngleThresh'})
 
             sm_CheckDownCam = smach.StateMachine(outcomes=['Obstacle', 'Null'])
 
@@ -104,7 +118,8 @@ def state_machine_handler():
                                                'groundHeight':'groundHeight'})
 
                 smach.StateMachine.add('AccendingCraft', AccendingCraft(),
-                                    transitions={'AccendingCraft':'AccendingCraft'},
+                                    transitions={'AccendingCraft':'AccendingCraft',
+                                                 'StartInteract':'StartInteract'},
                                     remapping={'lowHeight':'lowHeight',
                                                'normHeight':'normHeight',
                                                'altitudeDeviation':'altitudeDeviation'})
@@ -123,10 +138,33 @@ def state_machine_handler():
                                     transitions={'CheckObstacles':'CheckObstacles'},
                                     remapping={'obstacleThreshDist':'obstacleThreshDist'})
 
+            sm_EdgeDetect = smach.StateMachine(outcomes=['Obstacle', 'Null'])
+
+            with sm_EdgeDetect:
+                sm_EdgeDetect.userdata.EdgeDetectTimer = sm_top.userdata.EdgeDetectTimer
+                sm_EdgeDetect.userdata.EdgeDetectTimerMAX = sm_top.userdata.EdgeDetectTimerMAX
+
+                smach.StateMachine.add('StartInteract', StartInteract(),
+                                    transitions={'TouchDown':'TouchDown',
+                                                 'StartInteract':'StartInteract'},
+                                    remapping={'EdgeDetectTimerMAX':'EdgeDetectTimerMAX',
+                                               'EdgeDetectTimer':'EdgeDetectTimer'})
+
+                smach.StateMachine.add('TouchDown', TouchDown(),
+                                    transitions={'AccendingCraft':'AccendingCraft',
+                                                 'TouchDown':'TouchDown',
+                                                 'StartInteract':'StartInteract'},
+                                    remapping={'EdgeDetectTimer':'EdgeDetectTimer'})
+
+                smach.StateMachine.add('AccendingCraft', AccendingCraft(),
+                                    transitions={'AccendingCraft':'AccendingCraft',
+                                                 'StartInteract':'StartInteract'})
+
             smach.Concurrence.add('sm_TakeOff', sm_TakeOff)
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)
             smach.Concurrence.add('sm_StartInteract', sm_StartInteract)
             smach.Concurrence.add('sm_CheckObstacles', sm_CheckObstacles)
+            smach.Concurrence.add('sm_EdgeDetect', sm_EdgeDetect)
 
         smach.StateMachine.add('CON', sm_con,
                                transitions={'Null':'CON',
@@ -134,8 +172,13 @@ def state_machine_handler():
 
     sis = smach_ros.IntrospectionServer('smach_server', sm_top, '/SM_ROOT')
     sis.start()
-    sm_top.execute()
+
+    # sm_top.execute()
+    pool = ThreadPool(processes=5)
+    async_result = pool.apply_async(sm_top.execute)
+
     rospy.spin()
+
     sis.stop()
 
 def main():

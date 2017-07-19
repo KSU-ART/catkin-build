@@ -8,6 +8,7 @@ import numpy as np
 import json
 import time
 import math
+import random
 
 DEBUG = True
 
@@ -28,6 +29,8 @@ class TakeOff(smach.State):
         self.enableTakeOffLoop = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         if self.enableTakeOffLoop:
             # set altitude to normal height
             self.pubTargetAltitude.publish(Float32(userdata.normHeight))
@@ -41,10 +44,15 @@ class TakeOff(smach.State):
                 return 'TakeOff'
         else:
             return 'TakeOff'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
         
 class FindGR(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], output_keys=['targetYolo'])
+        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], output_keys=['targetYolo', 'imageWidth', 'imageHeight'])
         rospy.Subscriber("/IARC/YOLO", String, callback=self.callback)
         self.XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
         self.YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
@@ -67,41 +75,55 @@ class FindGR(smach.State):
             if DEBUG:
                 print("yolo is empty")
         else:
+            self.emptyYOLO = False
+            ## TODO: unit test this
             # find the min(y) yolo coordinate and set to minYolo
             npData = np.array(data)
-            minargs = np.argmin(npData, axis=0)
+            minargs = np.argmax(npData, axis=0)
             minCoord = npData[minargs[-1]]
             self.minYolo = minCoord[1:]
             # debug
             if DEBUG:
                 # print minargs
                 print("minYolo:", self.minYolo)
-            self.XtargetYoloPub.publish(Int16(self.minYolo[0]))
-            self.YtargetYoloPub.publish(Int16(self.minYolo[1]))
+            self.XtargetYoloPub.publish(Int16(self.minYolo[0] * 640))
+            self.YtargetYoloPub.publish(Int16(self.minYolo[1] * 480))
 
         
     def enableTakeOffLoop_cb(self, msg):
         self.enableTakeOffLoop = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         self.enableCheckDownCamLoop_pub.publish(Bool(True))
 
         if not self.enableTakeOffLoop:
             return 'TakeOff'
 
+        print("emptyYOLO:", self.emptyYOLO)
+
         if self.emptyYOLO:
             # no ground robot detected
+            print("going to Random Traversal")
             return 'RandomTraversal'
         else:
             if self.minYolo != None:
                 userdata.targetYolo = self.minYolo
             return 'FindGR'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
-###################### TODO: Needs more planing ########################
 class RandomTraversal(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['FindGR', 'TakeOff'])
+        smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], input_keys=['randomTraversalAngleThresh'])
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
+        self.YawPIDrt = rospy.Publisher('/IARC/randomTraversal/deltaAngle', Float32, queue_size=1)
+        self.targetAngle = random.uniform(-math.pi, math.pi)
+        self.angle = 0
 
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         self.enableTakeOffLoop = True
@@ -113,9 +135,22 @@ class RandomTraversal(smach.State):
         self.enableTakeOffLoop = msg.data
 
     def execute(self, userdata):
-        if not enableTakeOffLoop:
+        if DEBUG:
+            time.sleep(1)
+        if not self.enableTakeOffLoop:
             return 'TakeOff'
-        return 'FindGR'
+
+        if abs(self.angle - self.targetAngle) < userdata.randomTraversalAngleThresh:
+            self.targetAngle = random.uniform(-math.pi, math.pi)
+            return 'FindGR'
+        else:
+            self.YawPIDrt.publish(Float32(self.angle - self.targetAngle))
+            return 'RandomTraversal'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
 
 ####################### Down Cam Node ###########################
@@ -153,6 +188,8 @@ class CheckDownCam(smach.State):
         self.enableCheckDownCamLoop = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         if self.enableCheckDownCamLoop:
             userdata.GRdist = [self.posX, self.posY]
             userdata.GRangle = self.grAngle
@@ -164,6 +201,11 @@ class CheckDownCam(smach.State):
                 return 'FollowGR'
         else:
             return 'CheckDownCam'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
     
 class FollowGR(smach.State):
     def __init__(self):
@@ -180,11 +222,18 @@ class FollowGR(smach.State):
         self.enableCheckDownCamLoop = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         self.pubPitchPID.publish(Float32(userdata.GRdist[1]))
         self.pubRollPID.publish(Float32(userdata.GRdist[0]))
         if userdata.GRangle < userdata.minGoalAngle or userdata.GRangle > userdata.maxGoalAngle:
             self.enableStartInteractLoop_pub.publish(Bool(True))
         return 'CheckDownCam'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
 ############################## Interact Node ###############################
 class StartInteract(smach.State):
@@ -206,6 +255,8 @@ class StartInteract(smach.State):
         self.enableStartInteractLoop = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         if self.enableStartInteractLoop:
             self.pubTargetAltitude.publish(Float32(userdata.lowHeight))
             if abs(self.altitude - userdata.lowHeight) < userdata.altitudeDeviation:
@@ -216,6 +267,11 @@ class StartInteract(smach.State):
                 return 'StartInteract'
         else:
             return 'StartInteract'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
 class TouchDown(smach.State):
     def __init__(self):
@@ -229,6 +285,8 @@ class TouchDown(smach.State):
         self.enableStartInteractLoop = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         self.pubTargetAltitude.publish(Float32(userdata.groundHeight))
         if not self.enableStartInteractLoop:
             return 'StartInteract'
@@ -236,10 +294,15 @@ class TouchDown(smach.State):
             return 'AccendingCraft'
         else:
             return 'TouchDown'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
 class AccendingCraft(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['AccendingCraft'], input_keys=['lowHeight', 'normHeight', 'altitudeDeviation'])
+        smach.State.__init__(self, outcomes=['AccendingCraft', 'StartInteract'], input_keys=['lowHeight', 'normHeight', 'altitudeDeviation'])
         self.pubTargetAltitude = rospy.Publisher('/IARC/setAltitude', Float32, queue_size=1)
         rospy.Subscriber("/IARC/currentAltitude", Float32, callback=self.callback)
         self.altitude = 0
@@ -251,6 +314,8 @@ class AccendingCraft(smach.State):
         self.altitude = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         self.pubTargetAltitude.publish(Float32(userdata.normHeight))
         if self.altitude >= userdata.lowHeight:
             self.enableCheckDownCamLoop_pub.publish(Bool(True))
@@ -258,6 +323,11 @@ class AccendingCraft(smach.State):
             self.enableStartInteractLoop_pub.publish(Bool(False))
             return 'StartInteract'
         return 'AccendingCraft'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
 ############################# Obstacle Avoidence ############################
 class CheckObstacles(smach.State):
@@ -270,10 +340,17 @@ class CheckObstacles(smach.State):
         self.dist = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         if self.dist <= userdata.obstacleThreshDist:
             return 'ObstacleAvoidence'
         else:
             return 'CheckObstacles'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
 
 class ObstacleAvoidence(smach.State):
     def __init__(self):
@@ -297,19 +374,111 @@ class ObstacleAvoidence(smach.State):
         self.angle = msg.data
 
     def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
         self.enableTakeOffLoop_pub.publish(Bool(True))
         self.enableCheckDownCamLoop_pub.publish(Bool(False))
         self.enableStartInteractLoop_pub.publish(Bool(False))
 
         self.opposite_dist = userdata.obstacleThreshDist - self.dist
 
-        oppositeVec = (self.opposite_dist * -math.cos(self.angle), self.opposite_dist * -math.sin(self.angle))
+        oppositeVec = (self.opposite_dist * math.cos(self.angle+math.pi), self.opposite_dist * math.sin(self.angle+math.pi))
         if DEBUG:
             print("Obstacle opposite vector:", oppositeVec)
 
         if self.opposite_dist > 0:
             self.pubRollPID.publish(oppositeVec[1])
-            self.pubPitchPID.publish(-oppositeVec[0])
+            self.pubPitchPID.publish(oppositeVec[0])
 
         return 'CheckObstacles'
-        
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
+    
+############################### Check Edges ##################################
+class CheckEdges(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['CheckEdges', 'EdgeTimer'], input_keys=['EdgeDetectTimerMAX'], output_keys=['EdgeDetectTimer'])
+        rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
+        self.detected = False
+
+    def callback(self, msg):
+        self.detected = msg.data
+
+    def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
+        if self.detected:
+            userdata.EdgeDetectTimer = userdata.EdgeDetectTimerMAX + time.time()
+            return 'EdgeTimer'
+        else:
+            return 'CheckEdges'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
+
+class EdgeTimer(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['CheckEdges', 'EdgeTimer', 'TowardsArena'], input_keys=['EdgeDetectTimer'])
+        rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
+        self.detected = False
+
+    def callback(self, msg):
+        self.detected = msg.data
+
+    def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
+        if not self.detected:
+            return 'CheckEdges'
+        if userdata.EdgeDetectTimer >= time.time():
+            return 'TowardsArena'
+        else:
+            return 'EdgeTimer'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
+
+class TowardsArena(smach.State):
+    def __init__(self):
+        smach.State.__init__(self, outcomes=['CheckEdges', 'TowardsArena'], input_keys=[])
+        rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
+        self.detected = False
+        rospy.Subscriber("/IARC/edgeDetect/arenaVector/x", Float32, callback=self.arenaX_cb)
+        rospy.Subscriber("/IARC/edgeDetect/arenaVector/y", Float32, callback=self.arenaY_cb)
+        self.arenaX = 0
+        self.arenaY = 0
+
+        self.pubArenaX = rospy.Publisher('/IARC/edgeDetect/xPID', Float32, queue_size=1)
+        self.pubArenaY = rospy.Publisher('/IARC/edgeDetect/yPID', Float32, queue_size=1)
+
+    def callback(self, msg):
+        self.detected = msg.data
+
+    def arenaX_cb(self, msg):   
+        self.arenaX = msg.data
+
+    def arenaY_cb(self, msg):
+        self.arenaY = msg.data
+
+    def execute(self, userdata):
+        if DEBUG:
+            time.sleep(1)
+        self.pubArenaX.publish(Float32(self.arenaX))
+        self.pubArenaY.publish(Float32(self.arenaY))
+        if not self.detected:
+            return 'CheckEdges'
+        else:
+            return 'TowardsArena'
+    
+    def request_preempt(self):
+        """Overload the preempt request method just to spew an error."""
+        State.request_preempt(self)
+        rospy.logwarn("Preempted!")
+
