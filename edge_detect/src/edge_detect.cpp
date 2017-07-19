@@ -5,12 +5,20 @@ std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines
     // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
     // outputs a vector of 4 lines that should be at the extremes of the image
     // by Kyle Pawlowski 
+    if(lines == NULL){
+        std::vector<cv::Vec2f> *empty = new std::vector<cv::Vec2f>();
+        std::cout << "Null image encountered";
+        return empty;
+    }
+    if(lines->size() < 1){
+        return lines;
+    }
     float avgAngle = 0;
     float overlap = 0;
     float underlap = 0;
-    std::vector<cv::Vec2f> * groupA;
-    std::vector<cv::Vec2f> * groupB;
-    std::vector<cv::Vec2f> * finalists;
+    std::vector<cv::Vec2f> * groupA = new std::vector<cv::Vec2f>();
+    std::vector<cv::Vec2f> * groupB = new std::vector<cv::Vec2f>();
+    std::vector<cv::Vec2f> * finalists = new std::vector<cv::Vec2f>();
     for(std::vector<cv::Vec2f>::iterator line=lines->begin();line!=lines->end();line++){
         avgAngle+= (*line)[1];
     }
