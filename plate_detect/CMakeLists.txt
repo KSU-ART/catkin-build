@@ -10,6 +10,7 @@ project(plate_detect)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  cv_bridge
 )
 find_package(OpenCV REQUIRED)
 

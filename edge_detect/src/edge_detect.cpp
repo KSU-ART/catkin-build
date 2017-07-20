@@ -1,5 +1,73 @@
 #include "edge_detect.h"
 
+std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh){
+    // lines is a vector of all of the lines in an image
+    // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
+    // outputs a vector of 4 lines that should be at the extremes of the image
+    // by Kyle Pawlowski 
+    if(lines == NULL){
+        std::vector<cv::Vec2f> *empty = new std::vector<cv::Vec2f>();
+        std::cout << "Null image encountered";
+        return empty;
+    }
+    if(lines->size() < 1){
+        return lines;
+    }
+    float avgAngle = 0;
+    float overlap = 0;
+    float underlap = 0;
+    std::vector<cv::Vec2f> * groupA = new std::vector<cv::Vec2f>();
+    std::vector<cv::Vec2f> * groupB = new std::vector<cv::Vec2f>();
+    std::vector<cv::Vec2f> * finalists = new std::vector<cv::Vec2f>();
+    for(std::vector<cv::Vec2f>::iterator line=lines->begin();line!=lines->end();line++){
+        avgAngle+= (*line)[1];
+    }
+    avgAngle = avgAngle / lines->size();
+    if(avgAngle + angleThresh > 2*PI){
+        overlap = (avgAngle + angleThresh) - 2*PI;
+    }
+    else if(avgAngle - angleThresh < 0){
+        underlap = (angleThresh - avgAngle);
+    }
+    for(std::vector<cv::Vec2f>::iterator line=lines->begin();line!=lines->end();line++){
+        if(((*line)[1] < avgAngle && (*line)[1] > avgAngle - angleThresh) || (*line)[1] > 2*PI - underlap){
+            groupA->push_back(*line);
+        }
+        else if(((*line)[1] > avgAngle && (*line)[1] < avgAngle + angleThresh) || (*line)[1] < overlap){
+            groupB->push_back(*line);
+        }
+    }
+    if(groupA->size() > 0){
+        cv::Vec2f max = (*groupA)[0];
+        cv::Vec2f min = (*groupA)[0];
+        for(std::vector<cv::Vec2f>::iterator line=groupA->begin();line!=groupA->end();line++){
+            if((*line)[0] > max[0]){
+                max = *line;
+            }
+            else if((*line)[0] < min[0]){
+                min = *line;
+            }
+        }
+        finalists->push_back(max);
+        finalists->push_back(min);
+    }
+    if(groupB->size() > 0){
+        cv::Vec2f max2 = (*groupB)[0];
+        cv::Vec2f min2 = (*groupB)[0];
+        for(std::vector<cv::Vec2f>::iterator line=groupB->begin();line!=groupB->end();line++){
+            if((*line)[0] > max2[0]){
+                max2 = *line;
+            }
+            else if((*line)[0] < min2[0]){
+                min2 = *line;
+            }
+        }
+        finalists->push_back(max2);
+        finalists->push_back(min2);
+    }
+    return finalists;
+}
+
 void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int thickness){
     if(line[1]!=0){
         float m = -1/tan(line[1]);
@@ -13,6 +81,7 @@ void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int th
 
 void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
     std::vector<cv::Vec2f>::iterator current;
+    // std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
     for(current=lines->begin();current!=lines->end();current++){
         float p = (*current)[0];
         float theta = (*current)[1];
