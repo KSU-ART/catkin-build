@@ -15,6 +15,7 @@
 #include <vector>
 #include <math.h>
 #include "imageDecoder.h"
+#include "line.h"
 
 #define PI 3.14159265
 
@@ -53,7 +54,7 @@ public:
         DEBUG = true;
     }
     //added by Kyle
-    std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
+    //std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
 
     // debug functions
     void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0,0,255), int thickness = 1);

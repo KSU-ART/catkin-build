@@ -1,5 +1,5 @@
 #include "edge_detect.h"
-
+/*
 std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh){
     // lines is a vector of all of the lines in an image
     // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
@@ -67,7 +67,7 @@ std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines
     }
     return finalists;
 }
-
+*/
 void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int thickness){
     if(line[1]!=0){
         float m = -1/tan(line[1]);
@@ -79,9 +79,9 @@ void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int th
     }
 }
 
-void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines0, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
+void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
     std::vector<cv::Vec2f>::iterator current;
-    std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
+    //std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
     for(current=lines->begin();current!=lines->end();current++){
         float p = (*current)[0];
         float theta = (*current)[1];
