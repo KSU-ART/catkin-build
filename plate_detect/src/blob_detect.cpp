@@ -3,16 +3,19 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Bool.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <cv_bridge/cv_bridge.h>
 #include <math.h>
 #include "color.h"
 #include <iostream>
-#include "imageDecoder.h"
 #include <string>
 
 using namespace std;
 using namespace cv;
 
 string path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
+Mat src;
 
 bool sortFunc (int i, int j) { return (i>j); }
 
@@ -24,14 +27,26 @@ vector<size_t> sort_indexes(const vector<T> &v) {
   iota(idx.begin(), idx.end(), 0);
 
   // sort indexes based on comparing values in v
-  sort(idx.begin(), idx.end(),
-       [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+  sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
 
   return idx;
 }
 
 float getSquareDist(Point p){
 	return p.x*p.x + p.y*p.y;
+}
+
+void image_callback(const sensor_msgs::Image::ConstPtr& msg){
+	cout << "call" << endl;
+	cv_bridge::CvImagePtr cv_ptr;
+	try{
+		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+	}
+	catch (cv_bridge::Exception& e){
+		ROS_ERROR("cv_bridge exception: %s", e.what());
+		return;
+	}
+	src = cv_ptr->image;
 }
 
 int main( int argc, char** argv ){
@@ -41,12 +56,12 @@ int main( int argc, char** argv ){
 
 	ros::init(argc, argv,"roomba_pose");
 	ros::NodeHandle nh;
+	ros::Subscriber imageSub = nh.subscribe("/usb_cam_1/image_raw", 1, image_callback);
 	ros::Publisher pubx = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/x", 1);
 	ros::Publisher puby = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/y", 1);
 	ros::Publisher detectPub = nh.advertise<std_msgs::Bool>("/IARC/OrientationNet/detected", 1);
 
-	imageDecoder cap("/sensor/downCam");
-	Mat color, labcs, labThresh, Thresh1, Thresh2;
+	Mat labcs, labThresh, Thresh1, Thresh2;
 	//Define color of blobs to track
 	Color blob1('r', path);
 	Color blob2('g', path);
@@ -54,11 +69,10 @@ int main( int argc, char** argv ){
 	while(ros::ok())
 	{
 		//Passing video footage
-		color = cap.get_image();
-		if(!color.empty()){
+		if(!src.empty()){
 			// std::cout << "image found" << std::endl;
 			//Define CIE Lab img and smooth it
-			cvtColor(color, labcs, COLOR_BGR2Lab);
+			cvtColor(src, labcs, COLOR_BGR2Lab);
 			medianBlur(labcs,labcs,11);
 			//Std Altitude Threshold
 			inRange(labcs, blob1.get_min_scalar(), blob1.get_max_scalar(), Thresh1);
@@ -153,9 +167,9 @@ int main( int argc, char** argv ){
 				puby.publish(msg);
 
 				//cout <<"< " <<center.x <<" , " <<center.y <<" >" <<endl;
-				drawContours(color, contours, closestIndex, Scalar(0, 255, 255), 3, 8, vector<Vec4i>(), 0, Point());
-				circle(color, closestPoint, 5, Scalar(255, 255, 0), FILLED, LINE_8);
-				circle(color, Point(cam_width/2, cam_height/2), 5, Scalar(255, 255, 0), FILLED, LINE_8);
+				drawContours(src, contours, closestIndex, Scalar(0, 255, 255), 3, 8, vector<Vec4i>(), 0, Point());
+				circle(src, closestPoint, 5, Scalar(255, 255, 0), FILLED, LINE_8);
+				circle(src, Point(cam_width/2, cam_height/2), 5, Scalar(255, 255, 0), FILLED, LINE_8);
 			}
 		}
 		else{
@@ -166,8 +180,8 @@ int main( int argc, char** argv ){
 			if(!labThresh.empty()){
 				imshow("Thresh",labThresh);
 			}
-			if(!color.empty()){
-				imshow("Original",color);
+			if(!src.empty()){
+				imshow("Original",src);
 			}
 		}
 		ros::spinOnce();

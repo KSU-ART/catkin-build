@@ -23,6 +23,8 @@ def state_machine_handler():
     sm_top.userdata.minGoalAngle = 20 * math.pi /180
     sm_top.userdata.maxGoalAngle = 20 * math.pi /180
     sm_top.userdata.randomTraversalAngleThresh = 20 * math.pi /180
+    sm_top.userdata.imageWidth = 640
+    sm_top.userdata.imageHeight = 480
 
     sm_top.userdata.lowHeight = 0.2
     sm_top.userdata.TouchDownTimerMAX = 1
@@ -48,6 +50,8 @@ def state_machine_handler():
                 sm_TakeOff.userdata.altitudeDeviation = sm_top.userdata.altitudeDeviation
                 sm_TakeOff.userdata.targetYolo = sm_top.userdata.targetYolo
                 sm_TakeOff.userdata.randomTraversalAngleThresh = sm_top.userdata.randomTraversalAngleThresh
+                sm_TakeOff.userdata.imageWidth = sm_top.userdata.imageWidth
+                sm_TakeOff.userdata.imageHeight = sm_top.userdata.imageHeight
 
                 smach.StateMachine.add('TakeOff', TakeOff(),
                                     transitions={'FindGR':'FindGR',
