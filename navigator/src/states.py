@@ -53,7 +53,7 @@ class TakeOff(smach.State):
 class FindGR(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], output_keys=['targetYolo', 'imageWidth', 'imageHeight'])
-        rospy.Subscriber("/IARC/YOLO", String, callback=self.callback)
+        rospy.Subscriber("/yolo/first/boxes", String, callback=self.callback)
         self.XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
         self.YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
         self.emptyYOLO = False
