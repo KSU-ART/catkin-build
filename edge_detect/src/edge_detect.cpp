@@ -244,23 +244,29 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
     return average;
 }
 
+// void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img)
+
 void edgeDetector::runGridProcOnce(){
     src = im.get_image();
     if(src.empty()){
         std::cout << "no image" << std::endl;
         return;
     }
+    cv::cvtColor(src, lab, CV_BGR2Lab);
+
     cv::cvtColor(src, src, CV_BGR2GRAY);
 
-    // dst = cv::Mat::zeros( src.size(), CV_32FC1 );
-
-    /// Detecting corners
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
     cv::bitwise_not(dst, dst);
     cv::adaptiveThreshold(dst, dst, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, blockSize, 2);
     cv::bitwise_not(dst, dst);
     cv::Mat kernel = (cv::Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     cv::dilate(dst, dst2, kernel);
+
+    inRange(lab, red_color.get_min_scalar(), red_color.get_max_scalar(), red);
+    inRange(lab, green_color.get_min_scalar(), green_color.get_max_scalar(), green);
+    cv::dilate(red, red, kernel);
+    cv::dilate(green, green, kernel);
 
     int max=-1;
     cv::Point maxPt;
@@ -291,7 +297,21 @@ void edgeDetector::runGridProcOnce(){
     }
 
     std::vector<cv::Vec2f> lines;
-    cv::HoughLines(dst2, lines, 1, CV_PI/180, 210);
+    cv::HoughLines(dst2, lines, 1, CV_PI/180, lineThresh);
+    // std::vector<cv::Vec2f> lines1;
+    // cv::HoughLines(red, lines1, 1, CV_PI/180, lineThresh);
+    // std::vector<cv::Vec2f> lines2;
+    // cv::HoughLines(green, lines2, 1, CV_PI/180, lineThresh);
+
+    // std::vector<cv::Vec2f>::iterator current_red;
+    // for(current_red=lines1.begin();current_red!=lines1.end();current_red++){
+    //     lines.push_back(*current_red);
+    // }
+    // std::vector<cv::Vec2f>::iterator current_green;
+    // for(current_green=lines2.begin();current_green!=lines2.end();current_green++){
+    //     lines.push_back(*current_green);
+    // }
+
     mergeRelatedLines(&lines, dst2);
 
     std::vector<cv::Vec2f> edges;

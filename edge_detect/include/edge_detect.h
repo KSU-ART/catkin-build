@@ -15,6 +15,7 @@
 #include <vector>
 #include <math.h>
 #include "imageDecoder.h"
+#include "color.h"
 
 #define PI 3.14159265
 
@@ -26,13 +27,18 @@ private:
 	ros::Publisher puby;
 	ros::Publisher detectPub;
     
-    cv::Mat src;
+    cv::Mat src, lab, red, green;
     cv::Mat dst, dst2, dst3;
 
     imageDecoder im;
 
     std::string source_window;
     std::string corners_window;
+
+	Color red_color;
+	Color green_color;
+    std::string path;
+    int lineThresh;
 
     /// Detector parameters
 	int blockSize;
@@ -42,8 +48,11 @@ private:
 public:
     // constructor
     edgeDetector()
-    :im("/sensor/downCam")
+    :im("/sensor/compressed/downCam")
     {
+        path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
+        lineThresh = 210;
+
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
         detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
@@ -51,6 +60,9 @@ public:
         corners_window = "Corners detected";
         blockSize = 21;
         DEBUG = true;
+
+        red_color = Color('r', path);
+        green_color = Color('g', path);
     }
     //added by Kyle
     std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
