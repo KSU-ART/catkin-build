@@ -79,9 +79,10 @@ class FindGR(smach.State):
             ## TODO: unit test this
             # find the min(y) yolo coordinate and set to minYolo
             npData = np.array(data)
-            minargs = np.argmax(npData, axis=0)
-            minCoord = npData[minargs[-1]]
-            self.minYolo = minCoord[1:]
+            minargs = np.argmax(npData[npData[:,0] < 2], axis=0)
+            # print("minargs", npData[npData[:,0] < 2])
+            minCoord = npData[minargs[2]] 
+            self.minYolo = minCoord[1:3]
             # debug
             if DEBUG:
                 # print minargs
