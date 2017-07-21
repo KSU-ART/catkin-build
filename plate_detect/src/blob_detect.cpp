@@ -125,7 +125,7 @@ int main( int argc, char** argv ){
 				// cout << endl;
 				for(int i = 0; i < 3; i++){
 					int ind = sorted_areas.size()-(i+1);
-					cout << areas[sorted_areas[ind]] << " \t";
+					// cout << areas[sorted_areas[ind]] << " \t";
 					if(ind >= 0){
 						// cout << ind << " ";
 
