@@ -1,0 +1,3 @@
+<launch>
+	<node name="plate_detect" pkg="plate_detect" type="plate_detect_node" output="screen" launch-prefix="valgrind -v --track-origins=yes" />
+</launch>
