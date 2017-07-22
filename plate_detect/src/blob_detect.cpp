@@ -15,7 +15,7 @@
 using namespace std;
 using namespace cv;
 
-string path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
+string path = "/home/marvin/catkin_ws/src/catkin-build/plate_detect/include";
 Mat src;
 
 // bool sortFunc (int i, int j) { return (i>j); }

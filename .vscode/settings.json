@@ -49,5 +49,6 @@
         "utility": "cpp",
         "*.ipp": "cpp",
         "algorithm": "cpp"
-    }
+    },
+    "python.linting.pylintEnabled": false
 }
