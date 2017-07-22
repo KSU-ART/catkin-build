@@ -153,7 +153,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 
-add_executable(edge_detect_node src/main.cpp src/edge_detect.cpp)
+add_executable(edge_detect_node src/main.cpp src/edge_detect.cpp src/line.cpp)
 target_link_libraries(edge_detect_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(grid_detect_test src/grid_detect_test.cpp)

@@ -42,7 +42,7 @@ private:
 public:
     // constructor
     edgeDetector()
-    :im("/sensor/downCam")
+    :im("/sensor/compressed/downCam")
     {
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
@@ -53,7 +53,7 @@ public:
         DEBUG = true;
     }
     //added by Kyle
-    std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
+    //std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
 
     // debug functions
     void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0,0,255), int thickness = 1);

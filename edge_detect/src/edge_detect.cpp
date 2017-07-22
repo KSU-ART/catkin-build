@@ -1,9 +1,6 @@
 #include "edge_detect.h"
-<<<<<<< HEAD
+#include "line.h"
 /*
-=======
-
->>>>>>> parent of a18db6a... trying to get git to work
 std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh){
     // lines is a vector of all of the lines in an image
     // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
@@ -71,11 +68,7 @@ std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines
     }
     return finalists;
 }
-<<<<<<< HEAD
 */
-=======
-
->>>>>>> parent of a18db6a... trying to get git to work
 void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int thickness){
     if(line[1]!=0){
         float m = -1/tan(line[1]);
@@ -89,11 +82,7 @@ void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int th
 
 void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::vector<cv::Vec2f> *edges, int maxOverhangThresh, int minBufferArea, float lineOffset){
     std::vector<cv::Vec2f>::iterator current;
-<<<<<<< HEAD
     //std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
-=======
-    // std::vector<cv::Vec2f> *lines = whittleLines(lines0, PI / 2);
->>>>>>> parent of a18db6a... trying to get git to work
     for(current=lines->begin();current!=lines->end();current++){
         float p = (*current)[0];
         float theta = (*current)[1];
@@ -140,12 +129,22 @@ void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::v
 
 void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img){
     // double angleThresh = 10;
-    double mergeThresh = 64;
+    double mergeThresh = 50;
     std::vector<cv::Vec2f>::iterator current;
     for(current = lines->begin();current != lines->end();current++){
         if((*current)[0]<-99 && (*current)[1]<-99)
             continue;
-        float p1 = (*current)[0];
+        Line line (*current, img.size().height, img.size().width);
+        /*std::cout << "line x1 " << line.getPts()->x1 << "\n";
+        std::cout << "line y1 " << line.getPts()->y1 << "\n";
+        std::cout << "line x2 " << line.getPts()->x2 << "\n";
+        std::cout << "line y2 " << line.getPts()->y2 << "\n";
+        std::cout << "line slope " << *line.getSlope() << "\n";
+        std::cout << "line y_int " << *line.getYInt() << "\n";*/
+        /*std::cout << "line r " << line.getR() << "\n";
+        std::cout << "line theta " << line.getTheta() << "\n";*/
+        
+        /*float p1 = (*current)[0];
         float theta1 = (*current)[1];
         
         cv::Point pt1current, pt2current;
@@ -164,16 +163,18 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
             pt2current.x = -(pt2current.y-p1/sin(theta1))*tan(theta1);
 
         }
-        
+        */
         std::vector<cv::Vec2f>::iterator pos;
-        std::vector<cv::Vec4f> merges;
-        merges.push_back(cv::Vec4f(pt1current.x, pt1current.y, pt2current.x, pt2current.y));
+        std::vector<Line> merges;
+        merges.push_back(line);
         for(pos=lines->begin();pos!=lines->end();pos++){
+            Line compare_line (*pos, img.size().height, img.size().width);
             if((*pos)[0]<-99 && (*pos)[1]<-99) 
                 continue;
+                
             if(*current==*pos) 
                 continue;
-            
+            /*
             float p = (*pos)[0];
             float theta = (*pos)[1];
             
@@ -192,11 +193,12 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
                 pt2.y = img.size().height;
                 pt2.x = -(pt2.y-p/sin(theta))*tan(theta);
             }
-            if( ((double)(pt1.x-pt1current.x)*(pt1.x-pt1current.x) + (pt1.y-pt1current.y)*(pt1.y-pt1current.y)<mergeThresh*mergeThresh) &&
-                ((double)(pt2.x-pt2current.x)*(pt2.x-pt2current.x) + (pt2.y-pt2current.y)*(pt2.y-pt2current.y)<mergeThresh*mergeThresh) )
+            */
+            if( ((double)pow(line.getPts()->x1-compare_line.getPts()->x1, 2) + pow(line.getPts()->y1-compare_line.getPts()->y1, 2))<mergeThresh*mergeThresh &&
+                ((double)pow(line.getPts()->x2-compare_line.getPts()->x2, 2) + pow(line.getPts()->y2-compare_line.getPts()->y2, 2))<mergeThresh*mergeThresh )
             {
                 // Merge the two
-                merges.push_back(cv::Vec4f(pt1.x, pt1.y, pt2.x, pt2.y));
+                merges.push_back(compare_line);
 
                 (*pos)[0]=-100;
                 (*pos)[1]=-100;
@@ -206,12 +208,12 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
         float count = 0;
         cv::Point average1(0,0);
         cv::Point average2(0,0);
-        for(std::vector<cv::Vec4f>::iterator i=merges.begin(); i!=merges.end(); i++){
-            average1.x += (*i)[0];
-            average1.y += (*i)[1];
+        for(std::vector<Line>::iterator i=merges.begin(); i!=merges.end(); i++){
+            average1.x += i->getPts()->x1;
+            average1.y += i->getPts()->y1;
 
-            average2.x += (*i)[2];
-            average2.y += (*i)[3];
+            average2.x += i->getPts()->x2;
+            average2.y += i->getPts()->y2;
             
             count++;
         }
@@ -219,17 +221,20 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
         average1.y /= count;
         average2.x /= count;
         average2.y /= count;
+        std::cout << "average1 x " << average1.x << "\n";
+        std::cout << "average1 y " << average1.y << "\n";
+        std::cout << "average2 x " << average2.x << "\n";
+        std::cout << "average2 y " << average2.y << "\n";
 
-        float newP, newTheta;
-        if(average2.y - average1.y < 0.000001){
-            newTheta = PI/2;
-        }
-        else{
-            newTheta = atan2((average1.x - average2.x), (average2.y - average1.y));
-        }
-        newP = average1.x*cos(newTheta) + average1.y*sin(newTheta);
-        (*current)[0] = newP;
-        (*current)[1] = newTheta;
+        Line newLine (cv::Vec4f(average1.x,average1.y,average2.x,average2.y));
+
+        std::cout << "y int " << *newLine.getYInt() << "\n";
+        std::cout << "slope " << *newLine.getSlope() << "\n";
+        std::cout << " r " << newLine.getR() << "\n";
+        std::cout << "theta " << newLine.getTheta() << "\n";
+
+        (*current)[0] = newLine.getR();
+        (*current)[1] = newLine.getTheta();
     }
     // remove unwanted lines
     for(int i = lines->size()-1; i >= 0; i--){
