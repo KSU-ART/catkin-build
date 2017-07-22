@@ -135,35 +135,6 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
         if((*current)[0]<-99 && (*current)[1]<-99)
             continue;
         Line line (*current, img.size().height, img.size().width);
-        /*std::cout << "line x1 " << line.getPts()->x1 << "\n";
-        std::cout << "line y1 " << line.getPts()->y1 << "\n";
-        std::cout << "line x2 " << line.getPts()->x2 << "\n";
-        std::cout << "line y2 " << line.getPts()->y2 << "\n";
-        std::cout << "line slope " << *line.getSlope() << "\n";
-        std::cout << "line y_int " << *line.getYInt() << "\n";*/
-        /*std::cout << "line r " << line.getR() << "\n";
-        std::cout << "line theta " << line.getTheta() << "\n";*/
-        
-        /*float p1 = (*current)[0];
-        float theta1 = (*current)[1];
-        
-        cv::Point pt1current, pt2current;
-        if(theta1>CV_PI*45/180 && theta1<CV_PI*135/180){
-            pt1current.x = 0;
-            pt1current.y = p1/sin(theta1);
-
-            pt2current.x = img.size().width;
-            pt2current.y = -pt2current.x/tan(theta1) + p1/sin(theta1);
-        }
-        else{
-            pt1current.y = 0;
-            pt1current.x = p1/cos(theta1);
-
-            pt2current.y = img.size().height;
-            pt2current.x = -(pt2current.y-p1/sin(theta1))*tan(theta1);
-
-        }
-        */
         std::vector<cv::Vec2f>::iterator pos;
         std::vector<Line> merges;
         merges.push_back(line);
@@ -174,26 +145,6 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
                 
             if(*current==*pos) 
                 continue;
-            /*
-            float p = (*pos)[0];
-            float theta = (*pos)[1];
-            
-            cv::Point pt1, pt2;
-            if((*pos)[1]>CV_PI*45/180 && (*pos)[1]<CV_PI*135/180){
-                pt1.x = 0;
-                pt1.y = p/sin(theta);
-
-                pt2.x = img.size().width;
-                pt2.y = -pt2.x/tan(theta) + p/sin(theta);
-            }
-            else{
-                pt1.y = 0;
-                pt1.x = p/cos(theta);
-
-                pt2.y = img.size().height;
-                pt2.x = -(pt2.y-p/sin(theta))*tan(theta);
-            }
-            */
             if( ((double)pow(line.getPts()->x1-compare_line.getPts()->x1, 2) + pow(line.getPts()->y1-compare_line.getPts()->y1, 2))<mergeThresh*mergeThresh &&
                 ((double)pow(line.getPts()->x2-compare_line.getPts()->x2, 2) + pow(line.getPts()->y2-compare_line.getPts()->y2, 2))<mergeThresh*mergeThresh )
             {
@@ -221,18 +172,8 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
         average1.y /= count;
         average2.x /= count;
         average2.y /= count;
-        std::cout << "average1 x " << average1.x << "\n";
-        std::cout << "average1 y " << average1.y << "\n";
-        std::cout << "average2 x " << average2.x << "\n";
-        std::cout << "average2 y " << average2.y << "\n";
 
         Line newLine (cv::Vec4f(average1.x,average1.y,average2.x,average2.y));
-
-        std::cout << "y int " << *newLine.getYInt() << "\n";
-        std::cout << "slope " << *newLine.getSlope() << "\n";
-        std::cout << " r " << newLine.getR() << "\n";
-        std::cout << "theta " << newLine.getTheta() << "\n";
-
         (*current)[0] = newLine.getR();
         (*current)[1] = newLine.getTheta();
     }
