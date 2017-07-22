@@ -25,11 +25,13 @@ private:
     ros::Publisher pubx;
 	ros::Publisher puby;
 	ros::Publisher detectPub;
+
+    ros::Subscriber sub;
     
     cv::Mat src;
     cv::Mat dst, dst2, dst3;
 
-    imageDecoder im;
+    // imageDecoder im;
 
     std::string source_window;
     std::string corners_window;
@@ -42,11 +44,12 @@ private:
 public:
     // constructor
     edgeDetector()
-    :im("/sensor/compressed/downCam")
+    // :im("/sensor/compressed/downCam")
     {
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
         detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
+        sub = n.subscribe("/usb_cam_down/image_rect_color", 2, &edgeDetector::image_callback, this);
         source_window = "Source image";
         corners_window = "Corners detected";
         blockSize = 21;
@@ -54,6 +57,8 @@ public:
     }
     //added by Kyle
     std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
+
+    void image_callback(const sensor_msgs::Image::ConstPtr& msg);
 
     // debug functions
     void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0,0,255), int thickness = 1);

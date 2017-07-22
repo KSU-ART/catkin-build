@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "sensors.h"
 #include <cmath>
+#include "compressed_image_repeater.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ int main(int argc, char** argv)
 	LidarSensor sensorHokuyo(0, "/scan");
 	LidarSensor sensorAltitudeLidar(1, "/terarangerone");
 	imageEncoder forwardCam(1, "/sensor/compressed/forwardCam");
-	imageEncoder forwardCam(1, "/sensor/compressed/downCam");
+	ImageRepeater downCam("/usb_cam_down/image_raw");
 
 	ros::Rate loop_rate(120);
 	while (ros::ok())

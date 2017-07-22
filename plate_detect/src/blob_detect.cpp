@@ -60,7 +60,7 @@ int main( int argc, char** argv ){
 	ros::NodeHandle nh;
 
 	// ros::Subscriber imageSub = nh.subscribe("/usb_cam_1/image_raw", 1, image_callback);
-	imageDecoder im("/sensor/compressed/downCam");
+	imageDecoder im("/usb_cam_down/image_raw/compressed");
 
 	ros::Publisher pubx = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/x", 1);
 	ros::Publisher puby = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/y", 1);
