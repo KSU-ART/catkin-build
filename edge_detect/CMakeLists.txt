@@ -159,6 +159,12 @@ target_link_libraries(edge_detect_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(grid_detect_test src/grid_detect_test.cpp)
 target_link_libraries(grid_detect_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(color_set src/click_calibration.cpp src/color.cpp)
+target_link_libraries(color_set
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############

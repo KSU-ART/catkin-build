@@ -69,6 +69,16 @@ std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines
     return finalists;
 }
 */
+cv::Mat * isColor(cv::Mat img, CvScalar color){
+    cv::Mat * newMat = new cv::Mat(img.size().height, img.size().width, CV_16U);
+    for(int y = 0; y < img.size().height; y++){
+        for(int x = 0; x < img.size().width; x++){
+            newMat->at<double>(y,x) = sqrt(pow(color.val[0]-img.at<double>(y,x,0),2)+pow(color.val[1]-img.at<double>(y,x,1),2)+pow(color.val[2]-img.at<double>(y,x,2),2));
+        }
+    }
+    return newMat;
+}
+
 void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int thickness){
     if(line[1]!=0){
         float m = -1/tan(line[1]);
@@ -204,12 +214,18 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
 
 void edgeDetector::runGridProcOnce(){
     src = im.get_image();
+    double labThreshold = 64;
+    cv::Mat lab;
+    cv::Mat labRed;
+    cv::Mat labGreen;
     if(src.empty()){
         std::cout << "no image" << std::endl;
         return;
     }
+    cv::cvtColor(src, lab, CV_BGR2Lab);
     cv::cvtColor(src, src, CV_BGR2GRAY);
-
+    //labRed = *isColor(lab, Color('r', "/home/kyle/catkin_ws/src/edge_detect/include/red.txt"));
+    //labGreen = *isColor(lab,Color('g', "/home/kyle/catkin_ws/src/edge_detect/include/green.txt"));
     // dst = cv::Mat::zeros( src.size(), CV_32FC1 );
 
     /// Detecting corners
@@ -241,10 +257,18 @@ void edgeDetector::runGridProcOnce(){
 
     for(int y = 0; y < dst2.size().height; y++){
         uchar *row = dst2.ptr(y);
+        uchar *row_red = labRed.ptr(y);
+        uchar *row_green = labGreen.ptr(y);
         for(int x = 0; x < dst2.size().width; x++){
             if(row[x] == 64 && x != maxPt.x && y != maxPt.y){
                 int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
             }
+            /*else if(row_red[x] > labThreshold){
+                int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
+            }
+            else if(row_green[x] > labThreshold){
+                int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
+            }*/
         }
     }
 

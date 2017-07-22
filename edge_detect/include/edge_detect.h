@@ -15,6 +15,7 @@
 #include <vector>
 #include <math.h>
 #include "imageDecoder.h"
+#include "color.h"
 
 #define PI 3.14159265
 
@@ -42,7 +43,7 @@ private:
 public:
     // constructor
     edgeDetector()
-    :im("/sensor/compressed/downCam")
+    :im("/usb_cam_1/image_rect_color")
     {
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
