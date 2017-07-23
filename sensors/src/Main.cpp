@@ -14,11 +14,10 @@ int main(int argc, char** argv)
 
 	imageEncoder forwardCam(1, "/sensor/compressed/forwardCam");
 	ImageRepeater downCam("/usb_cam_down/image_raw");
-	CompassSensor imu;
+	CompassSensor com;
 
 	ros::Rate loop_rate(120);
-	while (ros::ok())
-	{
+	while (ros::ok()){
 		forwardCam.runOnce();
 
 		ros::spinOnce();
