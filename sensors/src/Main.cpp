@@ -1,11 +1,10 @@
 #include "ros/ros.h"
-#include "IMUSensor.h"
+#include "CompassSensor.h"
 #include "sensors.h"
 #include <cmath>
 #include "compressed_image_repeater.h"
 
 using namespace std;
-
 
 int main(int argc, char** argv)
 {
@@ -15,14 +14,12 @@ int main(int argc, char** argv)
 
 	imageEncoder forwardCam(1, "/sensor/compressed/forwardCam");
 	ImageRepeater downCam("/usb_cam_down/image_raw");
-	IMUSensor imu;
+	CompassSensor imu;
 
 	ros::Rate loop_rate(120);
 	while (ros::ok())
 	{
 		forwardCam.runOnce();
-
-		imu.runOnce();
 
 		ros::spinOnce();
 		loop_rate.sleep();
