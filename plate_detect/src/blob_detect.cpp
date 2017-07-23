@@ -54,7 +54,7 @@ int main( int argc, char** argv ){
 	int cam_width = 640;
 	int cam_height = 480;
 	int areaThresh = 400;
-	bool DEBUG = true;
+	bool DEBUG = false;
 
 	ros::init(argc, argv,"roomba_pose");
 	ros::NodeHandle nh;
