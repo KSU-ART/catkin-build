@@ -1,7 +1,7 @@
 <launch>
-	<node name="usb_cam_1" pkg="usb_cam" type="usb_cam_node" output="screen" >
+	<node name="usb_cam_down" pkg="usb_cam" type="usb_cam_node" output="screen" >
 		<param name="camera_name" value="narrow_stereo" />
-		<param name="video_device" value="/dev/video0" />
+		<param name="video_device" value="/dev/video1" />
 		<param name="pixel_format" value="yuyv" />
 		<param name="camera_frame_id" value="cam_1_frame" />
 		<param name="io_method" value="mmap"/> 
@@ -16,5 +16,5 @@
 		<param name="auto_white_balance" value="false" />
 		<param name="autoexposure" value="false" />
 	</node>
-	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_1"/>
+	<node name="image_proc" pkg="image_proc" type="image_proc" ns="usb_cam_down"/>
 </launch>

@@ -5,18 +5,22 @@
 #include <array>
 #include <string>
 #include <sensor_msgs/Imu.h>
+#include <std_msgs/Float32.h>
 
 class IMUSensor
 {
 private:
+	ros::NodeHandle nodeHandle;
 	ros::Subscriber _IMUSub;
+	ros::Publisher _anglePub;
 	std::array<double, 4> _quaternionImu;
+	double _angle;
 	
 public:
 	/// Pre: requires a nodehandle object
 	/// Post: 
-	IMUSensor(ros::NodeHandle);
-	IMUSensor(ros::NodeHandle, std::string);
+	IMUSensor();
+	IMUSensor(std::string);
 	
 	/// Post: deconstructs any pointers
 	~IMUSensor();
@@ -26,6 +30,13 @@ public:
 	
 	/// Post: Gets the current quaternion values
 	std::array<double, 4> getQuaternionImu ();
+
+	double convertQuat(std::array<double, 4> quat);
+	void computeAngle();
+
+	void runOnce();
+
+	double getAngle();
 	
 	double getQuaternionImuX ();
 	double getQuaternionImuY ();

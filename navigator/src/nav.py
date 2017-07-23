@@ -20,7 +20,7 @@ def state_machine_handler():
 
     sm_top.userdata.GRdist = 0
     sm_top.userdata.GRangle = 0
-    sm_top.userdata.minGoalAngle = 20 * math.pi /180
+    sm_top.userdata.minGoalAngle = -20 * math.pi /180
     sm_top.userdata.maxGoalAngle = 20 * math.pi /180
     sm_top.userdata.randomTraversalAngleThresh = 20 * math.pi /180
     sm_top.userdata.imageWidth = 640
@@ -144,21 +144,21 @@ def state_machine_handler():
                 sm_EdgeDetect.userdata.EdgeDetectTimer = sm_top.userdata.EdgeDetectTimer
                 sm_EdgeDetect.userdata.EdgeDetectTimerMAX = sm_top.userdata.EdgeDetectTimerMAX
 
-                smach.StateMachine.add('StartInteract', StartInteract(),
-                                    transitions={'TouchDown':'TouchDown',
-                                                 'StartInteract':'StartInteract'},
+                smach.StateMachine.add('CheckEdges', CheckEdges(),
+                                    transitions={'CheckEdges':'CheckEdges',
+                                                 'EdgeTimer':'EdgeTimer'},
                                     remapping={'EdgeDetectTimerMAX':'EdgeDetectTimerMAX',
                                                'EdgeDetectTimer':'EdgeDetectTimer'})
 
-                smach.StateMachine.add('TouchDown', TouchDown(),
-                                    transitions={'AccendingCraft':'AccendingCraft',
-                                                 'TouchDown':'TouchDown',
-                                                 'StartInteract':'StartInteract'},
+                smach.StateMachine.add('EdgeTimer', EdgeTimer(),
+                                    transitions={'CheckEdges':'CheckEdges',
+                                                 'EdgeTimer':'EdgeTimer',
+                                                 'TowardsArena':'TowardsArena'},
                                     remapping={'EdgeDetectTimer':'EdgeDetectTimer'})
 
-                smach.StateMachine.add('AccendingCraft', AccendingCraft(),
-                                    transitions={'AccendingCraft':'AccendingCraft',
-                                                 'StartInteract':'StartInteract'})
+                smach.StateMachine.add('TowardsArena', TowardsArena(),
+                                    transitions={'CheckEdges':'CheckEdges',
+                                                 'TowardsArena':'TowardsArena'})
 
             smach.Concurrence.add('sm_TakeOff', sm_TakeOff)
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)
