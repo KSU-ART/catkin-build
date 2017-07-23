@@ -210,8 +210,10 @@ class CheckDownCam(smach.State):
 class FollowGR(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['CheckDownCam'], input_keys=['GRdist', 'GRangle', 'minGoalAngle', 'maxGoalAngle'])
-        self.pubPitchPID = rospy.Publisher('/IARC/DownCam/PitchPID', Float32, queue_size=1)
-        self.pubRollPID = rospy.Publisher('/IARC/DownCam/RollPID', Float32, queue_size=1)
+        self.pubPitchPID = rospy.Publisher('/IARC/DownCam/PitchPID', Int16, queue_size=1)
+        self.pubRollPID = rospy.Publisher('/IARC/DownCam/RollPID', Int16, queue_size=1)
+        rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
+        self.angle = 0
 
         self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
 
@@ -221,11 +223,19 @@ class FollowGR(smach.State):
     def enableCheckDownCamLoop_cb(self, msg):
         self.enableCheckDownCamLoop = msg.data
 
+    def callback(self, msg):
+        self.angle = msg.data
+
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
-        self.pubPitchPID.publish(Float32(userdata.GRdist[1]))
-        self.pubRollPID.publish(Float32(userdata.GRdist[0]))
+            print("userdata.GRangle", userdata.GRangle)
+            print("userdata.minGoalAngle", userdata.minGoalAngle)
+            print("userdata.maxGoalAngle", userdata.maxGoalAngle)
+            print("Actual Angle", userdata.GRangle+self.angle)
+            print("userdata.GRdist", userdata.GRdist)
+        self.pubPitchPID.publish(Int16(userdata.GRdist[1]))
+        self.pubRollPID.publish(Int16(userdata.GRdist[0]))
         if userdata.GRangle < userdata.minGoalAngle or userdata.GRangle > userdata.maxGoalAngle:
             self.enableStartInteractLoop_pub.publish(Bool(True))
         return 'CheckDownCam'
@@ -246,6 +256,8 @@ class StartInteract(smach.State):
         rospy.Subscriber("/IARC/states/enableStartInteractLoop", Bool, callback=self.enableStartInteractLoop_cb)
         self.enableStartInteractLoop = False
 
+        self.StartInteract_pub = rospy.Publisher('/IARC/states/StartInteract', Bool, queue_size=1)
+
         self.enableCheckDownCamLoop_pub = rospy.Publisher('/IARC/states/enableCheckDownCamLoop', Bool, queue_size=1)
 
     def callback(self, msg):
@@ -262,6 +274,7 @@ class StartInteract(smach.State):
             if abs(self.altitude - userdata.lowHeight) < userdata.altitudeDeviation:
                 self.enableCheckDownCamLoop_pub.publish(Bool(False))
                 userdata.TouchDownTimer = userdata.TouchDownTimerMAX + time.time()
+                self.StartInteract_pub.publish(Bool(True))
                 return 'TouchDown'
             else:
                 return 'StartInteract'
@@ -287,10 +300,13 @@ class TouchDown(smach.State):
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
+            print("userdata.TouchDownTimer: ", userdata.TouchDownTimer)
+            print("time.time(): ", time.time())
+            print("delta: ", userdata.TouchDownTimer - time.time())
         self.pubTargetAltitude.publish(Float32(userdata.groundHeight))
         if not self.enableStartInteractLoop:
             return 'StartInteract'
-        if userdata.TouchDownTimer >= time.time():
+        if userdata.TouchDownTimer < time.time():
             return 'AccendingCraft'
         else:
             return 'TouchDown'
@@ -307,6 +323,8 @@ class AccendingCraft(smach.State):
         rospy.Subscriber("/IARC/currentAltitude", Float32, callback=self.callback)
         self.altitude = 0
 
+        self.EndInteract_pub = rospy.Publisher('/IARC/states/EndInteract', Bool, queue_size=1)
+
         self.enableCheckDownCamLoop_pub = rospy.Publisher('/IARC/states/enableCheckDownCamLoop', Bool, queue_size=1)
         self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
 
@@ -321,6 +339,7 @@ class AccendingCraft(smach.State):
             self.enableCheckDownCamLoop_pub.publish(Bool(True))
         if abs(self.altitude - userdata.normHeight) < userdata.altitudeDeviation:
             self.enableStartInteractLoop_pub.publish(Bool(False))
+            self.EndInteract_pub.publish(Bool(True))
             return 'StartInteract'
         return 'AccendingCraft'
     
@@ -336,8 +355,26 @@ class CheckObstacles(smach.State):
         rospy.Subscriber("/IARC/Obstacle/dist", Float32, callback=self.callbackDist)
         self.dist = 2
 
+        rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
+        rospy.Subscriber("/IARC/states/enableCheckDownCamLoop", Bool, callback=self.enableCheckDownCamLoop_cb)
+        rospy.Subscriber("/IARC/states/enableStartInteractLoop", Bool, callback=self.enableStartInteractLoop_cb)
+        self.enableTakeOffLoop = True
+        self.enableCheckDownCamLoop = False
+        self.enableStartInteractLoop = False
+
+        self.enableTakeOffLoop_pub = rospy.Publisher('/IARC/states/enableTakeOffLoop', Bool, queue_size=1)
+
     def callbackDist(self, msg):
         self.dist = msg.data
+
+    def enableTakeOffLoop_cb(self, msg):
+        self.enableTakeOffLoop = msg.data
+
+    def enableCheckDownCamLoop_cb(self, msg):
+        self.enableCheckDownCamLoop = msg.data
+
+    def enableStartInteractLoop_cb(self, msg):
+        self.enableStartInteractLoop = msg.data
 
     def execute(self, userdata):
         if DEBUG:
@@ -345,6 +382,8 @@ class CheckObstacles(smach.State):
         if self.dist <= userdata.obstacleThreshDist:
             return 'ObstacleAvoidence'
         else:
+            if self.enableTakeOffLoop == False and self.enableCheckDownCamLoop == False and self.enableStartInteractLoop == False:
+                self.enableTakeOffLoop_pub.publish(Bool(True))
             return 'CheckObstacles'
     
     def request_preempt(self):
@@ -367,6 +406,18 @@ class ObstacleAvoidence(smach.State):
         self.enableCheckDownCamLoop_pub = rospy.Publisher('/IARC/states/enableCheckDownCamLoop', Bool, queue_size=1)
         self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
 
+        rospy.Subscriber("/IARC/states/StartInteract", Bool, callback=self.callbackStartInteract)
+        rospy.Subscriber("/IARC/states/EndInteract", Bool, callback=self.callbackEndInteract)
+        self.Interacting = False
+        self.InteractingTimer = time.time()
+
+    def callbackStartInteract(self, msg):
+        self.Interacting = True
+        self.InteractingTimer = 30+time.time()
+
+    def callbackEndInteract(self, msg):
+        self.Interacting = False
+
     def callbackDist(self, msg):
         self.dist = msg.data
 
@@ -376,7 +427,19 @@ class ObstacleAvoidence(smach.State):
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
-        self.enableTakeOffLoop_pub.publish(Bool(True))
+
+        if self.InteractingTimer < time.time() and self.Interacting:
+            self.Interacting = False
+
+        print("\n*******Obstacle avoidence*******\n")
+        
+        if self.Interacting:
+            # incase the hokuyo detects the ground
+            # ignore all obstacles until interact mode is done
+            print("\n*******Obstacle avoidence is Disabled*******\n")
+            return 'CheckObstacles'
+        
+        self.enableTakeOffLoop_pub.publish(Bool(False))
         self.enableCheckDownCamLoop_pub.publish(Bool(False))
         self.enableStartInteractLoop_pub.publish(Bool(False))
 
@@ -435,7 +498,7 @@ class EdgeTimer(smach.State):
             time.sleep(1)
         if not self.detected:
             return 'CheckEdges'
-        if userdata.EdgeDetectTimer >= time.time():
+        if userdata.EdgeDetectTimer < time.time():
             return 'TowardsArena'
         else:
             return 'EdgeTimer'

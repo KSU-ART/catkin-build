@@ -133,6 +133,9 @@ double robot_controller::get_yaw_control(){
 	case Yolo:
 		return pids.getYawPID().calc(current_yolo_yaw);
 	case RandomTraversal:
+		if(DEBUG){
+			std::cout << "*******Rand_yaw: " << current_traversal_yaw << std::endl;
+		}
 		return pids.getYawPID().calc(current_traversal_yaw);
 	default:
 		return 0;
@@ -178,7 +181,7 @@ void robot_controller::nav_loop(){
 	// update the control values
 	roll = MID_PWM - get_roll_control() + ROLL_TRIM; // Roll value for Left is negative
 	pitch = MID_PWM - get_pitch_control() - PITCH_TRIM; // Pitch value for Forward is negative
-	yaw = MID_PWM - get_yaw_control() + YAW_TRIM;
+	yaw = MID_PWM - get_yaw_control() + YAW_TRIM; // Yaw value for Left is negative
 	throttle = MID_PWM + get_throttle_control();
 
 	mav.update_loop(roll, pitch, yaw, throttle);

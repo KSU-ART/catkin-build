@@ -108,7 +108,7 @@ private:
 public:
 	//contructor
 	robot_controller()
-	:pids("/home/odroid/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
+	:pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
 	fcuCommRate(45)
 	{
 		DEBUG = true;
@@ -143,8 +143,8 @@ public:
 		sub_set_altitude 	= n.subscribe("/IARC/setAltitude", 1, &robot_controller::target_altitude_cb, this);
 		sub_yolo_x 			= n.subscribe("/IARC/YOLO/target/x", 1, &robot_controller::yolo_x_cb, this);
 		sub_yolo_y 			= n.subscribe("/IARC/YOLO/target/y", 1, &robot_controller::yolo_y_cb, this);
-		sub_orien_x 		= n.subscribe("/IARC/OrientationNet/pos/x", 1, &robot_controller::delta_down_cam_x_cb, this);
-		sub_orien_y 		= n.subscribe("/IARC/OrientationNet/pos/y", 1, &robot_controller::delta_down_cam_y_cb, this);
+		sub_orien_x 		= n.subscribe("/IARC/DownCam/RollPID", 1, &robot_controller::delta_down_cam_x_cb, this);
+		sub_orien_y 		= n.subscribe("/IARC/DownCam/PitchPID", 1, &robot_controller::delta_down_cam_y_cb, this);
 		sub_obst_pitch 		= n.subscribe("/IARC/Obstacle/PitchPID", 1, &robot_controller::obstacle_pitch_cb, this);
 		sub_obst_roll 		= n.subscribe("/IARC/Obstacle/RollPID", 1, &robot_controller::obstacle_roll_cb, this);
 		sub_traversal_angle	= n.subscribe("/IARC/randomTraversal/deltaAngle", 1, &robot_controller::random_traversal_cb, this);
