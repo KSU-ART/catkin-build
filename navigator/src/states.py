@@ -64,11 +64,23 @@ class FindGR(smach.State):
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         self.enableTakeOffLoop = True
 
+        self.stringData = ''
+
     def callback(self, msg):
-        stringData = msg.data
+        self.stringData = msg.data
+        
+    def enableTakeOffLoop_cb(self, msg):
+        self.enableTakeOffLoop = msg.data
+
+    def execute(self, userdata):
         if DEBUG:
-            print("yolo string:",stringData)
-        data = json.loads(stringData)
+            time.sleep(1)
+            print("yolo string:",self.stringData)
+            print("emptyYOLO:", self.emptyYOLO)
+
+        self.enableCheckDownCamLoop_pub.publish(Bool(True))
+        data = json.loads(self.stringData)
+
         # check if yolo message is empty (aka no ground robot detected)
         if len(data) == 0:
             self.emptyYOLO = True
@@ -90,19 +102,8 @@ class FindGR(smach.State):
             self.XtargetYoloPub.publish(Int16(self.minYolo[0] * 640))
             self.YtargetYoloPub.publish(Int16(self.minYolo[1] * 480))
 
-        
-    def enableTakeOffLoop_cb(self, msg):
-        self.enableTakeOffLoop = msg.data
-
-    def execute(self, userdata):
-        if DEBUG:
-            time.sleep(1)
-        self.enableCheckDownCamLoop_pub.publish(Bool(True))
-
         if not self.enableTakeOffLoop:
             return 'TakeOff'
-
-        print("emptyYOLO:", self.emptyYOLO)
 
         if self.emptyYOLO:
             # no ground robot detected
