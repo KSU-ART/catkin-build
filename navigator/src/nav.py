@@ -145,20 +145,20 @@ def state_machine_handler():
                 sm_EdgeDetect.userdata.EdgeDetectTimerMAX = sm_top.userdata.EdgeDetectTimerMAX
 
                 smach.StateMachine.add('CheckEdges', CheckEdges(),
-                                    transitions={'TouchDown':'TouchDown',
-                                                 'StartInteract':'StartInteract'},
+                                    transitions={'CheckEdges':'CheckEdges',
+                                                 'EdgeTimer':'EdgeTimer'},
                                     remapping={'EdgeDetectTimerMAX':'EdgeDetectTimerMAX',
                                                'EdgeDetectTimer':'EdgeDetectTimer'})
 
                 smach.StateMachine.add('EdgeTimer', EdgeTimer(),
-                                    transitions={'AccendingCraft':'AccendingCraft',
-                                                 'TouchDown':'TouchDown',
-                                                 'StartInteract':'StartInteract'},
+                                    transitions={'CheckEdges':'CheckEdges',
+                                                 'EdgeTimer':'EdgeTimer',
+                                                 'TowardsArena':'TowardsArena'},
                                     remapping={'EdgeDetectTimer':'EdgeDetectTimer'})
 
                 smach.StateMachine.add('TowardsArena', TowardsArena(),
-                                    transitions={'AccendingCraft':'AccendingCraft',
-                                                 'StartInteract':'StartInteract'})
+                                    transitions={'CheckEdges':'CheckEdges',
+                                                 'TowardsArena':'TowardsArena'})
 
             smach.Concurrence.add('sm_TakeOff', sm_TakeOff)
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)
