@@ -10,7 +10,7 @@ import time
 import math
 import random
 
-DEBUG = False
+DEBUG = True
 
 class TakeOff(smach.State):
     def __init__(self):
@@ -77,6 +77,9 @@ class FindGR(smach.State):
             time.sleep(1)
             print("yolo string:",self.stringData)
             print("emptyYOLO:", self.emptyYOLO)
+        
+        if not self.enableTakeOffLoop:
+            return 'TakeOff'
 
         self.enableCheckDownCamLoop_pub.publish(Bool(True))
         data = json.loads(self.stringData)
@@ -88,7 +91,6 @@ class FindGR(smach.State):
                 print("yolo is empty")
         else:
             self.emptyYOLO = False
-            ## TODO: unit test this
             # find the min(y) yolo coordinate and set to minYolo
             npData = np.array(data)
             minargs = np.argmax(npData[npData[:,0] < 2], axis=0)
@@ -101,9 +103,6 @@ class FindGR(smach.State):
                 print("minYolo:", self.minYolo)
             self.XtargetYoloPub.publish(Int16(self.minYolo[0] * 640))
             self.YtargetYoloPub.publish(Int16(self.minYolo[1] * 480))
-
-        if not self.enableTakeOffLoop:
-            return 'TakeOff'
 
         if self.emptyYOLO:
             # no ground robot detected
@@ -144,10 +143,9 @@ class RandomTraversal(smach.State):
 
         if abs(self.angle - self.targetAngle) < userdata.randomTraversalAngleThresh:
             self.targetAngle = random.uniform(-math.pi, math.pi)
-            return 'FindGR'
-        else:
-            self.YawPIDrt.publish(Float32(self.angle - self.targetAngle))
-            return 'RandomTraversal'
+        
+        self.YawPIDrt.publish(Float32(self.angle - self.targetAngle))
+        return 'FindGR'
     
     def request_preempt(self):
         """Overload the preempt request method just to spew an error."""
