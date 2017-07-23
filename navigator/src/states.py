@@ -10,7 +10,7 @@ import time
 import math
 import random
 
-DEBUG = True
+DEBUG = False
 
 class TakeOff(smach.State):
     def __init__(self):
@@ -53,7 +53,7 @@ class TakeOff(smach.State):
 class FindGR(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=['RandomTraversal', 'FindGR', 'TakeOff'], output_keys=['targetYolo', 'imageWidth', 'imageHeight'])
-        rospy.Subscriber("/IARC/YOLO", String, callback=self.callback)
+        rospy.Subscriber("/yolo/first/boxes", String, callback=self.callback)
         self.XtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/x', Int16, queue_size=1)
         self.YtargetYoloPub = rospy.Publisher('/IARC/YOLO/target/y', Int16, queue_size=1)
         self.emptyYOLO = False
@@ -79,9 +79,10 @@ class FindGR(smach.State):
             ## TODO: unit test this
             # find the min(y) yolo coordinate and set to minYolo
             npData = np.array(data)
-            minargs = np.argmax(npData, axis=0)
-            minCoord = npData[minargs[-1]]
-            self.minYolo = minCoord[1:]
+            minargs = np.argmax(npData[npData[:,0] < 2], axis=0)
+            # print("minargs", npData[npData[:,0] < 2])
+            minCoord = npData[minargs[2]] 
+            self.minYolo = minCoord[1:3]
             # debug
             if DEBUG:
                 # print minargs

@@ -9,6 +9,7 @@ add_definitions(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  cv_bridge
 )
 
 find_package(OpenCV 3 REQUIRED)

@@ -1,7 +1,7 @@
 #include "color.h"
 
 int main(int argc, char** argv) {
-	std::string path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
+	std::string path = "/home/marvin/catkin_ws/src/catkin-build/plate_detect/include";
 	Color red('r', path);
 	Color green('g', path);
 

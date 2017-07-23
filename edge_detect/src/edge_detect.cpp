@@ -1,5 +1,18 @@
 #include "edge_detect.h"
 
+void edgeDetector::image_callback(const sensor_msgs::Image::ConstPtr& msg){
+	// cout << "call" << endl;
+	cv_bridge::CvImagePtr cv_ptr;
+	try{
+		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+	}
+	catch (cv_bridge::Exception& e){
+		ROS_ERROR("cv_bridge exception: %s", e.what());
+		return;
+	}
+	src = cv_ptr->image;
+}
+
 std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh){
     // lines is a vector of all of the lines in an image
     // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
@@ -247,7 +260,7 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
 // void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img)
 
 void edgeDetector::runGridProcOnce(){
-    src = im.get_image();
+    // src = im.get_image();
     if(src.empty()){
         std::cout << "no image" << std::endl;
         return;

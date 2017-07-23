@@ -10,26 +10,27 @@
 #include "color.h"
 #include <iostream>
 #include <string>
+#include "imageDecoder.h"
 
 using namespace std;
 using namespace cv;
 
-string path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
+string path = "/home/marvin/catkin_ws/src/catkin-build/plate_detect/include";
 Mat src;
 
-bool sortFunc (int i, int j) { return (i>j); }
+// bool sortFunc (int i, int j) { return (i>j); }
 
 template <typename T>
 vector<size_t> sort_indexes(const vector<T> &v) {
 
-  // initialize original index locations
-  vector<size_t> idx(v.size());
-  iota(idx.begin(), idx.end(), 0);
+	// initialize original index locations
+	vector<size_t> idx(v.size());
+	iota(idx.begin(), idx.end(), 0);
 
-  // sort indexes based on comparing values in v
-  sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+	// sort indexes based on comparing values in v
+	sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
 
-  return idx;
+	return idx;
 }
 
 float getSquareDist(Point p){
@@ -52,11 +53,15 @@ void image_callback(const sensor_msgs::Image::ConstPtr& msg){
 int main( int argc, char** argv ){
 	int cam_width = 640;
 	int cam_height = 480;
+	int areaThresh = 400;
 	bool DEBUG = true;
 
 	ros::init(argc, argv,"roomba_pose");
 	ros::NodeHandle nh;
-	ros::Subscriber imageSub = nh.subscribe("/usb_cam_1/image_raw", 1, image_callback);
+
+	// ros::Subscriber imageSub = nh.subscribe("/usb_cam_1/image_raw", 1, image_callback);
+	imageDecoder im("/usb_cam_down/image_raw/compressed");
+
 	ros::Publisher pubx = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/x", 1);
 	ros::Publisher puby = nh.advertise<std_msgs::Int16>("/IARC/OrientationNet/pos/y", 1);
 	ros::Publisher detectPub = nh.advertise<std_msgs::Bool>("/IARC/OrientationNet/detected", 1);
@@ -69,6 +74,8 @@ int main( int argc, char** argv ){
 	while(ros::ok())
 	{
 		//Passing video footage
+		src = im.get_image();
+
 		if(!src.empty()){
 			// std::cout << "image found" << std::endl;
 			//Define CIE Lab img and smooth it
@@ -101,13 +108,12 @@ int main( int argc, char** argv ){
 			Point delta;
 			if(contours.size()!=0)
 			{
-				detected.data = true;
-				detectPub.publish(detected);
 
 				for(int i=0;i<contours.size();i++)
 					areas.push_back(contourArea(contours[i], false));
 				
 				vector<size_t> sorted_areas = sort_indexes(areas);
+				// vector<size_t> sorted_areas(areas.size(), 0);
 				// lrgContour = distance(areas.begin(),max_element(areas.begin(),areas.end()));
 				lrgContour = sorted_areas[sorted_areas.size()-1];
 				// cout << "areas contains:";
@@ -119,15 +125,18 @@ int main( int argc, char** argv ){
 				int closestIndex;
 				Point closestDelta;
 				Point closestPoint;
-				// for(int i = 0; i < sorted_areas.size(); i++){
-				// 	cout << areas[sorted_areas[i]] << " ";
-				// }
-				// cout << endl;
+				bool is_detected = false;
+
 				for(int i = 0; i < 3; i++){
 					int ind = sorted_areas.size()-(i+1);
-					cout << areas[sorted_areas[ind]] << " \t";
 					if(ind >= 0){
-						// cout << ind << " ";
+						if(areas[sorted_areas[ind]] < areaThresh){
+							cout << "not big enough: ";
+							cout << areas[sorted_areas[ind]] << endl;
+							continue;
+						}
+						cout << areas[sorted_areas[ind]] << " ";
+						is_detected = true;
 
 						int xSum =0;
 						int ySum =0;
@@ -156,6 +165,8 @@ int main( int argc, char** argv ){
 
 					}
 				}
+				detected.data = is_detected;
+				detectPub.publish(detected);
 				cout << endl;
 				
 				// center = Point(xSum/contoursPoints.size(), ySum/contoursPoints.size());
@@ -166,10 +177,14 @@ int main( int argc, char** argv ){
 				msg.data = closestDelta.y;
 				puby.publish(msg);
 
-				//cout <<"< " <<center.x <<" , " <<center.y <<" >" <<endl;
-				drawContours(src, contours, closestIndex, Scalar(0, 255, 255), 3, 8, vector<Vec4i>(), 0, Point());
-				circle(src, closestPoint, 5, Scalar(255, 255, 0), FILLED, LINE_8);
-				circle(src, Point(cam_width/2, cam_height/2), 5, Scalar(255, 255, 0), FILLED, LINE_8);
+				if(DEBUG){
+					//cout <<"< " <<center.x <<" , " <<center.y <<" >" <<endl;
+					if(is_detected){
+						drawContours(src, contours, closestIndex, Scalar(0, 255, 255), 3, 8, vector<Vec4i>(), 0, Point());
+						circle(src, closestPoint, 5, Scalar(255, 255, 0), FILLED, LINE_8);
+					}
+					circle(src, Point(cam_width/2, cam_height/2), 5, Scalar(255, 255, 0), FILLED, LINE_8);
+				}
 			}
 		}
 		else{

@@ -1,6 +1,7 @@
 #ifndef EDGE_DETECT_H
 #define EDGE_DETECT_H
 
+#include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
@@ -26,11 +27,13 @@ private:
     ros::Publisher pubx;
 	ros::Publisher puby;
 	ros::Publisher detectPub;
+
+    ros::Subscriber sub;
     
     cv::Mat src, lab, red, green;
     cv::Mat dst, dst2, dst3;
 
-    imageDecoder im;
+    // imageDecoder im;
 
     std::string source_window;
     std::string corners_window;
@@ -39,6 +42,9 @@ private:
 	Color green_color;
     std::string path;
     int lineThresh;
+    int maxOverhangThresh;
+    int minBufferArea;
+    float lineOffset;
 
     /// Detector parameters
 	int blockSize;
@@ -48,27 +54,39 @@ private:
 public:
     // constructor
     edgeDetector()
-    :im("/sensor/compressed/downCam")
+    // :im("/usb_cam_down/image_raw/compressed")
     {
         path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
-        lineThresh = 210;
+        // lineThresh = 210;
+        lineThresh = 105;
 
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
         detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
+        sub = n.subscribe("/usb_cam_down/image_rect", 2, &edgeDetector::image_callback, this);
+
         source_window = "Source image";
         corners_window = "Corners detected";
-        blockSize = 21;
+        blockSize = 11;
+        maxOverhangThresh = 75;
+        minBufferArea = 8000;
+        lineOffset = 10;
+        // maxOverhangThresh = 150;
+        // minBufferArea = 32000;
+        // lineOffset = 20;
         DEBUG = true;
 
         red_color = Color('r', path);
         green_color = Color('g', path);
     }
+
     //added by Kyle
     std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
 
+    void image_callback(const sensor_msgs::Image::ConstPtr& msg);
+
     // debug functions
-    void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0,0,255), int thickness = 1);
+    void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0, 0, 255), int thickness = 1);
 
     /// counts the number of grid pixels on either side of each line
     /// if num of pixels is less thean maxOverhangThresh, then it is considered an edge line

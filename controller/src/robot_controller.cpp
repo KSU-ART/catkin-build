@@ -93,7 +93,7 @@ double robot_controller::get_roll_control(){
 	case DownCam:
 		return pids.getRollPID().calc(current_down_cam_roll);
 	case Obstacle:
-		return pids.getRollPID().calc(-current_obstacle_roll);
+		return pids.getRollPID().calc(current_obstacle_roll);
 	case EdgeDetect:
 		return pids.getRollPID().calc(current_edge_detect_roll);
 	default:
