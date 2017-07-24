@@ -340,12 +340,21 @@ class AccendingCraft(smach.State):
         self.enableCheckDownCamLoop_pub = rospy.Publisher('/IARC/states/enableCheckDownCamLoop', Bool, queue_size=1)
         self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
 
+        rospy.Subscriber("/IARC/states/enableStartInteractLoop", Bool, callback=self.enableStartInteractLoop_cb)
+        self.enableStartInteractLoop = False
+
+    def enableStartInteractLoop_cb(self, msg):
+        self.enableStartInteractLoop = msg.data
+
     def callback(self, msg):
         self.altitude = msg.data
 
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
+        if not self.enableStartInteractLoop:
+            return 'StartInteract'
+        
         self.pubTargetAltitude.publish(Float32(userdata.normHeight))
         if self.altitude >= userdata.lowHeight:
             self.enableCheckDownCamLoop_pub.publish(Bool(True))
