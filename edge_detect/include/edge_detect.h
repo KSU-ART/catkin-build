@@ -30,7 +30,7 @@ private:
 
     ros::Subscriber sub;
     
-    cv::Mat src, lab, red, green;
+    cv::Mat src, lab;
     cv::Mat dst, dst2, dst3;
 
     // imageDecoder im;
@@ -38,8 +38,6 @@ private:
     std::string source_window;
     std::string corners_window;
 
-	Color red_color;
-	Color green_color;
     std::string path;
     int lineThresh;
     int maxOverhangThresh;
