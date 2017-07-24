@@ -158,8 +158,8 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
     average[1] = 0;
     float count = 0;
     for(current=edges->begin(); current!=edges->end(); current++){
-        average[0] += (*current)[0]*cos((*current)[1]);
-        average[1] += (*current)[0]*sin((*current)[1]);
+        average[0] += cos((*current)[1]);
+        average[1] += sin((*current)[1]);
         count++;
     }
     average[0] /= count;
