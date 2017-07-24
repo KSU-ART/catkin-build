@@ -20,10 +20,11 @@ public:
 	/// Post: 
 	CompassSensor(){
 		ros::Subscriber compassSub = n.subscribe("/mavros/global_position/compass_hdg", 1, &CompassSensor::CompassSensorCB, this);
-		_anglePub = n.advertise<std_msgs::Float64>("/IARC/currentAngle", 1);
+		_anglePub = n.advertise<std_msgs::Float32>("/IARC/currentAngle", 1);
 	}
 	
-	void CompassSensorCB(const std_msgs::Float32::ConstPtr& msg){
+	void CompassSensorCB(const std_msgs::Float64::ConstPtr& msg){
+		std::cout << "got msg" <<std::endl;
 		float angle = msg->data;
 		if(angle > 180){
 			angle -= 360;
