@@ -24,7 +24,7 @@ class FindAngle:
         size = 15
         self.x_list = deque([0 for x in range(size)])
         self.y_list = deque([0 for x in range(size)])
-        self.m = videosub("/sensor/compressed/downCam")
+        self.m = videosub("/usb_cam_down/image_raw/compressed")
 
     # def show(self):
     #     cv2.imshow('frame', self.image)
@@ -48,29 +48,28 @@ class FindAngle:
 
             # Subtract 0.5 from all of the boxes
             coords = coords - 0.5
-
-            # Use distance formula on the x and y combinations to find smallest one, and convert floats x and y
-            for i in range(coords.shape[0]):
-                coords[i][0] = (sqrt(coords[i][1]*coords[i][1] + coords[i][2]*coords[i][2]))
-                
             
-            ind = np.argmin(coords, axis=0)
+            if(coords.shape[0] > 0):
+                for i in range(coords.shape[0]):
+                    coords[i][0] = (sqrt(coords[i][1]*coords[i][1] + coords[i][2]*coords[i][2]))
 
-            # Pop the oldest value out and add the new one
-            self.x_list.append(coords[ind[0]][1])
-            self.y_list.append(coords[ind[0]][2])
-            self.x_list.popleft()
-            self.y_list.popleft()
+                ind = np.argmin(coords, axis=0)
+                
+                # Pop the oldest value out and add the new one
+                self.x_list.append(coords[ind[0]][1])
+                self.y_list.append(coords[ind[0]][2])
+                self.x_list.popleft()
+                self.y_list.popleft()
 
-            self.plateDetectXpub.publish(Float32(coords[ind[0]][1]))
-            self.plateDetectYpub.publish(Float32(coords[ind[0]][2]))
+                self.plateDetectXpub.publish(Float32(coords[ind[0]][1] * 640))
+                self.plateDetectYpub.publish(Float32(coords[ind[0]][2] * 480))
 
-            # Sum list
-            x_sum = sum(self.x_list)
-            y_sum = sum(self.y_list)
+                # Sum list
+                x_sum = sum(self.x_list)
+                y_sum = sum(self.y_list)
 
-            # Take the arctangent to find the angle
-            self.predicted_angle = atan2(y_sum, x_sum) #* 180 / pi
+                # Take the arctangent to find the angle
+                self.predicted_angle = atan2(y_sum, x_sum) #* 180 / pi
 
             if DEBUG:
                 # print minargs

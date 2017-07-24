@@ -50,5 +50,6 @@
         "*.ipp": "cpp",
         "algorithm": "cpp",
         "vector": "cpp"
-    }
+    },
+    "python.linting.pylintEnabled": false
 }

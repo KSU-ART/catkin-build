@@ -45,10 +45,10 @@ private:
         }
 
         // Resize image
-        cv::resize(cvPtr->image, _image, cv::Size(IMAGE_HEIGHT_WIDTH, IMAGE_HEIGHT_WIDTH));
+        // cv::resize(cvPtr->image, _image, cv::Size(IMAGE_HEIGHT_WIDTH, IMAGE_HEIGHT_WIDTH));
 
         //Compress image
-        cv::imencode(".jpg", _image, _data);
+        cv::imencode(".jpg", cvPtr->image, _data);
 
         _compressed.data = _data;
         
