@@ -124,6 +124,7 @@ def state_machine_handler():
             sm_CheckObstacles = smach.StateMachine(outcomes=['Null'])
 
             with sm_CheckObstacles:
+                sm_CheckObstacles.userdata.normHeight = sm_top.userdata.normHeight
                 sm_CheckObstacles.userdata.obstacleThreshDist = sm_top.userdata.obstacleThreshDist
 
                 smach.StateMachine.add('CheckObstacles', CheckObstacles(),
@@ -133,7 +134,8 @@ def state_machine_handler():
 
                 smach.StateMachine.add('ObstacleAvoidence', ObstacleAvoidence(),
                                     transitions={'CheckObstacles':'CheckObstacles'},
-                                    remapping={'obstacleThreshDist':'obstacleThreshDist'})
+                                    remapping={'normHeight':'normHeight',
+                                               'obstacleThreshDist':'obstacleThreshDist'})
 
             sm_EdgeDetect = smach.StateMachine(outcomes=['Obstacle', 'Null'])
 
