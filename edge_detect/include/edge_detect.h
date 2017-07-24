@@ -1,6 +1,7 @@
 #ifndef EDGE_DETECT_H
 #define EDGE_DETECT_H
 
+#include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
@@ -15,6 +16,7 @@
 #include <vector>
 #include <math.h>
 #include "imageDecoder.h"
+#include "color.h"
 
 #define PI 3.14159265
 
@@ -28,7 +30,7 @@ private:
 
     ros::Subscriber sub;
     
-    cv::Mat src;
+    cv::Mat src, lab;
     cv::Mat dst, dst2, dst3;
 
     // imageDecoder im;
@@ -36,32 +38,61 @@ private:
     std::string source_window;
     std::string corners_window;
 
+    std::string path;
+    int lineThresh;
+    int maxOverhangThresh;
+    int minBufferArea;
+    float lineOffset;
+
     /// Detector parameters
 	int blockSize;
 
     bool DEBUG;
 
+    Color red;
+    Color green;
+    cv::Vec3f vec_red;
+    cv::Vec3f vec_green;
+
 public:
     // constructor
     edgeDetector()
-    // :im("/sensor/compressed/downCam")
+    // :im("/usb_cam_down/image_raw/compressed")
     {
+        path = "/home/stoplime/catkin_ws/src/catkin-build/plate_detect/include";
+        lineThresh = 210;
+        // lineThresh = 105;
+
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
         detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
-        sub = n.subscribe("/usb_cam_down/image_rect_color", 2, &edgeDetector::image_callback, this);
+        sub = n.subscribe("/usb_cam_down/image_rect", 2, &edgeDetector::image_callback, this);
+
         source_window = "Source image";
         corners_window = "Corners detected";
         blockSize = 21;
+        // maxOverhangThresh = 75;
+        // minBufferArea = 8000;
+        // lineOffset = 10;
+        maxOverhangThresh = 150;
+        minBufferArea = 32000;
+        lineOffset = 20;
+
         DEBUG = true;
+        red = Color('r', path);
+        green = Color ('g', path);
+        // std::cout << "*****************************" << red.getLMax() << std::endl;
+        vec_red = cv::Vec3f((red.getLMax()+red.getLMin())/2,(red.getAMax()+red.getAMin())/2,(red.getBMax()+red.getBMin())/2);
+        vec_green = cv::Vec3f((green.getLMax()+green.getLMin())/2,(green.getAMax()+green.getAMin())/2,(green.getBMax()+green.getBMin())/2);
     }
+
     //added by Kyle
-    std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
+    //std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
 
     void image_callback(const sensor_msgs::Image::ConstPtr& msg);
 
     // debug functions
-    void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0,0,255), int thickness = 1);
+    void drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb = CV_RGB(0, 0, 255), int thickness = 1);
 
     /// counts the number of grid pixels on either side of each line
     /// if num of pixels is less thean maxOverhangThresh, then it is considered an edge line
@@ -80,6 +111,7 @@ public:
 
     void runGridProcOnce();
 
+    
 };
 
 #endif

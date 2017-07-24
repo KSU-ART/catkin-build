@@ -178,6 +178,14 @@ target_link_libraries(calibrate
   ${OpenCV_LIBRARIES}
 )
 
+add_executable(test src/test.cpp)
+add_dependencies(test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
+
+
 
 #############
 ## Install ##
