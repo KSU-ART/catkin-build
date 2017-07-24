@@ -51,6 +51,11 @@ private:
 
     bool DEBUG;
 
+    Color red;
+    Color green;
+    cv::Vec3f vec_red;
+    cv::Vec3f vec_green;
+
 public:
     // constructor
     edgeDetector()
@@ -75,13 +80,15 @@ public:
         // minBufferArea = 32000;
         // lineOffset = 20;
         DEBUG = true;
-
-        red_color = Color('r', path);
-        green_color = Color('g', path);
+        red = Color('r', path);
+        green = Color ('g', path);
+        // std::cout << "*****************************" << red.getLMax() << std::endl;
+        vec_red = cv::Vec3f((red.getLMax()+red.getLMin())/2,(red.getAMax()+red.getAMin())/2,(red.getBMax()+red.getBMin())/2);
+        vec_green = cv::Vec3f((green.getLMax()+green.getLMin())/2,(green.getAMax()+green.getAMin())/2,(green.getBMax()+green.getBMin())/2);
     }
 
     //added by Kyle
-    std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
+    //std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
 
     void image_callback(const sensor_msgs::Image::ConstPtr& msg);
 
@@ -105,6 +112,7 @@ public:
 
     void runGridProcOnce();
 
+    
 };
 
 #endif

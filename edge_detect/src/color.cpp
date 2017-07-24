@@ -69,7 +69,11 @@ void Color::set_calibration_file(std::string file){
 	points[0] = cv::Point(0,0);
 	points[1] = cv::Point(1,1);
 	if (file.compare("") == 0){
+<<<<<<< HEAD
 		calibration_file = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
+=======
+		calibration_file = "/home/kyle/catkin_ws/src/catkin-build/edge_detect/include";
+>>>>>>> 25dbe30114245c2b54dc133a11c7ba0584c3c8c0
 	}
 	else{
 		calibration_file = file;
@@ -78,11 +82,19 @@ void Color::set_calibration_file(std::string file){
 
 
 void Color::calibrate_colors(int camera, float deviation_percentage){
+<<<<<<< HEAD
 	cv::VideoCapture cap(camera);
 	if (!cap.isOpened()){
 		return;
 	}
 	cv::Mat img_rgb, img_lab;
+=======
+	cv::VideoCapture cap(0);
+	if (!cap.isOpened()){
+		return;
+	}
+	cv::Mat img_rgb,img_lab;
+>>>>>>> 25dbe30114245c2b54dc133a11c7ba0584c3c8c0
 	cv::namedWindow("Img_RGB", cv::WINDOW_AUTOSIZE);
 	cv::setMouseCallback("Img_RGB", onMouse, this);
 	if(color_type == 'r'|| color_type == 'g'){
@@ -137,3 +149,13 @@ void Color::calibrate_colors(int camera, float deviation_percentage){
 	else
 		std::cout <<"Unknown color setting. Please set color either r for red or g for green";
 }
+<<<<<<< HEAD
+=======
+
+int Color::getLMin(){return lMin;}
+int Color::getLMax(){return lMax;}
+int Color::getAMin(){return aMin;}
+int Color::getAMax(){return aMax;}
+int Color::getBMin(){return bMin;}
+int Color::getBMax(){return bMax;}
+>>>>>>> 25dbe30114245c2b54dc133a11c7ba0584c3c8c0

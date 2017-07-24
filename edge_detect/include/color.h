@@ -57,6 +57,16 @@ public:
 
 	void calibrate_colors(int camera, float deviation_percentage);
 
+<<<<<<< HEAD
+=======
+	int getLMin();
+	int getLMax();
+	int getAMin();
+	int getAMax();
+	int getBMin();
+	int getBMax();
+
+>>>>>>> 25dbe30114245c2b54dc133a11c7ba0584c3c8c0
 };
 
 

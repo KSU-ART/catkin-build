@@ -1,7 +1,7 @@
 <launch>
 	<node name="usb_cam_down" pkg="usb_cam" type="usb_cam_node" output="screen" >
 		<param name="camera_name" value="narrow_stereo" />
-		<param name="video_device" value="/dev/video1" />
+		<param name="video_device" value="/dev/video2" />
 		<param name="pixel_format" value="yuyv" />
 		<param name="camera_frame_id" value="cam_1_frame" />
 		<param name="io_method" value="mmap"/> 
