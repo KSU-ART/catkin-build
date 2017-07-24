@@ -11,7 +11,7 @@ void edgeDetector::image_callback(const sensor_msgs::Image::ConstPtr& msg){
 		return;
 	}
 	src = cv_ptr->image;
-    cv::resize(src, src, cv::Size(), 0.5, 0.5);
+    // cv::resize(src, src, cv::Size(), 0.5, 0.5);
 }
 
 
@@ -176,8 +176,8 @@ void edgeDetector::runGridProcOnce(){
         return;
     }
     
-    cv::cvtColor(src, lab, CV_BGR2Lab);
-    cv::cvtColor(src, src, CV_BGR2GRAY);
+    // cv::cvtColor(src, lab, CV_BGR2Lab);
+    // cv::cvtColor(src, src, CV_BGR2GRAY);
 
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
     cv::bitwise_not(dst, dst);
@@ -207,8 +207,8 @@ void edgeDetector::runGridProcOnce(){
             }
         }
     }
-    std::cout << lab.at<cv::Vec3b>(0,0) << std::endl;
-    std::cout << vec_red;
+    // std::cout << lab.at<cv::Vec3b>(0,0) << std::endl;
+    // std::cout << vec_red;
     // cv::Vec3f var = *this->vec_red;
     cv::floodFill(dst2, maxPt, CV_RGB(255, 255, 255));
 

@@ -59,9 +59,9 @@ public:
     edgeDetector()
     // :im("/usb_cam_down/image_raw/compressed")
     {
-        path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
-        // lineThresh = 210;
-        lineThresh = 105;
+        path = "/home/stoplime/catkin_ws/src/catkin-build/plate_detect/include";
+        lineThresh = 210;
+        // lineThresh = 105;
 
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
@@ -70,13 +70,14 @@ public:
 
         source_window = "Source image";
         corners_window = "Corners detected";
-        blockSize = 11;
-        maxOverhangThresh = 75;
-        minBufferArea = 8000;
-        lineOffset = 10;
-        // maxOverhangThresh = 150;
-        // minBufferArea = 32000;
-        // lineOffset = 20;
+        blockSize = 21;
+        // maxOverhangThresh = 75;
+        // minBufferArea = 8000;
+        // lineOffset = 10;
+        maxOverhangThresh = 150;
+        minBufferArea = 32000;
+        lineOffset = 20;
+
         DEBUG = true;
         red = Color('r', path);
         green = Color ('g', path);
