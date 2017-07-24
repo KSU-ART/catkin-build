@@ -137,3 +137,10 @@ void Color::calibrate_colors(int camera, float deviation_percentage){
 	else
 		std::cout <<"Unknown color setting. Please set color either r for red or g for green";
 }
+
+int Color::getLMin(){return lMin;}
+int Color::getLMax(){return lMax;}
+int Color::getAMin(){return aMin;}
+int Color::getAMax(){return aMax;}
+int Color::getBMin(){return bMin;}
+int Color::getBMax(){return bMax;}

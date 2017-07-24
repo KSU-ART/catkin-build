@@ -1,82 +1,23 @@
 #include "edge_detect.h"
 #include "line.h"
-/*
-std::vector<cv::Vec2f>* edgeDetector::whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh){
-    // lines is a vector of all of the lines in an image
-    // angleThresh is a float between 0 and 2*PI that determines how picky the algorithm is with outliers
-    // outputs a vector of 4 lines that should be at the extremes of the image
-    // by Kyle Pawlowski 
-    if(lines == NULL){
-        std::vector<cv::Vec2f> *empty = new std::vector<cv::Vec2f>();
-        std::cout << "Null image encountered";
-        return empty;
-    }
-    if(lines->size() < 1){
-        return lines;
-    }
-    float avgAngle = 0;
-    float overlap = 0;
-    float underlap = 0;
-    std::vector<cv::Vec2f> * groupA = new std::vector<cv::Vec2f>();
-    std::vector<cv::Vec2f> * groupB = new std::vector<cv::Vec2f>();
-    std::vector<cv::Vec2f> * finalists = new std::vector<cv::Vec2f>();
-    for(std::vector<cv::Vec2f>::iterator line=lines->begin();line!=lines->end();line++){
-        avgAngle+= (*line)[1];
-    }
-    avgAngle = avgAngle / lines->size();
-    if(avgAngle + angleThresh > 2*PI){
-        overlap = (avgAngle + angleThresh) - 2*PI;
-    }
-    else if(avgAngle - angleThresh < 0){
-        underlap = (angleThresh - avgAngle);
-    }
-    for(std::vector<cv::Vec2f>::iterator line=lines->begin();line!=lines->end();line++){
-        if(((*line)[1] < avgAngle && (*line)[1] > avgAngle - angleThresh) || (*line)[1] > 2*PI - underlap){
-            groupA->push_back(*line);
-        }
-        else if(((*line)[1] > avgAngle && (*line)[1] < avgAngle + angleThresh) || (*line)[1] < overlap){
-            groupB->push_back(*line);
-        }
-    }
-    if(groupA->size() > 0){
-        cv::Vec2f max = (*groupA)[0];
-        cv::Vec2f min = (*groupA)[0];
-        for(std::vector<cv::Vec2f>::iterator line=groupA->begin();line!=groupA->end();line++){
-            if((*line)[0] > max[0]){
-                max = *line;
-            }
-            else if((*line)[0] < min[0]){
-                min = *line;
-            }
-        }
-        finalists->push_back(max);
-        finalists->push_back(min);
-    }
-    if(groupB->size() > 0){
-        cv::Vec2f max2 = (*groupB)[0];
-        cv::Vec2f min2 = (*groupB)[0];
-        for(std::vector<cv::Vec2f>::iterator line=groupB->begin();line!=groupB->end();line++){
-            if((*line)[0] > max2[0]){
-                max2 = *line;
-            }
-            else if((*line)[0] < min2[0]){
-                min2 = *line;
-            }
-        }
-        finalists->push_back(max2);
-        finalists->push_back(min2);
-    }
-    return finalists;
-}
-*/
-cv::Mat * isColor(cv::Mat img, CvScalar color){
-    cv::Mat * newMat = new cv::Mat(img.size().height, img.size().width, CV_16U);
-    for(int y = 0; y < img.size().height; y++){
-        for(int x = 0; x < img.size().width; x++){
-            newMat->at<double>(y,x) = sqrt(pow(color.val[0]-img.at<double>(y,x,0),2)+pow(color.val[1]-img.at<double>(y,x,1),2)+pow(color.val[2]-img.at<double>(y,x,2),2));
+
+cv::Mat * isColor(cv::Mat pic, cv::Vec3f color){
+    cv::Mat * newMat = new cv::Mat(pic.size().height, pic.size().width, 0.0);
+    for(int y = 0; y < pic.size().height; y++){
+        for(int x = 0; x < pic.size().width; x++){
+            ///newMat->at<uchar>(y,x) = pic.at<uchar>(x,y,1);
+            //float a = (pow((double)(color.val[0]-img.at<uchar>(y,x,0)),2)+((double)(color.val[1]-img.at<uchar>(y,x,1)))+pow((double)(color.val[2]-img.at<uchar>(y,x,2)),2));
+            newMat->at<uchar>(y,x) = sqrt(pow((double)(color[0]-pic.at<cv::Vec3b>(y,x).val[0]),2)+ 
+                                pow((double)(color[1]-pic.at<cv::Vec3b>(y,x).val[1]),2)+pow((double)(color[2]-pic.at<cv::Vec3b>(y,x).val[2]),2));
         }
     }
     return newMat;
+}
+
+double isColor(cv::Vec3f compare, cv::Vec3f color){
+    // std::cout << pow(color[0]-compare[0],2) << " " << pow(color[1]-compare[1],2)<< " " << pow(color[2]-compare[2],2) << " : " << sqrt(pow(color[0]-compare[0],2)+pow(color[1]-compare[1],2)+pow(color[2]-compare[2],2));
+    // std::cout << "\t" << color[0] << " " << color[1] << " " << color[2];
+    return sqrt(pow(color[0]-compare[0],2)+pow(color[1]-compare[1],2)+pow(color[2]-compare[2],2));
 }
 
 void edgeDetector::drawLine(cv::Vec2f line, cv::Mat &img, cv::Scalar rgb, int thickness){
@@ -214,18 +155,18 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
 
 void edgeDetector::runGridProcOnce(){
     src = im.get_image();
-    double labThreshold = 64;
+    double labThreshold = 20.0;
     cv::Mat lab;
-    cv::Mat labRed;
-    cv::Mat labGreen;
     if(src.empty()){
         std::cout << "no image" << std::endl;
         return;
     }
+    //lab = src;
     cv::cvtColor(src, lab, CV_BGR2Lab);
     cv::cvtColor(src, src, CV_BGR2GRAY);
-    //labRed = *isColor(lab, Color('r', "/home/kyle/catkin_ws/src/edge_detect/include/red.txt"));
-    //labGreen = *isColor(lab,Color('g', "/home/kyle/catkin_ws/src/edge_detect/include/green.txt"));
+    /*labRed = *isColor(lab, cv::Vec3f((*red.getLMax()+*red.getLMin())/2,(*red.getAMax()+*red.getAMin())/2,(*red.getBMax()+*red.getBMin())/2));
+    labGreen = *isColor(lab, cv::Vec3f((*green.getLMax()+*green.getLMin())/2,(*green.getAMax()+*green.getAMin())/2,(*green.getBMax()+*green.getBMin())/2));
+    */
     // dst = cv::Mat::zeros( src.size(), CV_32FC1 );
 
     /// Detecting corners
@@ -239,6 +180,23 @@ void edgeDetector::runGridProcOnce(){
     int max=-1;
     cv::Point maxPt;
 
+    // int count_ = 0;
+    for(int y = 0; y < dst2.size().height; y++){
+        uchar *row = dst2.ptr(y);
+        for(int x = 0; x < dst2.size().width; x++){
+            // std::cout << count_ << " : "<< x << ", " << y << " ";
+            // isColor(lab.at<cv::Vec3b>(y,x), this->vec_red);
+            // std::cout << std::endl;
+            // count_++;
+            // row[x] = 0;
+            if(isColor(lab.at<cv::Vec3b>(y,x), this->vec_red) < labThreshold){
+                row[x] = 255;
+            }
+            else if(isColor(lab.at<cv::Vec3b>(y,x), this->vec_green) < labThreshold){
+                row[x] = 255;
+            }
+        }
+    }
     for(int y = 0; y < dst2.size().height; y++){
         uchar *row = dst2.ptr(y);
         for(int x = 0; x < dst2.size().width; x++){
@@ -252,25 +210,25 @@ void edgeDetector::runGridProcOnce(){
             }
         }
     }
-
+    std::cout << lab.at<cv::Vec3b>(0,0) << std::endl;
+    std::cout << vec_red;
+    // cv::Vec3f var = *this->vec_red;
     cv::floodFill(dst2, maxPt, CV_RGB(255, 255, 255));
+
+    // std::cout << "labX" << lab.size().width << std::endl;
+    // std::cout << "labY" << lab.size().height << std::endl;
+    // std::cout << "dst2X" << dst2.size().width << std::endl;
+    // std::cout << "dst2Y" << dst2.size().height << std::endl;
 
     for(int y = 0; y < dst2.size().height; y++){
         uchar *row = dst2.ptr(y);
-        uchar *row_red = labRed.ptr(y);
-        uchar *row_green = labGreen.ptr(y);
         for(int x = 0; x < dst2.size().width; x++){
             if(row[x] == 64 && x != maxPt.x && y != maxPt.y){
                 int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
             }
-            /*else if(row_red[x] > labThreshold){
-                int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
-            }
-            else if(row_green[x] > labThreshold){
-                int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
-            }*/
         }
     }
+    // std::cout << "Didn't break\n";
 
     std::vector<cv::Vec2f> lines;
     cv::HoughLines(dst2, lines, 1, CV_PI/180, 210);

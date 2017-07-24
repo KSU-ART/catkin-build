@@ -40,10 +40,15 @@ private:
 
     bool DEBUG;
 
+    Color red;
+    Color green;
+    cv::Vec3f vec_red;
+    cv::Vec3f vec_green;
+
 public:
     // constructor
     edgeDetector()
-    :im("/usb_cam_1/image_rect_color")
+    :im("sensor/compressed/downCam")
     {
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
@@ -52,6 +57,11 @@ public:
         corners_window = "Corners detected";
         blockSize = 21;
         DEBUG = true;
+        red = Color('r', "/home/kyle/catkin_ws/src/catkin-build/edge_detect/include");
+        green = Color ('g', "/home/kyle/catkin_ws/src/catkin-build/edge_detect/include");
+        // std::cout << "*****************************" << red.getLMax() << std::endl;
+        vec_red = cv::Vec3f((red.getLMax()+red.getLMin())/2,(red.getAMax()+red.getAMin())/2,(red.getBMax()+red.getBMin())/2);
+        vec_green = cv::Vec3f((green.getLMax()+green.getLMin())/2,(green.getAMax()+green.getAMin())/2,(green.getBMax()+green.getBMin())/2);
     }
     //added by Kyle
     //std::vector<cv::Vec2f>* whittleLines(std::vector<cv::Vec2f> *lines, float angleThresh);
@@ -76,6 +86,7 @@ public:
 
     void runGridProcOnce();
 
+    
 };
 
 #endif
