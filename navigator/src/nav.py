@@ -20,7 +20,6 @@ def state_machine_handler():
 
     sm_top.userdata.GRdist = 0
     sm_top.userdata.GRangle = 0
-    sm_top.userdata.minGoalAngle = -20 * math.pi /180
     sm_top.userdata.maxGoalAngle = 20 * math.pi /180
     sm_top.userdata.randomTraversalAngleThresh = 20 * math.pi /180
     sm_top.userdata.imageWidth = 640
@@ -76,7 +75,6 @@ def state_machine_handler():
             with sm_CheckDownCam:
                 sm_CheckDownCam.userdata.GRdist = sm_top.userdata.GRdist
                 sm_CheckDownCam.userdata.GRangle = sm_top.userdata.GRangle
-                sm_CheckDownCam.userdata.minGoalAngle = sm_top.userdata.minGoalAngle
                 sm_CheckDownCam.userdata.maxGoalAngle = sm_top.userdata.maxGoalAngle
 
                 smach.StateMachine.add('CheckDownCam', CheckDownCam(),
@@ -89,7 +87,6 @@ def state_machine_handler():
                                     transitions={'CheckDownCam':'CheckDownCam'},
                                     remapping={'GRdist':'GRdist',
                                                'GRangle':'GRangle',
-                                               'minGoalAngle':'minGoalAngle',
                                                'maxGoalAngle':'maxGoalAngle'})
 
             sm_StartInteract = smach.StateMachine(outcomes=['Obstacle', 'Null'])

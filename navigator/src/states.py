@@ -209,34 +209,48 @@ class CheckDownCam(smach.State):
     
 class FollowGR(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['CheckDownCam'], input_keys=['GRdist', 'GRangle', 'minGoalAngle', 'maxGoalAngle'])
+        smach.State.__init__(self, outcomes=['CheckDownCam'], input_keys=['GRdist', 'GRangle', 'maxGoalAngle'])
         self.pubPitchPID = rospy.Publisher('/IARC/DownCam/PitchPID', Int16, queue_size=1)
         self.pubRollPID = rospy.Publisher('/IARC/DownCam/RollPID', Int16, queue_size=1)
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
         self.angle = 0
+        self.targetAngle = None
 
         self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
 
+        self.StartInteract_pub = rospy.Publisher('/IARC/states/StartInteract', Bool, queue_size=1)
+
         rospy.Subscriber("/IARC/states/enableCheckDownCamLoop", Bool, callback=self.enableCheckDownCamLoop_cb)
         self.enableCheckDownCamLoop = True
+
+    def normalizeAngle(self, x):
+        if(x > math.pi):
+            x -= 2*math.pi
+        elif(x < -math.pi):
+            x += 2*math.pi
+        return x
 
     def enableCheckDownCamLoop_cb(self, msg):
         self.enableCheckDownCamLoop = msg.data
 
     def callback(self, msg):
         self.angle = msg.data
+        if(self.targetAngle == None):
+            self.targetAngle = self.normalizeAngle(self.angle + (20 * math.pi /180))
 
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
             print("userdata.GRangle", userdata.GRangle)
-            print("userdata.minGoalAngle", userdata.minGoalAngle)
             print("userdata.maxGoalAngle", userdata.maxGoalAngle)
             print("Actual Angle", userdata.GRangle+self.angle)
             print("userdata.GRdist", userdata.GRdist)
         self.pubPitchPID.publish(Int16(userdata.GRdist[1]))
         self.pubRollPID.publish(Int16(userdata.GRdist[0]))
-        if userdata.GRangle < userdata.minGoalAngle or userdata.GRangle > userdata.maxGoalAngle:
+        # find the angle of ground robot relative to ground
+        # then check to see if it is within target angle
+        if abs( self.normalizeAngle( self.normalizeAngle(userdata.GRangle + self.angle) - self.targetAngle) ) > userdata.maxGoalAngle:
+            self.StartInteract_pub.publish(Bool(True))
             self.enableStartInteractLoop_pub.publish(Bool(True))
         return 'CheckDownCam'
     
@@ -256,8 +270,6 @@ class StartInteract(smach.State):
         rospy.Subscriber("/IARC/states/enableStartInteractLoop", Bool, callback=self.enableStartInteractLoop_cb)
         self.enableStartInteractLoop = False
 
-        self.StartInteract_pub = rospy.Publisher('/IARC/states/StartInteract', Bool, queue_size=1)
-
         self.enableCheckDownCamLoop_pub = rospy.Publisher('/IARC/states/enableCheckDownCamLoop', Bool, queue_size=1)
 
     def callback(self, msg):
@@ -274,7 +286,6 @@ class StartInteract(smach.State):
             if abs(self.altitude - userdata.lowHeight) < userdata.altitudeDeviation:
                 self.enableCheckDownCamLoop_pub.publish(Bool(False))
                 userdata.TouchDownTimer = userdata.TouchDownTimerMAX + time.time()
-                self.StartInteract_pub.publish(Bool(True))
                 return 'TouchDown'
             else:
                 return 'StartInteract'
@@ -412,8 +423,9 @@ class ObstacleAvoidence(smach.State):
         self.InteractingTimer = time.time()
 
     def callbackStartInteract(self, msg):
-        self.Interacting = True
-        self.InteractingTimer = 30+time.time()
+        if not self.Interacting:
+            self.InteractingTimer = 10+time.time() 
+            self.Interacting = True
 
     def callbackEndInteract(self, msg):
         self.Interacting = False
