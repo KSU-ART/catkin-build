@@ -64,7 +64,7 @@ class FindGR(smach.State):
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         self.enableTakeOffLoop = True
 
-        self.stringData = ''
+        self.stringData = "[]"
 
     def callback(self, msg):
         self.stringData = msg.data
