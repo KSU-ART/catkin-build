@@ -6,7 +6,7 @@
 	<include file="$(find sensors)/launch/point_lidar.launch" />
 
 	<!-- Downward Camera image proc  -->
-	<include file="$(find sensors)/launch/cam.launch">
+	<include file="$(find sensors)/launch/cam.launch" />
 
 	<!-- Starts sensor procressing -->
 	<node name="start" pkg="sensors" type="start" />
