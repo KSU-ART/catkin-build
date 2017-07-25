@@ -19,8 +19,6 @@ cv::Mat * isColor(cv::Mat pic, cv::Vec3f color){
     cv::Mat * newMat = new cv::Mat(pic.size().height, pic.size().width, 0.0);
     for(int y = 0; y < pic.size().height; y++){
         for(int x = 0; x < pic.size().width; x++){
-            ///newMat->at<uchar>(y,x) = pic.at<uchar>(x,y,1);
-            //float a = (pow((double)(color.val[0]-img.at<uchar>(y,x,0)),2)+((double)(color.val[1]-img.at<uchar>(y,x,1)))+pow((double)(color.val[2]-img.at<uchar>(y,x,2)),2));
             newMat->at<uchar>(y,x) = sqrt(pow((double)(color[0]-pic.at<cv::Vec3b>(y,x).val[0]),2)+ 
                                 pow((double)(color[1]-pic.at<cv::Vec3b>(y,x).val[1]),2)+pow((double)(color[2]-pic.at<cv::Vec3b>(y,x).val[2]),2));
         }
@@ -176,7 +174,8 @@ void edgeDetector::runGridProcOnce(){
         return;
     }
     
-    // cv::cvtColor(src, lab, CV_BGR2Lab);
+    cv::cvtColor(src, lab, CV_BGR2Lab);
+    cv::Mat green_mat = *isColor(lab, this->vec_green);
     // cv::cvtColor(src, src, CV_BGR2GRAY);
 
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
@@ -186,6 +185,13 @@ void edgeDetector::runGridProcOnce(){
     cv::Mat kernel = (cv::Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     cv::dilate(dst, dst2, kernel);
 
+    cv::GaussianBlur(green_mat, green_mat, cv::Size(11,11), 0);
+    cv::bitwise_not(green_mat, green_mat);
+    cv::adaptiveThreshold(green_mat, green_mat, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, blockSize, 2);
+    cv::bitwise_not(green_mat, green_mat);
+    cv::Mat kernel_green = (cv::Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
+    cv::dilate(green_mat, green_mat, kernel_green);
+
     // inRange(lab, red_color.get_min_scalar(), red_color.get_max_scalar(), red);
     // inRange(lab, green_color.get_min_scalar(), green_color.get_max_scalar(), green);
     // cv::dilate(red, red, kernel);
@@ -193,6 +199,8 @@ void edgeDetector::runGridProcOnce(){
 
     int max=-1;
     cv::Point maxPt;
+    cv::Point maxPtG;
+    int max_green=-1;
 
     for(int y = 0; y < dst2.size().height; y++){
         uchar *row = dst2.ptr(y);
@@ -207,10 +215,25 @@ void edgeDetector::runGridProcOnce(){
             }
         }
     }
+
+    for(int y = 0; y < green_mat.size().height; y++){
+        uchar *row =green_mat.ptr(y);
+        for(int x = 0; x < green_mat.size().width; x++){
+            if(row[x] >= 128){
+                int area = cv::floodFill(green_mat, cv::Point(x, y), CV_RGB(16, 16, 64));
+
+                if(area > max_green){
+                    maxPtG = cv::Point(x, y);
+                    max_green = area;
+                }
+            }
+        }
+    }
     // std::cout << lab.at<cv::Vec3b>(0,0) << std::endl;
     // std::cout << vec_red;
     // cv::Vec3f var = *this->vec_red;
     cv::floodFill(dst2, maxPt, CV_RGB(255, 255, 255));
+    cv::floodFill(green_mat, maxPtG, CV_RGB(255, 255, 255));
 
     for(int y = 0; y < dst2.size().height; y++){
         uchar *row = dst2.ptr(y);
@@ -220,11 +243,23 @@ void edgeDetector::runGridProcOnce(){
             }
         }
     }
-    // std::cout << "Didn't break\n";
+
+    for(int y = 0; y < green_mat.size().height; y++){
+        uchar *row = green_mat.ptr(y);
+        for(int x = 0; x < green_mat.size().width; x++){
+            if(row[x] == 64 && x != maxPtG.x && y != maxPtG.y){
+                int area = cv::floodFill(green_mat, cv::Point(x,y), CV_RGB(0,0,0));
+            }
+        }
+    }
 
     std::vector<cv::Vec2f> lines;
+    std::vector<cv::Vec2f> lines_green;
     cv::HoughLines(dst2, lines, 1, CV_PI/180, lineThresh);
-
+    cv::HoughLines(green_mat, lines_green, 1, CV_PI/180, lineThresh);
+    for(std::vector<cv::Vec2f>::iterator i = lines_green.begin(); i != lines_green.end(); i++){
+        lines.push_back(*i);
+    }
     mergeRelatedLines(&lines, dst2);
 
     std::vector<cv::Vec2f> edges;
