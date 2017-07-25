@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 	LidarSensor sensorHokuyo(0, "/scan");
 	LidarSensor sensorAltitudeLidar(1, "/terarangerone");
 
-	imageEncoder forwardCam(1, "/sensor/compressed/forwardCam");
+	imageEncoder forwardCam(0, "/sensor/compressed/forwardCam");
 	ImageRepeater downCam("/usb_cam_down/image_raw");
 	CompassSensor imu;
 
