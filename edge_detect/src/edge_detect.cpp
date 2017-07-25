@@ -167,15 +167,14 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
 
 void edgeDetector::runGridProcOnce(){
     // src = im.get_image();
-    double labThreshold = 20.0;
     cv::Mat lab;
     if(src.empty()){
         std::cout << "no image" << std::endl;
         return;
     }
     
-    cv::cvtColor(src, lab, CV_BGR2Lab);
-    cv::Mat green_mat = *isColor(lab, this->vec_green);
+    //cv::cvtColor(src, lab, CV_BGR2Lab);
+    cv::Mat green_mat = *isColor(src, this->vec_green);
     // cv::cvtColor(src, src, CV_BGR2GRAY);
 
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
