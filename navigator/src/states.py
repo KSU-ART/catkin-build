@@ -354,7 +354,7 @@ class AccendingCraft(smach.State):
             time.sleep(1)
         if not self.enableStartInteractLoop:
             return 'StartInteract'
-        
+
         self.pubTargetAltitude.publish(Float32(userdata.normHeight))
         if self.altitude >= userdata.lowHeight:
             self.enableCheckDownCamLoop_pub.publish(Bool(True))
@@ -379,11 +379,15 @@ class CheckObstacles(smach.State):
         rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
         rospy.Subscriber("/IARC/states/enableCheckDownCamLoop", Bool, callback=self.enableCheckDownCamLoop_cb)
         rospy.Subscriber("/IARC/states/enableStartInteractLoop", Bool, callback=self.enableStartInteractLoop_cb)
+        rospy.Subscriber("/IARC/states/enableEdgeLoop", Bool, callback=self.enableEdgeLoop_cb)
         self.enableTakeOffLoop = True
         self.enableCheckDownCamLoop = False
         self.enableStartInteractLoop = False
+        self.enableEdgeLoop = True
 
         self.enableTakeOffLoop_pub = rospy.Publisher('/IARC/states/enableTakeOffLoop', Bool, queue_size=1)
+
+        self.enableObstacleLoop_pub = rospy.Publisher('/IARC/states/enableObstacleLoop', Bool, queue_size=1)
 
     def callbackDist(self, msg):
         self.dist = msg.data
@@ -397,14 +401,20 @@ class CheckObstacles(smach.State):
     def enableStartInteractLoop_cb(self, msg):
         self.enableStartInteractLoop = msg.data
 
+    def enableEdgeLoop_cb(self, msg):
+        self.enableEdgeLoop = msg.data
+
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
         if self.dist <= userdata.obstacleThreshDist:
+            self.enableObstacleLoop_pub.publish(Bool(True))
             return 'ObstacleAvoidence'
         else:
-            if self.enableTakeOffLoop == False and self.enableCheckDownCamLoop == False and self.enableStartInteractLoop == False:
-                self.enableTakeOffLoop_pub.publish(Bool(True))
+            self.enableObstacleLoop_pub.publish(Bool(False))
+            if self.enableEdgeLoop == False:
+                if self.enableTakeOffLoop == False and self.enableCheckDownCamLoop == False and self.enableStartInteractLoop == False:
+                    self.enableTakeOffLoop_pub.publish(Bool(True))
             return 'CheckObstacles'
     
     def request_preempt(self):
@@ -469,16 +479,49 @@ class CheckEdges(smach.State):
         rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
         self.detected = False
 
+        rospy.Subscriber("/IARC/states/enableTakeOffLoop", Bool, callback=self.enableTakeOffLoop_cb)
+        rospy.Subscriber("/IARC/states/enableCheckDownCamLoop", Bool, callback=self.enableCheckDownCamLoop_cb)
+        rospy.Subscriber("/IARC/states/enableStartInteractLoop", Bool, callback=self.enableStartInteractLoop_cb)
+        rospy.Subscriber("/IARC/states/enableObstacleLoop", Bool, callback=self.enableObstacleLoop_cb)
+        self.enableTakeOffLoop = True
+        self.enableCheckDownCamLoop = False
+        self.enableStartInteractLoop = False
+        self.enableObstacleLoop = True
+
+        self.enableTakeOffLoop_pub = rospy.Publisher('/IARC/states/enableTakeOffLoop', Bool, queue_size=1)
+
+        self.enableEdgeLoop_pub = rospy.Publisher('/IARC/states/enableEdgeLoop', Bool, queue_size=1)
+
     def callback(self, msg):
         self.detected = msg.data
+
+    def enableTakeOffLoop_cb(self, msg):
+        self.enableTakeOffLoop = msg.data
+
+    def enableCheckDownCamLoop_cb(self, msg):
+        self.enableCheckDownCamLoop = msg.data
+
+    def enableStartInteractLoop_cb(self, msg):
+        self.enableStartInteractLoop = msg.data
+
+    def enableObstacleLoop_cb(self, msg):
+        self.enableObstacleLoop = msg.data
 
     def execute(self, userdata):
         if DEBUG:
             time.sleep(1)
+        if self.enableObstacleLoop == False:
+            if self.enableTakeOffLoop == False and self.enableCheckDownCamLoop == False and self.enableStartInteractLoop == False:
+                self.enableTakeOffLoop_pub.publish(Bool(True))
+        
         if self.detected:
+            self.enableEdgeLoop_pub.publish(Bool(True))
             userdata.EdgeDetectTimer = userdata.EdgeDetectTimerMAX + time.time()
+            if DEBUG:
+                print("****************Starting Edge Detect******************")
             return 'EdgeTimer'
         else:
+            self.enableEdgeLoop_pub.publish(Bool(False))
             return 'CheckEdges'
     
     def request_preempt(self):
@@ -492,6 +535,10 @@ class EdgeTimer(smach.State):
         rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
         self.detected = False
 
+        self.enableTakeOffLoop_pub = rospy.Publisher('/IARC/states/enableTakeOffLoop', Bool, queue_size=1)
+        self.enableCheckDownCamLoop_pub = rospy.Publisher('/IARC/states/enableCheckDownCamLoop', Bool, queue_size=1)
+        self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
+
     def callback(self, msg):
         self.detected = msg.data
 
@@ -501,6 +548,11 @@ class EdgeTimer(smach.State):
         if not self.detected:
             return 'CheckEdges'
         if userdata.EdgeDetectTimer < time.time():
+            if DEBUG:
+                print("****************Edge Detect TIMER Engaged******************")
+            self.enableTakeOffLoop_pub.publish(Bool(False))
+            self.enableCheckDownCamLoop_pub.publish(Bool(False))
+            self.enableStartInteractLoop_pub.publish(Bool(False))
             return 'TowardsArena'
         else:
             return 'EdgeTimer'
@@ -512,7 +564,7 @@ class EdgeTimer(smach.State):
 
 class TowardsArena(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['CheckEdges', 'TowardsArena'], input_keys=[])
+        smach.State.__init__(self, outcomes=['CheckEdges', 'TowardsArena'], input_keys=['normHeight'])
         rospy.Subscriber("/IARC/edgeDetect/detected", Bool, callback=self.callback)
         self.detected = False
         rospy.Subscriber("/IARC/edgeDetect/arenaVector/x", Float32, callback=self.arenaX_cb)
@@ -522,6 +574,8 @@ class TowardsArena(smach.State):
 
         self.pubArenaX = rospy.Publisher('/IARC/edgeDetect/xPID', Float32, queue_size=1)
         self.pubArenaY = rospy.Publisher('/IARC/edgeDetect/yPID', Float32, queue_size=1)
+
+        self.pubTargetAltitude = rospy.Publisher('/IARC/setAltitude', Float32, queue_size=1)
 
     def callback(self, msg):
         self.detected = msg.data
@@ -537,6 +591,7 @@ class TowardsArena(smach.State):
             time.sleep(1)
         self.pubArenaX.publish(Float32(self.arenaX))
         self.pubArenaY.publish(Float32(self.arenaY))
+        self.pubTargetAltitude.publish(Float32(userdata.normHeight))
         if not self.detected:
             return 'CheckEdges'
         else:
