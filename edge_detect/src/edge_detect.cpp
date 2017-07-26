@@ -178,14 +178,10 @@ void edgeDetector::runGridProcOnce(){
 
     //mcFall code
     cv::cvtColor(src, hsv, CV_BGR2HSV);
-    cv::Mat grey (hsv.size().height, hsv.size().width);
-    for(int y = 0; y < hsv.size().height; y++){
-        uchar * row = hsv.ptr(y);
-        for(int x = 0; x < hsv.size().width; x++){
-            grey.at<uchar>(y,x) = row[x].val[0];
-        }
-    }
-    cv::Mat mask (grey.size().height, grey.size().width);
+    std::vector<cv::Mat> hsv_planes;
+    cv::split(hsv, hsv_planes);
+    cv::Mat grey = hsv_planes[0];
+    cv::Mat mask (grey.size().height, grey.size().width, cv::DataType<uchar>::type);
     for(int y = 0; y < grey.size().height; y++){
         uchar * row = grey.ptr(y);
         for(int x = 0; x < grey.size().width; x++){
@@ -198,7 +194,7 @@ void edgeDetector::runGridProcOnce(){
         }
     }
     cv::Mat edge;
-    cv::Sobel(mask, edge, CV_64F, 0, 1, ksize=5);
+    cv::Sobel(mask, edge, CV_64F, 0, 1, 5);
     for(int y = 0; y < edge.size().height; y++){
         uchar * row = edge.ptr(y);
         for(int x = 0; x < edge.size().width; x++){
@@ -270,7 +266,7 @@ void edgeDetector::runGridProcOnce(){
     for(std::vector<cv::Vec2f>::iterator i=colorLines.begin(); i!=colorLines.end(); i++){
         lines.push_back(*i);
     }
-    
+
     std::vector<cv::Vec2f> edges;
     findEdges(&lines, dst2, &edges, maxOverhangThresh, minBufferArea, lineOffset);
 
