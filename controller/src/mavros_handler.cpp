@@ -23,9 +23,9 @@ void mavros_handler::land_msg_channels(){
 void mavros_handler::ai_msg_channels(int roll, int pitch, int yaw, int throttle){
     RC_MSG.channels[MODE_CHANNEL] = RC_MSG.CHAN_RELEASE;
 
-    RC_MSG.channels[ROLL_CHANNEL] = roll + ROLL_TRIM;
-    RC_MSG.channels[PITCH_CHANNEL] = pitch + PITCH_TRIM;
-    RC_MSG.channels[YAW_CHANNEL] = yaw + YAW_TRIM;
+    RC_MSG.channels[ROLL_CHANNEL] = roll;
+    RC_MSG.channels[PITCH_CHANNEL] = pitch;
+    RC_MSG.channels[YAW_CHANNEL] = yaw;
     RC_MSG.channels[THROTTLE_CHANNEL] = throttle;
 }
 
