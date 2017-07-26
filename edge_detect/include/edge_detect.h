@@ -54,6 +54,8 @@ private:
     //cv::Vec3f vec_red;
     //cv::Vec3f vec_green;
 
+    cv::Mat kernel;
+
 public:
     // constructor
     edgeDetector()
@@ -66,7 +68,7 @@ public:
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
         detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
-        sub = n.subscribe("/usb_cam_down/image_raw", 2, &edgeDetector::image_callback, this);
+        sub = n.subscribe("/usb_cam_down/image_rect_color", 2, &edgeDetector::image_callback, this);
 
         source_window = "Source image";
         corners_window = "Corners detected";
@@ -84,6 +86,8 @@ public:
         // std::cout << "*****************************" << red.getLMax() << std::endl;
         //vec_red = cv::Vec3f((red.getLMax()+red.getLMin())/2,(red.getAMax()+red.getAMin())/2,(red.getBMax()+red.getBMin())/2);
         //vec_green = cv::Vec3f((green.getLMax()+green.getLMin())/2,(green.getAMax()+green.getAMin())/2,(green.getBMax()+green.getBMin())/2);
+
+        kernel = (cv::Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     }
 
     //added by Kyle
@@ -110,6 +114,8 @@ public:
     cv::Vec2f averageEdge(std::vector<cv::Vec2f> *edges);
 
     // void imageCallback(const sensor_msgs::ImageConstPtr& msg);
+
+    void largestBlob(cv::Mat src, cv::Mat& dst);
 
     void runGridProcOnce();
 

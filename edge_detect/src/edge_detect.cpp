@@ -167,6 +167,37 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
     return average;
 }
 
+void edgeDetector::largestBlob(cv::Mat src, cv::Mat& dst){
+    int max=-1;
+    cv::Point maxPt;
+    dst = src;
+
+    for(int y = 0; y < dst.size().height; y++){
+        uchar *row = dst.ptr(y);
+        for(int x = 0; x < dst.size().width; x++){
+            if(row[x] >= 128){
+                int area = cv::floodFill(dst, cv::Point(x, y), CV_RGB(16, 16, 64));
+
+                if(area > max){
+                    maxPt = cv::Point(x, y);
+                    max = area;
+                }
+            }
+        }
+    }
+    cv::floodFill(dst, maxPt, CV_RGB(255, 255, 255));
+
+    for(int y = 0; y < dst.size().height; y++){
+        uchar *row = dst.ptr(y);
+        for(int x = 0; x < dst.size().width; x++){
+            if(row[x] == 64 && x != maxPt.x && y != maxPt.y){
+                int area = cv::floodFill(dst, cv::Point(x,y), CV_RGB(0,0,0));
+            }
+        }
+    }
+}
+
+
 void edgeDetector::runGridProcOnce(){
     // src = im.get_image();
     double labThreshold = 20.0;
@@ -183,8 +214,15 @@ void edgeDetector::runGridProcOnce(){
     std::vector<cv::Mat> hsv_planes;
     cv::split(hsv, hsv_planes);
     cv::Mat grey = hsv_planes[0];
-    cv::Mat mask (grey.size().height, grey.size().width, cv::DataType<uchar>::type);
-    for(int y = 0; y < grey.size().height; y++){
+    grey.convertTo(grey, CV_8U);
+
+    // cv::Mat mask;
+    // mask = hsv;
+    // cv::inRange(mask, cv::Scalar(0, 0, 40), cv::Scalar(255, 255, 75), mask);
+
+    cv::Mat mask = cv::Mat(grey > cv::Mat(grey.size(), cv::DataType<uchar>::type, 40) & grey < cv::Mat(grey.size(), cv::DataType<uchar>::type, 75)).mul(255);
+
+    /*for(int y = 0; y < grey.size().height; y++){
         uchar * row = grey.ptr(y);
         for(int x = 0; x < grey.size().width; x++){
             if(row[x] > 40 && row[x] < 75){
@@ -194,10 +232,12 @@ void edgeDetector::runGridProcOnce(){
                 mask.at<uchar>(y,x) = 0;
             }
         }
-    }
+    }*/
+    std::cout << "break" << std::endl;
     cv::Mat edge;
     cv::Sobel(mask, edge, CV_64F, 0, 1, 5);
-    for(int y = 0; y < edge.size().height; y++){
+    edge = cv::Mat(edge != cv::Mat(edge.size(), cv::DataType<uchar>::type, 0)).mul(255);
+    /*for(int y = 0; y < edge.size().height; y++){
         uchar * row = edge.ptr(y);
         for(int x = 0; x < edge.size().width; x++){
             if(row[x] != 0){
@@ -207,70 +247,55 @@ void edgeDetector::runGridProcOnce(){
                 edge.at<uchar>(y,x) = 0;
             }
         }
-    }
+    }*/
     std::vector<cv::Vec2f> colorHough;
     cv::Mat edge_uchar;
+    std::cout << "break" << std::endl;
     edge.convertTo(edge_uchar, CV_8U);
     std::cout << "Edge type" << edge_uchar.type() << "\n";
     cv::HoughLines(edge_uchar, colorHough, 1,PI/180,500,1,20);
     
+    // cv::GaussianBlur(mask, mask, cv::Size(11,11), 0);
+    cv::erode(mask, mask, kernel);
+    cv::dilate(mask, mask, kernel);
 
+    largestBlob(mask, mask);
+    cv::dilate(mask, mask, kernel);
 
+    cv::erode(mask, mask, kernel);
+    cv::erode(mask, mask, kernel);
+
+    //*****************  White lines  ***************
     cv::cvtColor(src, src, CV_BGR2GRAY);
 
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
     cv::bitwise_not(dst, dst);
     cv::adaptiveThreshold(dst, dst, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, blockSize, 2);
     cv::bitwise_not(dst, dst);
-    cv::Mat kernel = (cv::Mat_<uchar>(3,3) << 0,1,0,1,1,1,0,1,0);
     cv::dilate(dst, dst2, kernel);
+    
+    largestBlob(dst2, dst2);
+
+    cv::addWeighted(dst2, 1, mask, 1, 0, dst2);
 
     // inRange(lab, red_color.get_min_scalar(), red_color.get_max_scalar(), red);
     // inRange(lab, green_color.get_min_scalar(), green_color.get_max_scalar(), green);
     // cv::dilate(red, red, kernel);
     // cv::dilate(green, green, kernel);
 
-    int max=-1;
-    cv::Point maxPt;
-
-    for(int y = 0; y < dst2.size().height; y++){
-        uchar *row = dst2.ptr(y);
-        for(int x = 0; x < dst2.size().width; x++){
-            if(row[x] >= 128){
-                int area = cv::floodFill(dst2, cv::Point(x, y), CV_RGB(16, 16, 64));
-
-                if(area > max){
-                    maxPt = cv::Point(x, y);
-                    max = area;
-                }
-            }
-        }
-    }
-    // std::cout << lab.at<cv::Vec3b>(0,0) << std::endl;
-    // std::cout << vec_red;
-    // cv::Vec3f var = *this->vec_red;
-    cv::floodFill(dst2, maxPt, CV_RGB(255, 255, 255));
-
-    for(int y = 0; y < dst2.size().height; y++){
-        uchar *row = dst2.ptr(y);
-        for(int x = 0; x < dst2.size().width; x++){
-            if(row[x] == 64 && x != maxPt.x && y != maxPt.y){
-                int area = cv::floodFill(dst2, cv::Point(x,y), CV_RGB(0,0,0));
-            }
-        }
-    }
+    
     // std::cout << "Didn't break\n";
 
     std::vector<cv::Vec2f> lines;
     cv::HoughLines(dst2, lines, 1, CV_PI/180, lineThresh);
 
-    mergeRelatedLines(&lines, dst2);
-
     //mcFall code
-    mergeRelatedLines(&colorHough, edge_uchar);
-    for(std::vector<cv::Vec2f>::iterator i=colorHough.begin(); i!=colorHough.end(); i++){
-        lines.push_back(cv::Vec2f((*i)[0],(*i)[1]));
-    }
+    // mergeRelatedLines(&colorHough, edge_uchar);
+    // for(std::vector<cv::Vec2f>::iterator i=green_lines.begin(); i!=green_lines.end(); i++){
+    //     lines.push_back(cv::Vec2f((*i)[0],(*i)[1]));
+    // }
+
+    mergeRelatedLines(&lines, dst2);
 
     std::vector<cv::Vec2f> edges;
     findEdges(&lines, dst2, &edges, maxOverhangThresh, minBufferArea, lineOffset);
