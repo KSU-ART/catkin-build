@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String, Float32, UInt8MultiArray
+from std_msgs.msg import String, Float32, UInt8MultiArray, Bool
 import numpy as np
 import cv2
 from collections import deque
@@ -19,12 +19,13 @@ class FindAngle:
         self.AnglePub = rospy.Publisher("/IARC/OrientationNet/angle", Float32, queue_size=1)
         self.plateDetectXpub = rospy.Publisher("/IARC/OrientationNet/pos/x", Float32, queue_size=1)
         self.plateDetectYpub = rospy.Publisher("/IARC/OrientationNet/pos/y", Float32, queue_size=1)
+        self.plateDetectedpub = rospy.Publisher("/IARC/OrientationNet/detected", Bool, queue_size=1)
         self.emptyYOLO = False
         self.predicted_angle = 0.0
         size = 15
         self.x_list = deque([0 for x in range(size)])
         self.y_list = deque([0 for x in range(size)])
-        self.m = videosub("/usb_cam_down/image_raw/compressed")
+        self.m = videosub("/usb_cam_down/image_raw/custom_compressed")
 
     # def show(self):
     #     cv2.imshow('frame', self.image)
@@ -85,6 +86,7 @@ class FindAngle:
 
                 cv2.imshow('image',cv_img)
                 cv2.waitKey(10)
+        self.plateDetectedpub.publish(Bool(self.emptyYOLO))
 
 
 if __name__ == '__main__':
