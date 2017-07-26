@@ -108,7 +108,7 @@ class FindGR(smach.State):
 	        if self.emptyYOLO:
 	            # no ground robot detected
 	            print("going to Random Traversal")
-	            return 'FindGR'
+	            return 'RandomTraversal'
 	        else:
 	            if self.minYolo != None:
 	                userdata.targetYolo = self.minYolo
@@ -256,7 +256,7 @@ class FollowGR(smach.State):
             # then check to see if it is within target angle
             if abs( self.normalizeAngle( self.normalizeAngle(userdata.GRangle + self.angle) - self.targetAngle) ) > userdata.maxGoalAngle:
                 self.StartInteract_pub.publish(Bool(True))
-                # self.enableStartInteractLoop_pub.publish(Bool(True))
+                self.enableStartInteractLoop_pub.publish(Bool(True))
         return 'CheckDownCam'
     
     def request_preempt(self):
