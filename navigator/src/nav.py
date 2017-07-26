@@ -140,6 +140,7 @@ def state_machine_handler():
             sm_EdgeDetect = smach.StateMachine(outcomes=['Obstacle', 'Null'])
 
             with sm_EdgeDetect:
+                sm_EdgeDetect.userdata.normHeight = sm_top.userdata.normHeight
                 sm_EdgeDetect.userdata.EdgeDetectTimer = sm_top.userdata.EdgeDetectTimer
                 sm_EdgeDetect.userdata.EdgeDetectTimerMAX = sm_top.userdata.EdgeDetectTimerMAX
 
@@ -157,7 +158,8 @@ def state_machine_handler():
 
                 smach.StateMachine.add('TowardsArena', TowardsArena(),
                                     transitions={'CheckEdges':'CheckEdges',
-                                                 'TowardsArena':'TowardsArena'})
+                                                 'TowardsArena':'TowardsArena'},
+                                    remapping={'normHeight':'normHeight'})
 
             smach.Concurrence.add('sm_TakeOff', sm_TakeOff)
             smach.Concurrence.add('sm_CheckDownCam', sm_CheckDownCam)

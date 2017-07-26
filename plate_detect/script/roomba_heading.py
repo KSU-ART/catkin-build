@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String, Float32, UInt8MultiArray, Bool
+from std_msgs.msg import String, Float32, Bool, Int16
 import numpy as np
 import cv2
 from collections import deque
@@ -17,9 +17,10 @@ class FindAngle:
         rospy.Subscriber("/yolo/second/boxes", String, callback=self.callback)
         
         self.AnglePub = rospy.Publisher("/IARC/OrientationNet/angle", Float32, queue_size=1)
-        self.plateDetectXpub = rospy.Publisher("/IARC/OrientationNet/pos/x", Float32, queue_size=1)
-        self.plateDetectYpub = rospy.Publisher("/IARC/OrientationNet/pos/y", Float32, queue_size=1)
+        self.plateDetectXpub = rospy.Publisher("/IARC/OrientationNet/pos/x", Int16, queue_size=1)
+        self.plateDetectYpub = rospy.Publisher("/IARC/OrientationNet/pos/y", Int16, queue_size=1)
         self.plateDetectedpub = rospy.Publisher("/IARC/OrientationNet/detected", Bool, queue_size=1)
+
         self.emptyYOLO = False
         self.predicted_angle = 0.0
         size = 15
@@ -62,8 +63,11 @@ class FindAngle:
                 self.x_list.popleft()
                 self.y_list.popleft()
 
-                self.plateDetectXpub.publish(Float32(coords[ind[0]][1] * 640))
-                self.plateDetectYpub.publish(Float32(coords[ind[0]][2] * 480))
+                self.plateDetectXpub.publish(Int16(coords[ind[0]][1] * 640))
+                self.plateDetectYpub.publish(Int16(coords[ind[0]][2] * 480))
+                
+                if DEBUG:
+                    print("pos: ", coords[ind[0]][1] * 640, coords[ind[0]][2] * 480)
 
                 # Sum list
                 x_sum = sum(self.x_list)
@@ -84,9 +88,9 @@ class FindAngle:
                 cv2.line(cv_img,(320,240),(int(100*cos(self.predicted_angle))+320, int(100*sin(self.predicted_angle))+240), (0,255,0), 5)
                 # cv2.line(cv_img,(320,240),(int(100*pred[0][0])+320, int(-100*pred[0][1])+240), (255,0,0), 5)
 
-                cv2.imshow('image',cv_img)
+                cv2.imshow('image', cv_img)
                 cv2.waitKey(10)
-        self.plateDetectedpub.publish(Bool(self.emptyYOLO))
+        self.plateDetectedpub.publish(Bool(not self.emptyYOLO))
 
 
 if __name__ == '__main__':
