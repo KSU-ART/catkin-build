@@ -86,7 +86,7 @@ class FindAngle:
 
                 cv2.imshow('image',cv_img)
                 cv2.waitKey(10)
-        self.plateDetectedpub.publish(Bool(self.emptyYOLO))
+        self.plateDetectedpub.publish(Bool(not self.emptyYOLO))
 
 
 if __name__ == '__main__':
