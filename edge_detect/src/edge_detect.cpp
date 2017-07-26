@@ -4,7 +4,7 @@
 void edgeDetector::image_callback(const sensor_msgs::Image::ConstPtr& msg){
 	cv_bridge::CvImagePtr cv_ptr;
 	try{
-		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
 	}
 	catch (cv_bridge::Exception& e){
 		ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -177,7 +177,9 @@ void edgeDetector::runGridProcOnce(){
     }
 
     //mcFall code
+    std::cout << "start gridproc" << std::endl;
     cv::cvtColor(src, hsv, CV_BGR2HSV);
+    std::cout << "converted" << std::endl;
     std::vector<cv::Mat> hsv_planes;
     cv::split(hsv, hsv_planes);
     cv::Mat grey = hsv_planes[0];
@@ -185,7 +187,7 @@ void edgeDetector::runGridProcOnce(){
     for(int y = 0; y < grey.size().height; y++){
         uchar * row = grey.ptr(y);
         for(int x = 0; x < grey.size().width; x++){
-            if(row[x] > 50 && row[x] < 100){
+            if(row[x] > 40 && row[x] < 75){
                 mask.at<uchar>(y,x) = 255;
             }
             else{
@@ -206,11 +208,15 @@ void edgeDetector::runGridProcOnce(){
             }
         }
     }
-    cv::Mat colorHough;
-    cv::HoughLines(edge, colorHough, 1,PI/180,500,1,20);
+    std::vector<cv::Vec2f> colorHough;
+    cv::Mat edge_uchar;
+    edge.convertTo(edge_uchar, CV_8U);
+    std::cout << "Edge type" << edge_uchar.type() << "\n";
+    cv::HoughLines(edge_uchar, colorHough, 1,PI/180,500,1,20);
+    
 
 
-    // cv::cvtColor(src, src, CV_BGR2GRAY);
+    cv::cvtColor(src, src, CV_BGR2GRAY);
 
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
     cv::bitwise_not(dst, dst);
@@ -261,10 +267,9 @@ void edgeDetector::runGridProcOnce(){
     mergeRelatedLines(&lines, dst2);
 
     //mcFall code
-    std::vector<cv::Vec2f> colorLines;
-    mergeRelatedLines(&colorLines, colorHough);
-    for(std::vector<cv::Vec2f>::iterator i=colorLines.begin(); i!=colorLines.end(); i++){
-        lines.push_back(*i);
+    mergeRelatedLines(&colorHough, edge_uchar);
+    for(std::vector<cv::Vec2f>::iterator i=colorHough.begin(); i!=colorHough.end(); i++){
+        lines.push_back(cv::Vec2f((*i)[0],(*i)[1]));
     }
 
     std::vector<cv::Vec2f> edges;
@@ -300,6 +305,7 @@ void edgeDetector::runGridProcOnce(){
         }
         std::cout << "display image" << std::endl;
         imshow( source_window, src );
+        imshow( "Color mask", mask );
         imshow( corners_window, dst2 );
     }
     cv::waitKey(5);

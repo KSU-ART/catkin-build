@@ -8,8 +8,7 @@ int main( int argc, char** argv )
 
     while(ros::ok()){
         ed.runGridProcOnce();
-
         loopRate.sleep();
-	    ros::spinOnce();
+        ros::spinOnce();
     }
 }

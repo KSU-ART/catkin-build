@@ -51,8 +51,8 @@ private:
 
     Color red;
     Color green;
-    cv::Vec3f vec_red;
-    cv::Vec3f vec_green;
+    //cv::Vec3f vec_red;
+    //cv::Vec3f vec_green;
 
 public:
     // constructor
@@ -66,7 +66,7 @@ public:
         pubx = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/x", 1);
         puby = n.advertise<std_msgs::Float32>("/IARC/edgeDetect/arenaVector/y", 1);
         detectPub = n.advertise<std_msgs::Bool>("/IARC/edgeDetect/detected", 1);
-        sub = n.subscribe("/usb_cam_down/image_rect", 2, &edgeDetector::image_callback, this);
+        sub = n.subscribe("/usb_cam_down/image_raw", 2, &edgeDetector::image_callback, this);
 
         source_window = "Source image";
         corners_window = "Corners detected";
@@ -79,11 +79,11 @@ public:
         lineOffset = 20;
 
         DEBUG = true;
-        red = Color('r', path);
-        green = Color ('g', path);
+        //red = Color('r', path);
+        //green = Color ('g', path);
         // std::cout << "*****************************" << red.getLMax() << std::endl;
-        vec_red = cv::Vec3f((red.getLMax()+red.getLMin())/2,(red.getAMax()+red.getAMin())/2,(red.getBMax()+red.getBMin())/2);
-        vec_green = cv::Vec3f((green.getLMax()+green.getLMin())/2,(green.getAMax()+green.getAMin())/2,(green.getBMax()+green.getBMin())/2);
+        //vec_red = cv::Vec3f((red.getLMax()+red.getLMin())/2,(red.getAMax()+red.getAMin())/2,(red.getBMax()+red.getBMin())/2);
+        //vec_green = cv::Vec3f((green.getLMax()+green.getLMin())/2,(green.getAMax()+green.getAMin())/2,(green.getBMax()+green.getBMin())/2);
     }
 
     //added by Kyle
@@ -105,12 +105,15 @@ public:
     /// post: merges the parallel lines together
     void mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img);
 
+    void mergeRelatedLines(std::vector<cv::Vec4i> *lines);
+
     cv::Vec2f averageEdge(std::vector<cv::Vec2f> *edges);
 
     // void imageCallback(const sensor_msgs::ImageConstPtr& msg);
 
     void runGridProcOnce();
 
+    cv::Mat getSrc(){return src;}
     
 };
 
