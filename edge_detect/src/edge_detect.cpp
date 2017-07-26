@@ -170,13 +170,50 @@ cv::Vec2f edgeDetector::averageEdge(std::vector<cv::Vec2f> *edges){
 void edgeDetector::runGridProcOnce(){
     // src = im.get_image();
     double labThreshold = 20.0;
-    cv::Mat lab;
+    cv::Mat hsv;
     if(src.empty()){
         std::cout << "no image" << std::endl;
         return;
     }
-    
-    // cv::cvtColor(src, lab, CV_BGR2Lab);
+
+    //mcFall code
+    cv::cvtColor(src, hsv, CV_BGR2HSV);
+    cv::Mat grey (hsv.size().height, hsv.size().width);
+    for(int y = 0; y < hsv.size().height; y++){
+        uchar * row = hsv.ptr(y);
+        for(int x = 0; x < hsv.size().width; x++){
+            grey.at<uchar>(y,x) = row[x].val[0];
+        }
+    }
+    cv::Mat mask (grey.size().height, grey.size().width);
+    for(int y = 0; y < grey.size().height; y++){
+        uchar * row = grey.ptr(y);
+        for(int x = 0; x < grey.size().width; x++){
+            if(row[x] > 50 && row[x] < 100){
+                mask.at<uchar>(y,x) = 255;
+            }
+            else{
+                mask.at<uchar>(y,x) = 0;
+            }
+        }
+    }
+    cv::Mat edge;
+    cv::Sobel(mask, edge, CV_64F, 0, 1, ksize=5);
+    for(int y = 0; y < edge.size().height; y++){
+        uchar * row = edge.ptr(y);
+        for(int x = 0; x < edge.size().width; x++){
+            if(row[x] != 0){
+                edge.at<uchar>(y,x) = 255;
+            }
+            else{
+                edge.at<uchar>(y,x) = 0;
+            }
+        }
+    }
+    cv::Mat colorHough;
+    cv::HoughLines(edge, colorHough, 1,PI/180,500,1,20);
+
+
     // cv::cvtColor(src, src, CV_BGR2GRAY);
 
     cv::GaussianBlur(src, dst, cv::Size(11,11), 0);
@@ -227,6 +264,13 @@ void edgeDetector::runGridProcOnce(){
 
     mergeRelatedLines(&lines, dst2);
 
+    //mcFall code
+    std::vector<cv::Vec2f> colorLines;
+    mergeRelatedLines(&colorLines, colorHough);
+    for(std::vector<cv::Vec2f>::iterator i=colorLines.begin(); i!=colorLines.end(); i++){
+        lines.push_back(*i);
+    }
+    
     std::vector<cv::Vec2f> edges;
     findEdges(&lines, dst2, &edges, maxOverhangThresh, minBufferArea, lineOffset);
 
