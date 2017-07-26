@@ -215,6 +215,7 @@ class FollowGR(smach.State):
         rospy.Subscriber("/IARC/currentAngle", Float32, callback=self.callback)
         self.angle = 0
         self.targetAngle = None
+        self.angleK = 135
 
         self.enableStartInteractLoop_pub = rospy.Publisher('/IARC/states/enableStartInteractLoop', Bool, queue_size=1)
 
@@ -236,7 +237,7 @@ class FollowGR(smach.State):
     def callback(self, msg):
         self.angle = msg.data
         if(self.targetAngle == None):
-            self.targetAngle = self.normalizeAngle(self.angle + (20 * math.pi /180))
+            self.targetAngle = self.normalizeAngle(self.angle + (self.angleK * math.pi /180))
 
     def execute(self, userdata):
         if DEBUG:
