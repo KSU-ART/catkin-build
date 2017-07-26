@@ -23,8 +23,8 @@
 #define SLOW_DESCENT 1500
 
 ///Trim values will be added onto the mavros message outside of PID loop:
-#define ROLL_TRIM -4
-#define PITCH_TRIM 30
+#define ROLL_TRIM 0
+#define PITCH_TRIM 0
 #define YAW_TRIM 0
 
 #define MAX_HEIGHT 2.0

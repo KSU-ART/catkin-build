@@ -15,7 +15,7 @@ def state_machine_handler():
     sm_top = smach.StateMachine(outcomes=['Done'])
 
     sm_top.userdata.normHeight = 1
-    sm_top.userdata.altitudeDeviation = 0.1
+    sm_top.userdata.altitudeDeviation = 0.25
     sm_top.userdata.targetYolo = [1, 2]
 
     sm_top.userdata.GRdist = 0
@@ -30,7 +30,7 @@ def state_machine_handler():
     sm_top.userdata.TouchDownTimer = 0
     sm_top.userdata.groundHeight = 0
 
-    sm_top.userdata.obstacleThreshDist = 1.5
+    sm_top.userdata.obstacleThreshDist = 0
 
     sm_top.userdata.EdgeDetectTimerMAX = 5
     sm_top.userdata.EdgeDetectTimer = 0

@@ -108,7 +108,7 @@ private:
 public:
 	//contructor
 	robot_controller()
-	:pids("/home/stoplime/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
+	:pids("/home/odroid/catkin_ws/src/catkin-build/controller/include/pid_calibration.txt"),
 	fcuCommRate(45)
 	{
 		DEBUG = true;

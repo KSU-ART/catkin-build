@@ -10,7 +10,7 @@ import time
 import math
 import random
 
-DEBUG = True
+DEBUG = False
 
 class TakeOff(smach.State):
     def __init__(self):
@@ -80,38 +80,41 @@ class FindGR(smach.State):
         
         if not self.enableTakeOffLoop:
             return 'TakeOff'
+		
+        try:
+        	self.enableCheckDownCamLoop_pub.publish(Bool(True))
+        	data = json.loads(self.stringData)
 
-        self.enableCheckDownCamLoop_pub.publish(Bool(True))
-        data = json.loads(self.stringData)
-
-        # check if yolo message is empty (aka no ground robot detected)
-        if len(data) == 0:
-            self.emptyYOLO = True
-            if DEBUG:
-                print("yolo is empty")
-        else:
-            self.emptyYOLO = False
-            # find the min(y) yolo coordinate and set to minYolo
-            npData = np.array(data)
-            minargs = np.argmax(npData[npData[:,0] < 2], axis=0)
-            # print("minargs", npData[npData[:,0] < 2])
-            minCoord = npData[minargs[2]] 
-            self.minYolo = minCoord[1:3]
-            # debug
-            if DEBUG:
-                # print minargs
-                print("minYolo:", self.minYolo)
-            self.XtargetYoloPub.publish(Int16(self.minYolo[0] * 640))
-            self.YtargetYoloPub.publish(Int16(self.minYolo[1] * 480))
-
-        if self.emptyYOLO:
-            # no ground robot detected
-            print("going to Random Traversal")
-            return 'RandomTraversal'
-        else:
-            if self.minYolo != None:
-                userdata.targetYolo = self.minYolo
-            return 'FindGR'
+        	# check if yolo message is empty (aka no ground robot detected)
+        	if len(data) == 0:
+        	    self.emptyYOLO = True
+        	    if DEBUG:
+        	        print("yolo is empty")
+        	else:
+        	    self.emptyYOLO = False
+        	    # find the min(y) yolo coordinate and set to minYolo
+        	    npData = np.array(data)
+        	    minargs = np.argmax(npData[npData[:,0] < 2], axis=0)
+        	    # print("minargs", npData[npData[:,0] < 2])
+        	    minCoord = npData[minargs[2]] 
+        	    self.minYolo = minCoord[1:3]
+        	    # debug
+        	    if DEBUG:
+        	        # print minargs
+        	        print("minYolo:", self.minYolo)
+        	    self.XtargetYoloPub.publish(Int16(self.minYolo[0] * 640))
+        	    self.YtargetYoloPub.publish(Int16(self.minYolo[1] * 480))
+	
+	        if self.emptyYOLO:
+	            # no ground robot detected
+	            print("going to Random Traversal")
+	            return 'FindGR'
+	        else:
+	            if self.minYolo != None:
+	                userdata.targetYolo = self.minYolo
+	            return 'FindGR'
+        except:
+			return 'FindGR'
     
     def request_preempt(self):
         """Overload the preempt request method just to spew an error."""
@@ -252,7 +255,7 @@ class FollowGR(smach.State):
             # then check to see if it is within target angle
             if abs( self.normalizeAngle( self.normalizeAngle(userdata.GRangle + self.angle) - self.targetAngle) ) > userdata.maxGoalAngle:
                 self.StartInteract_pub.publish(Bool(True))
-                self.enableStartInteractLoop_pub.publish(Bool(True))
+                # self.enableStartInteractLoop_pub.publish(Bool(True))
         return 'CheckDownCam'
     
     def request_preempt(self):
