@@ -11,7 +11,7 @@ void edgeDetector::image_callback(const sensor_msgs::Image::ConstPtr& msg){
 		return;
 	}
 	src = cv_ptr->image;
-    // cv::resize(src, src, cv::Size(), 0.5, 0.5);
+    cv::resize(src, src, cv::Size(), 0.5, 0.5);
 }
 
 
@@ -86,7 +86,7 @@ void edgeDetector::findEdges(std::vector<cv::Vec2f> *lines, cv::Mat &img, std::v
                 edges->push_back(cv::Vec2f(p, theta));
             }
             else if(negGridArea < maxOverhangThresh){
-                edges->push_back(cv::Vec2f(-p, theta));
+                edges->push_back(cv::Vec2f(p, theta));
             }
         }
     }
@@ -104,12 +104,14 @@ void edgeDetector::mergeRelatedLines(std::vector<cv::Vec2f> *lines, cv::Mat &img
         std::vector<Line> merges;
         merges.push_back(line);
         for(pos=lines->begin();pos!=lines->end();pos++){
-            Line compare_line (*pos, img.size().height, img.size().width);
             if((*pos)[0]<-99 && (*pos)[1]<-99) 
                 continue;
                 
             if(*current==*pos) 
                 continue;
+
+            Line compare_line (*pos, img.size().height, img.size().width);
+
             if( ((double)pow(line.getPts()->x1-compare_line.getPts()->x1, 2) + pow(line.getPts()->y1-compare_line.getPts()->y1, 2))<mergeThresh*mergeThresh &&
                 ((double)pow(line.getPts()->x2-compare_line.getPts()->x2, 2) + pow(line.getPts()->y2-compare_line.getPts()->y2, 2))<mergeThresh*mergeThresh )
             {

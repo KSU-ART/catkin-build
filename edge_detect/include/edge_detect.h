@@ -70,10 +70,12 @@ public:
 
         source_window = "Source image";
         corners_window = "Corners detected";
-        blockSize = 21;
+        
+        // blockSize = 15;
         // maxOverhangThresh = 75;
         // minBufferArea = 8000;
-        // lineOffset = 10;
+        // lineOffset = 20;
+        blockSize = 21;        
         maxOverhangThresh = 150;
         minBufferArea = 32000;
         lineOffset = 20;
