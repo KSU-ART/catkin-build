@@ -59,7 +59,7 @@ public:
     edgeDetector()
     // :im("/usb_cam_down/image_raw/compressed")
     {
-        path = "/home/stoplime/catkin_ws/src/catkin-build/plate_detect/include";
+        path = "/home/odroid/catkin_ws/src/catkin-build/plate_detect/include";
         lineThresh = 210;
         // lineThresh = 105;
 
